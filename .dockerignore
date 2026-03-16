@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+*.md
+*.bat
+*.ps1
+oracleJdk-25/
+apache-maven-3.9.6/
+maven.zip
+.vscode/
+.idea/
+*.iml
