@@ -1,9 +1,0 @@
-br\com\campushop\campushop_backend\controller\CadastroController.class
-br\com\campushop\campushop_backend\CampushopBackendApplication.class
-br\com\campushop\campushop_backend\config\SecurityConfig.class
-br\com\campushop\campushop_backend\controller\LoginController.class
-br\com\campushop\campushop_backend\repository\UsuarioRepository.class
-br\com\campushop\campushop_backend\service\UsuarioService.class
-br\com\campushop\campushop_backend\service\CustomUserDetailsService.class
-br\com\campushop\campushop_backend\controller\HomeController.class
-br\com\campushop\campushop_backend\model\Usuario.class
