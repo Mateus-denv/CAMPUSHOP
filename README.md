@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./campuShopcapa.png" width="50%" height="auto">
+  <img src="./Campushop/campuShopcapa.png" width="50%" height="auto">
 </div>
 
 # CampusShop - Seu Marketplace Estudantil
