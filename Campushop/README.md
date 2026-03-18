@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./campuShopcapa.png" width="50%" height="auto">
+</div>
+
 # CampusShop - Seu Marketplace Estudantil
 
 O CampusShop é uma plataforma de marketplace desenvolvida para conectar estudantes, permitindo a compra e venda de produtos de forma segura e conveniente dentro da comunidade acadêmici       1a.
