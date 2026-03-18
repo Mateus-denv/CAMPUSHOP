@@ -1,4 +1,4 @@
-# Script para rodar CampuShop com Docker
+﻿# Script para rodar CampuShop com Docker
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "   CampuShop - Docker Setup" -ForegroundColor Cyan
@@ -69,6 +69,6 @@ switch ($opcao) {
         Write-Host "Acesse: http://localhost:8080" -ForegroundColor Cyan
     }
     default {
-        Write-Host "Opção inválida!" -ForegroundColor Red
+        Write-Host "Opcao invalida!" -ForegroundColor Red
     }
 }
