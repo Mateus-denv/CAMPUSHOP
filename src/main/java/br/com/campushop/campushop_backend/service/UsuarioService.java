@@ -28,9 +28,9 @@ public class UsuarioService {
         logger.info("Tentando salvar usuário com email: {}", usuario.getEmail());
         
         // Validar campos obrigatórios
-        if (usuario.getNomeCompleto() == null || usuario.getNomeCompleto().trim().isEmpty()) {
-            logger.error("Nome completo não fornecido");
-            throw new IllegalArgumentException("Nome completo é obrigatório");
+        if (usuario.getNomeCliente() == null || usuario.getNomeCliente().trim().isEmpty()) {
+            logger.error("Nome não fornecido");
+            throw new IllegalArgumentException("Nome é obrigatório");
         }
         if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
             logger.error("Email não fornecido");

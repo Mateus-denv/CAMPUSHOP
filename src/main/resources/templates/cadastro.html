@@ -22,8 +22,8 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             
             <div class="form-group">
-                <label for="nomeCompleto">Nome Completo</label>
-                <input id="nomeCompleto" type="text" th:field="*{nomeCompleto}" placeholder="Seu nome completo" required>
+                <label for="nomeCliente">Nome Completo</label>
+                <input id="nomeCliente" type="text" th:field="*{nomeCliente}" placeholder="Seu nome completo" required>
             </div>
 
             <div class="form-group">
@@ -50,17 +50,27 @@
 
             <div class="two-col">
                 <div class="form-group">
-                    <label for="instituicao">Instituição de Ensino</label>
-                    <select id="instituicao" th:field="*{instituicao}" required>
+                    <label for="telefone">Telefone / WhatsApp</label>
+                    <input id="telefone" type="text" th:field="*{telefone}" placeholder="(00) 00000-0000" required>
+                </div>
+                <div class="form-group">
+                    <label for="cpfCnpj">CPF ou CNPJ</label>
+                    <input id="cpfCnpj" type="text" th:field="*{cpfCnpj}" placeholder="000.000.000-00" required>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label for="instituicaoEnsino">Instituição de Ensino</label>
+                    <select id="instituicaoEnsino" th:field="*{instituicaoEnsino}" required>
                         <option value="" disabled selected>Selecione sua instituição</option>
                         <option value="UFBA">UFBA</option>
                         <option value="UNEB">UNEB</option>
-                        <option value="SENAI">SENAI</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="cidade">Cidade</label>
-                    <select id="cidade" th:field="*{cidade}" required>
+                    <label for="nomeCidade">Cidade</label>
+                    <select id="nomeCidade" th:field="*{cidade}" required>
                         <option value="" disabled selected>Selecione sua cidade</option>
                         <option value="Camaçari">Camaçari</option>
                         <option value="Salvador">Salvador</option>
@@ -72,14 +82,14 @@
                 <label>Escolha seu perfil</label>
                 <div class="profile-selection">
                     <label class="profile-option selected">
-                        <input type="radio" th:field="*{perfil}" value="comprador" checked>
+                        <input type="radio" th:field="*{tipoConta}" value="cliente" checked>
                         <div>
-                            <strong>Comprador</strong>
+                            <strong>Cliente</strong>
                             <p class="profile-description">Quero comprar produtos</p>
                         </div>
                     </label>
                     <label class="profile-option">
-                        <input type="radio" th:field="*{perfil}" value="vendedor">
+                        <input type="radio" th:field="*{tipoConta}" value="vendedor">
                         <div>
                             <strong>Vendedor</strong>
                             <p class="profile-description">Quero vender produtos</p>
@@ -87,7 +97,7 @@
                     </label>
                 </div>
             </div>
-
+            
             <button type="submit" class="btn btn-gradient">Criar Conta</button>
         </form>
         <div class="final-box">
