@@ -151,4 +151,4 @@ mvn spring-boot:run
 
 ---
 
-Projeto desenvolvido por **Caio, Jhonathas, Julia e Pedro**.
+Projeto desenvolvido por **Caio, Jhonathas, Julia, Pedro e Mateus**.
