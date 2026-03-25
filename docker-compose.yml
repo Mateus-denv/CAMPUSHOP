@@ -41,17 +41,7 @@ services:
 
     # Healthcheck robusto
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p123456",
-        ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,12 +103,7 @@ services:
 
       # JVM Options
       JAVA_OPTS: >-
-        -Xmx512m
-        -Xms256m
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
-        -Duser.timezone=America/Sao_Paulo
+        -Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom -Duser.timezone=America/Sao_Paulo
 
     # Dependências entre serviços
     depends_on:
@@ -136,7 +121,7 @@ services:
 
     # Healthcheck da aplicação
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -151,6 +136,25 @@ services:
         reservations:
           cpus: "0.5"
           memory: 512M
+
+  # ==========================================
+  # phpMyAdmin
+  # ==========================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: campushop-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      # O PMA_HOST já preenche o campo "Server" automaticamente para você!
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    networks:
+      - campushop-network
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 # ============================================
 # VOLUMES (Persistência de Dados)
