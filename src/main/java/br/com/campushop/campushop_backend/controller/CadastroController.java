@@ -28,6 +28,12 @@ public class CadastroController {
 
     @PostMapping("/cadastro")
     public String cadastrar(Usuario usuario, String confirmarSenha, RedirectAttributes redirectAttributes) {
+
+        if (usuario.getRa() == null || usuario.getRa().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("erro", "R.A é obrigatório para cadastro");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/cadastro";
+        }
         
         // Validar senha
         if (usuario.getSenha() == null || usuario.getSenha().length() < 6) {
@@ -46,6 +52,12 @@ public class CadastroController {
         // Verificar se email já existe
         if (usuarioService.emailJaCadastrado(usuario.getEmail())) {
             redirectAttributes.addFlashAttribute("erro", "Email já cadastrado");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/cadastro";
+        }
+
+        if (usuarioService.raJaCadastrado(usuario.getRa().trim())) {
+            redirectAttributes.addFlashAttribute("erro", "R.A já cadastrado");
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/cadastro";
         }

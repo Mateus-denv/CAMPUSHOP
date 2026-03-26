@@ -14,6 +14,9 @@ public class Usuario {
     private String nomeCompleto;
 
     @Column(nullable = false, unique = true)
+    private String ra;
+
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -32,8 +35,9 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(String nomeCompleto, String email, String senha, String instituicao, String cidade, String perfil) {
+    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade, String perfil) {
         this.nomeCompleto = nomeCompleto;
+        this.ra = ra;
         this.email = email;
         this.senha = senha;
         this.instituicao = instituicao;
@@ -56,6 +60,14 @@ public class Usuario {
 
     public void setNomeCompleto(String nomeCompleto) {
         this.nomeCompleto = nomeCompleto;
+    }
+
+    public String getRa() {
+        return ra;
+    }
+
+    public void setRa(String ra) {
+        this.ra = ra;
     }
 
     public String getEmail() {
@@ -103,6 +115,7 @@ public class Usuario {
         return "Usuario{" +
                 "id=" + id +
                 ", nomeCompleto='" + nomeCompleto + '\'' +
+                ", ra='" + ra + '\'' +
                 ", email='" + email + '\'' +
                 ", instituicao='" + instituicao + '\'' +
                 ", cidade='" + cidade + '\'' +

@@ -32,6 +32,10 @@ public class UsuarioService {
             logger.error("Nome completo não fornecido");
             throw new IllegalArgumentException("Nome completo é obrigatório");
         }
+        if (usuario.getRa() == null || usuario.getRa().trim().isEmpty()) {
+            logger.error("R.A não fornecido");
+            throw new IllegalArgumentException("R.A é obrigatório");
+        }
         if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
             logger.error("Email não fornecido");
             throw new IllegalArgumentException("Email é obrigatório");
@@ -40,6 +44,8 @@ public class UsuarioService {
             logger.error("Senha não fornecida");
             throw new IllegalArgumentException("Senha é obrigatória");
         }
+
+        usuario.setRa(usuario.getRa().trim());
         
         // Criptografar senha
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
@@ -63,6 +69,10 @@ public class UsuarioService {
 
     public boolean emailJaCadastrado(String email) {
         return usuarioRepository.existsByEmail(email);
+    }
+
+    public boolean raJaCadastrado(String ra) {
+        return usuarioRepository.existsByRa(ra);
     }
 
 }
