@@ -35,7 +35,8 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade, String perfil) {
+    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade,
+            String perfil) {
         this.nomeCompleto = nomeCompleto;
         this.ra = ra;
         this.email = email;

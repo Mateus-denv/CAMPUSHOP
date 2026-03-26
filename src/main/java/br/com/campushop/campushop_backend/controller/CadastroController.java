@@ -34,14 +34,21 @@ public class CadastroController {
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/cadastro";
         }
-        
+
+        String ra = usuario.getRa().trim();
+        if (!ra.matches("\\d{9}")) {
+            redirectAttributes.addFlashAttribute("erro", "R.A deve conter exatamente 9 dígitos numéricos");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/cadastro";
+        }
+
         // Validar senha
         if (usuario.getSenha() == null || usuario.getSenha().length() < 6) {
             redirectAttributes.addFlashAttribute("erro", "A senha deve ter pelo menos 6 caracteres");
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/cadastro";
         }
-        
+
         // Validar confirmação de senha
         if (!usuario.getSenha().equals(confirmarSenha)) {
             redirectAttributes.addFlashAttribute("erro", "As senhas não coincidem");
@@ -56,7 +63,7 @@ public class CadastroController {
             return "redirect:/cadastro";
         }
 
-        if (usuarioService.raJaCadastrado(usuario.getRa().trim())) {
+        if (usuarioService.raJaCadastrado(ra)) {
             redirectAttributes.addFlashAttribute("erro", "R.A já cadastrado");
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/cadastro";
