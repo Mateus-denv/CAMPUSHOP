@@ -1,6 +1,8 @@
 package br.com.campushop.campushop_backend.repository;
 
 import br.com.campushop.campushop_backend.model.Usuario;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

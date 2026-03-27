@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate; // Importante para lidar com a data
+
 @Controller
 public class CadastroController {
 
@@ -70,6 +72,10 @@ public class CadastroController {
         }
 
         try {
+            // Preenchendo os dados automáticos exigidos pelo banco (NOT_NULL)
+            usuario.setDataCadastro(LocalDate.now()); // Pega a data exata de hoje
+            usuario.setAtivado(true); // Define a conta como ativada por padrão
+
             usuarioService.salvar(usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Cadastro realizado com sucesso! Faça o login.");
             return "redirect:/login";
