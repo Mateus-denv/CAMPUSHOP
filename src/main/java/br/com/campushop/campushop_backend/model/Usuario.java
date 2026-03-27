@@ -11,7 +11,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id; // No diagrama é Integer
 
-    @Column(name = "email", unique = true, length = 100)
+    @Column(nullable = false)
+    private String nomeCompleto;
+
+    @Column(nullable = false, unique = true)
+    private String ra;
+
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(name = "cidade", length = 100)
@@ -49,9 +55,10 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(String email, String cidade, String nomeCliente, String senha, String telefone,
-            String tipoConta, String tipoCliente, String cpfCnpj, String instituicaoEnsino,
-            String localizacaoGps, Boolean ativado, LocalDate dataCadastro) {
+    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade,
+            String perfil) {
+        this.nomeCompleto = nomeCompleto;
+        this.ra = ra;
         this.email = email;
         this.cidade = cidade;
         this.nomeCliente = nomeCliente;
@@ -72,6 +79,22 @@ public class Usuario {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getNomeCompleto() {
+        return nomeCompleto;
+    }
+
+    public void setNomeCompleto(String nomeCompleto) {
+        this.nomeCompleto = nomeCompleto;
+    }
+
+    public String getRa() {
+        return ra;
+    }
+
+    public void setRa(String ra) {
+        this.ra = ra;
     }
 
     public String getEmail() {
@@ -166,6 +189,8 @@ public class Usuario {
     public String toString() {
         return "Usuario{" +
                 "id=" + id +
+                ", nomeCompleto='" + nomeCompleto + '\'' +
+                ", ra='" + ra + '\'' +
                 ", email='" + email + '\'' +
                 ", cidade='" + cidade + '\'' +
                 ", nomeCliente='" + nomeCliente + '\'' +

@@ -14,7 +14,7 @@ import java.util.Optional;
 public class UsuarioService {
 
     private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
-    
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -26,11 +26,20 @@ public class UsuarioService {
 
     public Usuario salvar(Usuario usuario) {
         logger.info("Tentando salvar usuário com email: {}", usuario.getEmail());
-        
+
         // Validar campos obrigatórios
         if (usuario.getNomeCliente() == null || usuario.getNomeCliente().trim().isEmpty()) {
             logger.error("Nome não fornecido");
             throw new IllegalArgumentException("Nome é obrigatório");
+        }
+        if (usuario.getRa() == null || usuario.getRa().trim().isEmpty()) {
+            logger.error("R.A não fornecido");
+            throw new IllegalArgumentException("R.A é obrigatório");
+        }
+        String ra = usuario.getRa().trim();
+        if (!ra.matches("\\d{9}")) {
+            logger.error("R.A inválido: {}", ra);
+            throw new IllegalArgumentException("R.A deve conter exatamente 9 dígitos numéricos");
         }
         if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
             logger.error("Email não fornecido");
@@ -40,15 +49,17 @@ public class UsuarioService {
             logger.error("Senha não fornecida");
             throw new IllegalArgumentException("Senha é obrigatória");
         }
-        
+
+        usuario.setRa(ra);
+
         // Criptografar senha
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         logger.info("Senha criptografada com sucesso");
-        
+
         // Salvar no banco
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
         logger.info("Usuário salvo com sucesso! ID: {}", usuarioSalvo.getId());
-        
+
         return usuarioSalvo;
     }
 
@@ -63,6 +74,10 @@ public class UsuarioService {
 
     public boolean emailJaCadastrado(String email) {
         return usuarioRepository.existsByEmail(email);
+    }
+
+    public boolean raJaCadastrado(String ra) {
+        return usuarioRepository.existsByRa(ra);
     }
 
 }
