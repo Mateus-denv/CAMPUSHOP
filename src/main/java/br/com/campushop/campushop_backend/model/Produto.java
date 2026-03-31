@@ -4,19 +4,15 @@ import jakarta.persistence.*; // Importando as anotações JPA para mapear a cla
 
 @Entity
 @Table(name = "produto")
-
 public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_produto") // Força o nome exatamente como o MySQL quer
+    @Column(name = "id_produto")
     private Integer idProduto;
 
     @Column(name = "nome_produto", nullable = false, length = 200)
-    private String nomeProduto; // Dica: use CamelCase no Java para seguir o padrão da linguagem
-
-    @Column(length = 100)
-    private String nome;
+    private String nomeProduto;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
@@ -33,11 +29,37 @@ public class Produto {
     private String dimensoes;
     private Double peso;
 
-    // @ManyToOne
-    // @JoinColumn(name = "idVendedor")
-    // private Usuario vendedor;
-
     @ManyToOne
     @JoinColumn(name = "idCategoria")
     private Categoria categoria;
+
+    // --- GETTERS E SETTERS ---
+    // Eles permitem que o Spring leia e grave os dados nos campos privados
+
+    public Integer getIdProduto() { return idProduto; }
+    public void setIdProduto(Integer idProduto) { this.idProduto = idProduto; }
+
+    public String getNomeProduto() { return nomeProduto; }
+    public void setNomeProduto(String nomeProduto) { this.nomeProduto = nomeProduto; }
+
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public Integer getEstoque() { return estoque; }
+    public void setEstoque(Integer estoque) { this.estoque = estoque; }
+
+    public Double getPreco() { return preco; }
+    public void setPreco(Double preco) { this.preco = preco; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getDimensoes() { return dimensoes; }
+    public void setDimensoes(String dimensoes) { this.dimensoes = dimensoes; }
+
+    public Double getPeso() { return peso; }
+    public void setPeso(Double peso) { this.peso = peso; }
+
+    public Categoria getCategoria() { return categoria; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 }
