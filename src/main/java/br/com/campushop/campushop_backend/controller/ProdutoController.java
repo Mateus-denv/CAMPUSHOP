@@ -6,28 +6,22 @@ import org.springframework.beans.factory.annotation.Autowired; // Importando a a
 import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
 import org.springframework.web.bind.annotation.*; // Importando as anotações para criar endpoints REST
 
-import java.util.List; // Importando List para retornar listas de produtos
+import java.util.List;
 
-@RestController // Anotação para indicar que esta classe é um controller REST, ou seja, vai lidar com requisições HTTP e retornar respostas JSON
-@RequestMapping("/produtos") // Define a rota base para todos os endpoints deste controller
-
+@RestController 
+@RequestMapping("/produtos") 
 public class ProdutoController {
+    
     @Autowired
-    private ProdutoRepository produtoRepository; // Injetando o ProdutoRepository para acessar os dados dos produtos no banco de dados
+    private ProdutoRepository produtoRepository; 
 
-    // Listar todos os produtos (Para a Home)
+    // 1. Ler todos (Read)
     @GetMapping
     public List<Produto> listarTodos() {
-        return produtoRepository.findAll(); // Retorna uma lista de todos os produtos cadastrados no banco de dados
+        return produtoRepository.findAll(); 
     }
 
-    // Salvar novo produto (Para o Cadastro de Produto)
-    @PostMapping
-    public Produto salvar(@RequestBody Produto produto) {
-        return produtoRepository.save(produto);
-    }
-
-    // Buscar um produto específico pelo ID
+    // 2. Ler por ID (Read)
     @GetMapping("/{id}")
     public ResponseEntity<Produto> buscarPorId(@PathVariable Integer id) {
         return produtoRepository.findById(id)
@@ -35,7 +29,34 @@ public class ProdutoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Deletar produto
+    // 3. Criar novo produto (Create)
+    @PostMapping
+    public Produto salvar(@RequestBody Produto produto) {
+        return produtoRepository.save(produto);
+    }
+
+    // 4. Atualizar produto existente (Update) - NOVO!
+    @PutMapping("/{id}")
+    public ResponseEntity<Produto> atualizar(@PathVariable Integer id, @RequestBody Produto produtoAtualizado) {
+        return produtoRepository.findById(id)
+            .map(produtoExistente -> {
+                produtoExistente.setNomeProduto(produtoAtualizado.getNomeProduto());
+                produtoExistente.setDescricao(produtoAtualizado.getDescricao());
+                produtoExistente.setEstoque(produtoAtualizado.getEstoque());
+                produtoExistente.setPreco(produtoAtualizado.getPreco());
+                produtoExistente.setStatus(produtoAtualizado.getStatus());
+                produtoExistente.setDimensoes(produtoAtualizado.getDimensoes());
+                produtoExistente.setPeso(produtoAtualizado.getPeso());
+                // Categoria precisa ser tratada com cuidado, mas para o básico faremos assim:
+                produtoExistente.setCategoria(produtoAtualizado.getCategoria());
+                
+                Produto produtoSalvo = produtoRepository.save(produtoExistente);
+                return ResponseEntity.ok(produtoSalvo);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    // 5. Deletar produto (Delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Integer id) {
         produtoRepository.deleteById(id);
