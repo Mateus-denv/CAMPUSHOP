@@ -36,30 +36,75 @@ public class Produto {
     // --- GETTERS E SETTERS ---
     // Eles permitem que o Spring leia e grave os dados nos campos privados
 
-    public Integer getIdProduto() { return idProduto; }
-    public void setIdProduto(Integer idProduto) { this.idProduto = idProduto; }
+    public Integer getIdProduto() {
+        return idProduto;
+    }
 
-    public String getNomeProduto() { return nomeProduto; }
-    public void setNomeProduto(String nomeProduto) { this.nomeProduto = nomeProduto; }
+    public void setIdProduto(Integer idProduto) {
+        this.idProduto = idProduto;
+    }
 
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getNomeProduto() {
+        return nomeProduto;
+    }
 
-    public Integer getEstoque() { return estoque; }
-    public void setEstoque(Integer estoque) { this.estoque = estoque; }
+    public void setNomeProduto(String nomeProduto) {
+        this.nomeProduto = nomeProduto;
+    }
 
-    public Double getPreco() { return preco; }
-    public void setPreco(Double preco) { this.preco = preco; }
+    public String getDescricao() {
+        return descricao;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
 
-    public String getDimensoes() { return dimensoes; }
-    public void setDimensoes(String dimensoes) { this.dimensoes = dimensoes; }
+    public Integer getEstoque() {
+        return estoque;
+    }
 
-    public Double getPeso() { return peso; }
-    public void setPeso(Double peso) { this.peso = peso; }
+    public void setEstoque(Integer estoque) {
+        this.estoque = estoque;
+    }
 
-    public Categoria getCategoria() { return categoria; }
-    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
+    public Double getPreco() {
+        return preco;
+    }
+
+    public void setPreco(Double preco) {
+        this.preco = preco;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDimensoes() {
+        return dimensoes;
+    }
+
+    public void setDimensoes(String dimensoes) {
+        this.dimensoes = dimensoes;
+    }
+
+    public Double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(Double peso) {
+        this.peso = peso;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
 }
