@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style3.css">
+    <link rel="stylesheet" href="css/editar-perfil.css">
+    <title>Editar Perfil - CampusShop</title>
+    <meta name="description" content="Edite seu perfil no CampusShop - marketplace estudantil.">
+    <style>/* small fallback styles if needed */:root{--orange:#ff7a2d;--purple:#5b6df0}</style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="brand">
+                <div class="logo-circle" aria-hidden></div>
+                <a href="#" class="logo">Campus<span>Shop</span></a>
+            </div>
+
+            <div class="search-wrap">
+                <input class="search" type="search" placeholder="Buscar produtos..." aria-label="Buscar produtos">
+            </div>
+
+            <nav class="main-nav">
+                <a href="#">Home</a>
+                <a href="#categories">Categorias</a>
+                <a href="#">Entrar</a>
+                <a href="#" class="btn btn-ghost">Cadastrar</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container main-content">
+            <!-- Sidebar do Perfil -->
+            <aside class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="profile-image">
+                        <img src="https://via.placeholder.com/150" alt="Foto do perfil">
+                    </div>
+                    <h2 class="profile-name">Nome não<br>definido</h2>
+                    <span class="verified-badge">Verificado</span>
+                    
+                    <div class="profile-info">
+                        <p class="institution">Instituição não definida</p>
+                        <p class="city">Cidade não definida</p>
+                        <p class="member-since">Membro desde <strong>Data não disponível</strong></p>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat">
+                            <span class="stat-number">12</span>
+                            <span class="stat-label">Vendas</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">8</span>
+                            <span class="stat-label">Compras</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-block">+ Anunciar Produto</button>
+                    <a href="#" class="btn btn-secondary btn-block">Editar Perfil</a>
+                </div>
+            </aside>
+
+            <!-- Conteúdo Principal -->
+            <section class="main-section">
+                <!-- Navegação de Abas -->
+                <nav class="tabs-nav">
+                    <a href="#" class="tab-item active">Visão Geral</a>
+                    <a href="#" class="tab-item">Meus Produtos</a>
+                    <a href="#" class="tab-item">Compras</a>
+                    <a href="#" class="tab-item">Favoritos</a>
+                    <a href="#" class="tab-item">Conversas</a>
+                    <a href="#" class="tab-item">Configurações</a>
+                    <a href="#" class="tab-item">Código</a>
+                </nav>
+
+                <!-- Cards de Visão Geral -->
+                <div class="overview-cards">
+                    <div class="card card-products">
+                        <div class="card-header">
+                            <h3 class="card-title">Produtos Ativos</h3>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </div>
+                        <p class="card-number">1</p>
+                    </div>
+
+                    <div class="card card-sales">
+                        <div class="card-header">
+                            <h3 class="card-title">Produtos Vendidos</h3>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                            </svg>
+                        </div>
+                        <p class="card-number">1</p>
+                    </div>
+
+                    <div class="card card-favorites">
+                        <div class="card-header">
+                            <h3 class="card-title">Favoritos</h3>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </div>
+                        <p class="card-number">2</p>
+                    </div>
+                </div>
+
+                <!-- Atividade Recente -->
+                <section class="recent-activity">
+                    <h3 class="section-title">Atividade Recente</h3>
+                    
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <span class="activity-dot" style="background-color: #10b981;"></span>
+                            <div class="activity-content">
+                                <p class="activity-text">Produto <strong>"iPhone 13 128GB"</strong> recebeu 3 visualizações</p>
+                                <p class="activity-time">2 horas atrás</p>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <span class="activity-dot" style="background-color: #f97316;"></span>
+                            <div class="activity-content">
+                                <p class="activity-text">Compra <strong>"Cálculo I"</strong> foi entregue</p>
+                                <p class="activity-time">1 dia atrás</p>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <span class="activity-dot" style="background-color: #3b82f6;"></span>
+                            <div class="activity-content">
+                                <p class="activity-text">Produto <strong>"Notebook Dell"</strong> foi vendido</p>
+                                <p class="activity-time">3 dias atrás</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <a href="produtos.html" class="btn btn-primary">Meus Produtos</a>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <strong>CampusShop</strong> — 2025. Feito para estudantes.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
