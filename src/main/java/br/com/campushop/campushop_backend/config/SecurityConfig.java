@@ -24,7 +24,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // Desabilita para facilitar o desenvolvimento inicial
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/login", "/cadastro", "/error", "/produtos", "/produtos/**").permitAll() // Permite acesso público a essas rotas
+                .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/login", "/cadastro", "/error", "/produtos", "/produtos/**", "/cadastrar-produto", "/cadastrar-produto/**").permitAll() // Permite acesso público a essas rotas
                 .anyRequest().authenticated() // Bloqueia o resto
             )
             .formLogin(form -> form
