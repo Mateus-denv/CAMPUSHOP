@@ -2,6 +2,7 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
   lang="pt-BR"
 >
   <head>
@@ -57,7 +58,7 @@
       </div>
     </header>
 
-    <main>
+    <main layout:fragment="content">
       <section class="hero">
         <div class="container hero-inner">
           <div class="hero-content">

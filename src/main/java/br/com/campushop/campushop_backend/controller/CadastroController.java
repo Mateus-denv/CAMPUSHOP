@@ -16,7 +16,6 @@ public class CadastroController {
 
     private final UsuarioService usuarioService;
 
-    @Autowired
     public CadastroController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
@@ -64,7 +63,6 @@ public class CadastroController {
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/cadastro";
         }
-
 
         try {
             // Preenchendo os dados automáticos exigidos pelo banco (NOT_NULL)

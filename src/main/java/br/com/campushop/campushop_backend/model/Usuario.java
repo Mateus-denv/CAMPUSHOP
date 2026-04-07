@@ -60,16 +60,12 @@ public class Usuario {
         this.nomeCompleto = nomeCompleto;
         this.ra = ra;
         this.email = email;
-        this.cidade = cidade;
-        this.nomeCliente = nomeCliente;
         this.senha = senha;
-        this.telefone = telefone;
-        this.tipoConta = tipoConta;
-        this.cpfCnpj = cpfCnpj;
-        this.instituicaoEnsino = instituicaoEnsino;
-        this.localizacaoGps = localizacaoGps;
-        this.ativado = ativado;
-        this.dataCadastro = dataCadastro;
+        this.instituicaoEnsino = instituicao;
+        this.cidade = cidade;
+        this.tipoConta = perfil;
+        this.ativado = true; // default
+        this.dataCadastro = LocalDate.now();
     }
 
     // Getters and Setters

@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../../Documents/CampuShop (1)/CampuShop (1)/CampuShop (1)/CampuShop/oracleJdk-25"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.compile.nullAnalysis.mode": "automatic",
+		"java.debug.settings.onBuildFailureProceed": true,
+		"maven.terminal.useJavaHome": true,
+		"spring.initializr.defaultLanguage": "Java",
+		"files.associations": {
+			"*.java": "java"
+		}
+	}
+}

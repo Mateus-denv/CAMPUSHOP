@@ -16,13 +16,27 @@ public class Categoria {
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
-    // --- GETTERS E SETTERS ---
-    public Integer getIdCategoria() { return idCategoria; }
-    public void setIdCategoria(Integer idCategoria) { this.idCategoria = idCategoria; } // O ID é gerado automaticamente, então geralmente não precisamos de um setter para ele
+   public Integer getIdCategoria() {
+        return idCategoria;
+    }
 
-    public String getNomeCategoria() { return nome_categoria; }
-    public void setNomeCategoria(String nomeCategoria) { this.nome_categoria = nomeCategoria; } // O nome da categoria é obrigatório, então não pode ser nulo
+    public void setIdCategoria(Integer idCategoria) {
+        this.idCategoria = idCategoria;
+    }
 
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; } // A descrição é opcional, então pode ser nula
+    public String getNome_categoria() {
+        return nome_categoria;
+    }
+
+    public void setNome_categoria(String nome_categoria) {
+        this.nome_categoria = nome_categoria;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
 }

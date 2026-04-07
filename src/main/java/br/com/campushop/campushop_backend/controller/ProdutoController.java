@@ -6,24 +6,26 @@ import org.springframework.beans.factory.annotation.Autowired; // Importando a a
 import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
 import org.springframework.web.bind.annotation.*; // Importando as anotações para criar endpoints REST
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
-@RestController 
-@RequestMapping("/produtos") 
+@RestController
+@RequestMapping("/produtos")
 public class ProdutoController {
-    
+
     @Autowired
-    private ProdutoRepository produtoRepository; 
+    private ProdutoRepository produtoRepository;
 
     // 1. Ler todos (Read)
     @GetMapping
     public List<Produto> listarTodos() {
-        return produtoRepository.findAll(); 
+        return produtoRepository.findAll();
     }
 
     // 2. Ler por ID (Read)
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<Produto> buscarPorId(@PathVariable @Nullable Integer id) {
         return produtoRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -31,34 +33,35 @@ public class ProdutoController {
 
     // 3. Criar novo produto (Create)
     @PostMapping
-    public Produto salvar(@RequestBody Produto produto) {
+    public Produto salvar(@RequestBody @Nullable Produto produto) {
         return produtoRepository.save(produto);
     }
 
     // 4. Atualizar produto existente (Update) - NOVO!
     @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizar(@PathVariable Integer id, @RequestBody Produto produtoAtualizado) {
+    public ResponseEntity<Produto> atualizar(@PathVariable @Nullable Integer id,
+            @RequestBody @Nullable Produto produtoAtualizado) {
         return produtoRepository.findById(id)
-            .map(produtoExistente -> {
-                produtoExistente.setNomeProduto(produtoAtualizado.getNomeProduto());
-                produtoExistente.setDescricao(produtoAtualizado.getDescricao());
-                produtoExistente.setEstoque(produtoAtualizado.getEstoque());
-                produtoExistente.setPreco(produtoAtualizado.getPreco());
-                produtoExistente.setStatus(produtoAtualizado.getStatus());
-                produtoExistente.setDimensoes(produtoAtualizado.getDimensoes());
-                produtoExistente.setPeso(produtoAtualizado.getPeso());
-                // Categoria precisa ser tratada com cuidado, mas para o básico faremos assim:
-                produtoExistente.setCategoria(produtoAtualizado.getCategoria());
-                
-                Produto produtoSalvo = produtoRepository.save(produtoExistente);
-                return ResponseEntity.ok(produtoSalvo);
-            })
-            .orElse(ResponseEntity.notFound().build());
+                .map(produtoExistente -> {
+                    produtoExistente.setNomeProduto(produtoAtualizado.getNomeProduto());
+                    produtoExistente.setDescricao(produtoAtualizado.getDescricao());
+                    produtoExistente.setEstoque(produtoAtualizado.getEstoque());
+                    produtoExistente.setPreco(produtoAtualizado.getPreco());
+                    produtoExistente.setStatus(produtoAtualizado.getStatus());
+                    produtoExistente.setDimensoes(produtoAtualizado.getDimensoes());
+                    produtoExistente.setPeso(produtoAtualizado.getPeso());
+                    // Categoria precisa ser tratada com cuidado, mas para o básico faremos assim:
+                    produtoExistente.setCategoria(produtoAtualizado.getCategoria());
+
+                    Produto produtoSalvo = produtoRepository.save(produtoExistente);
+                    return ResponseEntity.ok(produtoSalvo);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // 5. Deletar produto (Delete)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable @Nullable Integer id) {
         produtoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
