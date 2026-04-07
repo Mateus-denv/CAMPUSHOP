@@ -43,10 +43,11 @@ public class SecurityConfig {
             
         return http.build();
     }
-    
+
     // Forma correta de expor o AuthenticationManager no Spring Boot 3+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
