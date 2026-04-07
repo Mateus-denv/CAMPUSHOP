@@ -18,6 +18,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -27,9 +28,9 @@ public class UsuarioService {
         logger.info("Tentando salvar usuário com email: {}", usuario.getEmail());
 
         // Validar campos obrigatórios
-        if (usuario.getNomeCliente() == null || usuario.getNomeCliente().trim().isEmpty()) {
-            logger.error("Nome não fornecido");
-            throw new IllegalArgumentException("Nome é obrigatório");
+        if (usuario.getNomeCompleto() == null || usuario.getNomeCompleto().trim().isEmpty()) {
+            logger.error("Nome completo não fornecido");
+            throw new IllegalArgumentException("Nome completo é obrigatório");
         }
         if (usuario.getRa() == null || usuario.getRa().trim().isEmpty()) {
             logger.error("R.A não fornecido");
@@ -44,10 +45,23 @@ public class UsuarioService {
             logger.error("Email não fornecido");
             throw new IllegalArgumentException("Email é obrigatório");
         }
+        String email = usuario.getEmail().trim().toLowerCase();
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            logger.error("Email inválido: {}", email);
+            throw new IllegalArgumentException("Email inválido");
+        }
+
         if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
             logger.error("Senha não fornecida");
             throw new IllegalArgumentException("Senha é obrigatória");
         }
+        if (usuario.getSenha().length() < 6) {
+            logger.error("Senha muito curta para o email: {}", email);
+            throw new IllegalArgumentException("A senha deve ter pelo menos 6 caracteres");
+        }
+
+        usuario.setRa(ra);
+        usuario.setEmail(email);
 
         // Criptografar senha
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
@@ -76,4 +90,5 @@ public class UsuarioService {
     public boolean raJaCadastrado(String ra) {
         return usuarioRepository.existsByRa(ra);
     }
+
 }
