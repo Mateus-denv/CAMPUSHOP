@@ -81,16 +81,19 @@ public class AuthController {
 
             Usuario novoUsuario = new Usuario();
             novoUsuario.setNomeCompleto(request.getNomeCompleto().trim());
+            novoUsuario.setNomeCliente(request.getNomeCompleto().trim());
+            novoUsuario.setAtivado(true);
+            novoUsuario.setDataCadastro(java.time.LocalDate.now());
             novoUsuario.setRa(ra);
             novoUsuario.setEmail(email);
             novoUsuario.setSenha(request.getSenha());
-            novoUsuario.setInstituicao(request.getInstituicao() != null && !request.getInstituicao().trim().isEmpty()
+            novoUsuario.setInstituicaoEnsino(request.getInstituicao() != null && !request.getInstituicao().trim().isEmpty()
                     ? request.getInstituicao().trim()
                     : "Não informado");
             novoUsuario.setCidade(request.getCidade() != null && !request.getCidade().trim().isEmpty()
                     ? request.getCidade().trim()
                     : "Não informado");
-            novoUsuario.setPerfil(perfil);
+            novoUsuario.setTipoConta(perfil);
 
             Usuario salvo = usuarioService.salvar(novoUsuario);
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(salvo.getEmail());
@@ -142,7 +145,9 @@ public class AuthController {
         user.put("nome", usuario.getNomeCompleto());
         user.put("email", usuario.getEmail());
         user.put("ra", usuario.getRa());
-        user.put("role", usuario.getPerfil());
+        user.put("role", usuario.getTipoConta());
         return user;
     }
 }
+
+
