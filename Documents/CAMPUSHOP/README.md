@@ -1,154 +1,165 @@
 <div align="center">
-  <img src="./Campushop/campuShopcapa.png" width="50%" height="auto">
+	<img src="./campuShopcapa.png" width="50%" height="auto">
 </div>
 
 # CampuShop - Seu Marketplace Estudantil
 
-O CampusShop é uma plataforma de marketplace desenvolvida para conectar estudantes, permitindo a compra e venda de produtos de forma segura e conveniente dentro da comunidade acadêmici       1a.
+O **CampuShop** conecta estudantes que querem comprar e vender produtos de forma simples e segura dentro da comunidade acadêmica.
 
-## Visão Geral do Projeto
+Em vez de procurar em vários grupos e chats, a ideia é ter tudo em um só lugar: cadastro, vitrine de produtos, carrinho, pedidos e autenticação.
 
-Este projeto consiste em uma aplicação web construída com **Spring Boot** para o backend e **Thymeleaf** com HTML, CSS e JavaScript para o frontend. O objetivo é criar um ambiente onde os estudantes possam anunciar produtos, encontrar o que precisam e interagir de forma segura.
+## 🛠️ Tecnologias
 
-## Funcionalidades Implementadas
+- **Backend:** Java 17, Spring Boot 3, Spring Security, Spring Data JPA
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS
+- **Banco de Dados:** MySQL 8
+- **Ferramentas de Deploy:** Docker, Docker Compose
 
-- **Backend**:
-  - API RESTful com Spring Boot.
-  - Persistência de dados com Spring Data JPA e H2 (banco de dados em memória).
-  - Sistema de segurança com **Spring Security** para autenticação.
-  - **Criptografia de senhas** utilizando BCrypt.
-- **Frontend**:
-  - Interface moderna e responsiva criada com HTML5, CSS3 e JavaScript.
-  - Templates dinâmicos com Thymeleaf.
-  - Páginas de Login, Cadastro e Home.
+## 🧩 Visão geral (não técnica)
 
-## Como Executar o Projeto
+Pense no sistema como uma feira universitária organizada:
 
-Existem **duas formas** de executar o projeto: com Docker (recomendado para apresentações) ou localmente com Maven.
+- **Usuário** = estudante com identificação (RA, email)
+- **Produto** = item anunciado por um estudante
+- **Carrinho** = cesta temporária para decidir o que comprar
+- **Pedido** = compra finalizada
+- **Itens** = detalhamento de cada produto dentro do carrinho/pedido
 
----
+Assim, o banco de dados funciona como o "caderno oficial" da feira: guarda quem vende, quem compra, o que foi anunciado e o que foi comprado.
 
-## 🐳 OPÇÃO 1: Com Docker (RECOMENDADO)
+## 🗄️ Banco de Dados (didático)
 
-### Ideal para:
+Esta seção foi feita para ser compreensível por dev júnior, estagiário ou pessoa não técnica.
 
-✅ Apresentações em outros PCs  
-✅ Não ter que instalar Java/Maven/MySQL  
-✅ Ambiente isolado e consistente
+### Entidades principais
 
-### Pré-requisitos:
+- `usuarios`: cadastro do estudante
+- `produtos`: anúncios de venda
+- `carrinhos`: carrinho ativo de cada cliente
+- `itens_carrinho`: produtos dentro do carrinho
+- `pedidos`: compra fechada
+- `itens_pedido`: itens de cada pedido
 
-- **Docker Desktop** instalado: https://www.docker.com/products/docker-desktop
+### Diagrama ER (DER)
 
-### Como usar:
+```mermaid
+erDiagram
+		USUARIOS ||--o{ PRODUTOS : vende
+		USUARIOS ||--|| CARRINHOS : possui
+		CARRINHOS ||--o{ ITENS_CARRINHO : contem
+		PRODUTOS ||--o{ ITENS_CARRINHO : aparece_em
+		USUARIOS ||--o{ PEDIDOS : realiza
+		PEDIDOS ||--o{ ITENS_PEDIDO : contem
+		PRODUTOS ||--o{ ITENS_PEDIDO : vendido_em
+```
 
-**PowerShell:**
+## 📁 Scripts de BD versionados, ordenados e testáveis
+
+Os scripts ficam em `db/scripts` e seguem ordem numérica:
+
+1. `db/scripts/001_schema.sql` → cria estrutura (tabelas e relacionamentos)
+2. `db/scripts/002_seed.sql` → dados iniciais para teste
+3. `db/scripts/003_validate.sql` → validação pós-implantação
+4. `db/scripts/999_rollback.sql` → rollback/limpeza do esquema
+
+## 📌 Pré-requisitos
+
+- Docker Desktop instalado
+- `docker compose` disponível no terminal
+- Porta `3306` livre (MySQL)
+- Porta `8080` livre (aplicação)
+
+## 🚀 Guia de implantação do zero (máquina limpa)
+
+### 🔹 Passo 1: Preparar ambiente
+
+No diretório raiz do projeto:
 
 ```powershell
-.\run-docker.ps1
-# Escolha opção 1 (Iniciar aplicação)
+cd C:\Users\aluno.senai\Documents\CAMPUSHOP
+docker compose up -d mysql
 ```
 
-**CMD:**
-
-```cmd
-run-docker.bat
-```
-
-**Acesse:** http://localhost:8080
-
-📖 **Guia completo:** Veja [DOCKER_GUIDE.md](DOCKER_GUIDE.md)
-
----
-
-## 💻 OPÇÃO 2: Execução Local (Maven)
-
-### Pré-requisitos
-
-Antes de começar, certifique-se de que você tem os seguintes softwares instalados e configurados no seu ambiente:
-
-- **Java (JDK 17 ou superior)**:
-
-  - Para verificar se o Java está instalado, abra um terminal (Prompt de Comando, PowerShell, etc.) e execute:
-    ```sh
-    java -version
-    ```
-  - Você deve ver uma saída informando a versão do Java. Se o comando não for encontrado, você precisará [instalar o JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html).
-
-- **Apache Maven (3.x ou superior)**:
-  - Para verificar se o Maven está instalado, execute no terminal:
-    ```sh
-    mvn -version
-    ```
-  - Se o comando não for encontrado, você precisará [instalar o Maven](https://maven.apache.org/install.html) e adicioná-lo ao `PATH` do seu sistema.
-
-### 2. Obtendo o Código
-
-- **Clone o repositório** para a sua máquina local:
-  ```bash
-  git clone https://github.com/JhonathasDev/CampuShop.git
-  ```
-- **Navegue até o diretório** do projeto:
-  ```bash
-  cd CampuShop
-  ```
-
-### 3. Compilando e Executando a Aplicação
-
-**Usando scripts automáticos (recomendado):**
+### 🔹 Passo 2: Criar e estruturar o banco
 
 ```powershell
-.\compile.ps1 spring-boot:run
+docker cp .\db\scripts\001_schema.sql campushop-mysql:/tmp/001_schema.sql
+docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/001_schema.sql"
 ```
 
-**Ou manualmente:**
+### 🔹 Passo 3: Executar scripts versionados
 
-```bash
+```powershell
+docker cp .\db\scripts\002_seed.sql campushop-mysql:/tmp/002_seed.sql
+docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/002_seed.sql"
+
+docker cp .\db\scripts\003_validate.sql campushop-mysql:/tmp/003_validate.sql
+docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/003_validate.sql"
+```
+
+### 🔹 Passo 4: Subir aplicação
+
+```powershell
+docker compose up -d --build
+docker compose ps
+```
+
+Acesse: `http://localhost:8080`
+
+## ✅ Validação pós-implantação
+
+- Execute `db/scripts/003_validate.sql`
+- Confirme que as tabelas retornam contagem sem erro
+- Acesse a aplicação em `http://localhost:8080`
+- Valide login/cadastro e listagem de produtos
+
+Consulta rápida de conferência:
+
+```sql
+USE campushop;
+SHOW TABLES;
+SELECT COUNT(*) FROM usuarios;
+SELECT COUNT(*) FROM produtos;
+```
+
+## ♻️ Rollback / Limpeza
+
+Se precisar desfazer estrutura e dados do banco:
+
+1. Execute `db/scripts/999_rollback.sql`
+2. (Opcional) remover volumes Docker para reset total:
+
+```powershell
+docker compose down -v
+```
+
+## 📦 Execução local sem Docker (opcional)
+
+### Backend
+
+```powershell
 mvn spring-boot:run
 ```
 
-- **O que este comando faz?**
+### Frontend (desenvolvimento com hot reload)
 
-  1.  O Maven irá baixar todas as dependências do projeto listadas no arquivo `pom.xml`. Isso pode levar alguns minutos na primeira vez.
-  2.  Em seguida, ele compilará todo o código-fonte Java.
-  3.  Por fim, ele iniciará o servidor web embutido (Tomcat).
-
-- **Aguarde o servidor iniciar**. Você saberá que o projeto está rodando quando vir mensagens no terminal parecidas com esta:
-  ```
-  ...
-  ...  Tomcat started on port(s): 8080 (http) with context path ''
-  ...  Started CampushopBackendApplication in X.XXX seconds (JVM running for Y.YYY)
-  ```
-
-### 4. Acesse a Aplicação
-
-- Após o servidor iniciar com sucesso, abra seu navegador de internet.
-- Acesse a seguinte URL: `http://localhost:8080`
-
-### 5. Parando a Aplicação
-
-- Para desligar o servidor, volte ao terminal onde ele está rodando e pressione `Ctrl + C`.
-
-## Estrutura do Projeto
-
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
-/
-├── src/
-│   ├── main/
-│   │   ├── java/br/com/campushop/campushop_backend/
-│   │   │   ├── config/         # Configurações de segurança
-│   │   │   ├── controller/     # Controladores web
-│   │   │   ├── model/          # Entidades JPA
-│   │   │   ├── repository/     # Repositórios Spring Data
-│   │   │   └── service/        # Lógica de negócio
-│   │   └── resources/
-│   │       ├── static/         # Arquivos CSS, JS e imagens
-│   │       └── templates/      # Templates HTML (Thymeleaf)
-│   └── test/                   # Testes unitários
-├── pom.xml                     # Dependências e build do Maven
-└── README.md                   # Este arquivo
-```
+
+Frontend: `http://localhost:5173`  
+Backend/API: `http://localhost:8080`
+
+## 📂 Estrutura essencial
+
+- `src/main/java` → código backend
+- `src/main/resources` → templates e arquivos estáticos servidos pelo Spring
+- `frontend` → código-fonte React
+- `db/scripts` → scripts SQL versionados
+- `docker-compose.yml` → orquestração de app + banco
 
 ---
 
-Projeto desenvolvido por **Caio, Jhonathas, Julia e Pedro**.
+Projeto desenvolvido por **Caio, Jhonathas, Julia, Pedro e Mateus**.
