@@ -42,16 +42,9 @@ Esta seção foi feita para ser compreensível por dev júnior, estagiário ou p
 
 ### Diagrama ER (DER)
 
-```mermaid
-erDiagram
-		USUARIOS ||--o{ PRODUTOS : vende
-		USUARIOS ||--|| CARRINHOS : possui
-		CARRINHOS ||--o{ ITENS_CARRINHO : contem
-		PRODUTOS ||--o{ ITENS_CARRINHO : aparece_em
-		USUARIOS ||--o{ PEDIDOS : realiza
-		PEDIDOS ||--o{ ITENS_PEDIDO : contem
-		PRODUTOS ||--o{ ITENS_PEDIDO : vendido_em
-```
+<div align="center">
+	<img src="./src/main/resources/static/assets/diagrama%20er%20board.png" alt="Diagrama ER do CampuShop" width="100%" height="auto">
+</div>
 
 ## 📁 Scripts de BD versionados, ordenados e testáveis
 
