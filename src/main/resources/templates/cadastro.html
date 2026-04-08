@@ -18,35 +18,36 @@
         <div th:if="${erro}" class="error-message" th:text="${erro}"></div>
         <div th:if="${sucesso}" class="success-message" th:text="${sucesso}"></div>
 
-        <form th:action="@{/cadastro}" method="post">
+        <form th:action="@{/cadastro}" th:object="${usuario}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             
             <div class="form-group">
-                <label for="nomeCliente">Nome Completo</label>
-                <input id="nomeCliente" name="nomeCliente" type="text" placeholder="Seu nome completo" required>
+                <label for="nomeCompleto">Nome Completo</label>
+                <input id="nomeCompleto" type="text" th:field="*{nomeCompleto}" placeholder="Seu nome completo" required>
             </div>
 
             <div class="form-group">
                 <label for="ra">R.A (Registro Acadêmico)</label>
-                <input id="ra" type="text" name="ra" placeholder="000000000" required>
+                <input id="ra" type="text" th:field="*{ra}" placeholder="Seu R.A institucional" pattern="[0-9]{9}" minlength="9" maxlength="9" inputmode="numeric" required>
             </div>
 
             <div class="form-group">
                 <label for="email">E-mail</label>
-                <input id="email" name="email" type="email" placeholder="seu@email.com" required>
+                <input id="email" type="email" th:field="*{email}" placeholder="seu@email.com" required>
             </div>
 
             <div class="two-col">
                 <div class="form-group">
                     <label for="senha">Senha</label>
                     <div class="password-field">
-                        <input id="senha" name="senha" type="password" placeholder="Sua senha" required>
+                        <input id="senha" type="password" th:field="*{senha}" placeholder="Sua senha" required>
                         <span class="eye-icon" onclick="togglePassword('senha')">👁️</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="confirmarSenha">Confirmar Senha</label>
                     <div class="password-field">
-                        <input id="confirmarSenha" name="confirmarSenha" type="password" placeholder="Confirme sua senha" required>
+                        <input id="confirmarSenha" type="password" name="confirmarSenha" placeholder="Confirme sua senha" required>
                         <span class="eye-icon" onclick="togglePassword('confirmarSenha')">👁️</span>
                     </div>
                 </div>
@@ -54,27 +55,17 @@
 
             <div class="two-col">
                 <div class="form-group">
-                    <label for="telefone">Telefone / WhatsApp</label>
-                    <input id="telefone" name="telefone" type="text" placeholder="(00) 00000-0000" required>
-                </div>
-                <div class="form-group">
-                    <label for="cpfCnpj">CPF ou CNPJ</label>
-                    <input id="cpfCnpj" name="cpfCnpj" type="text" placeholder="000.000.000-00" required>
-                </div>
-            </div>
-
-            <div class="two-col">
-                <div class="form-group">
-                    <label for="instituicaoEnsino">Instituição de Ensino</label>
-                    <select id="instituicaoEnsino" name="instituicaoEnsino" required>
+                    <label for="instituicao">Instituição de Ensino</label>
+                    <select id="instituicao" th:field="*{instituicao}" required>
                         <option value="" disabled selected>Selecione sua instituição</option>
                         <option value="UFBA">UFBA</option>
                         <option value="UNEB">UNEB</option>
+                        <option value="SENAI">SENAI</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="nomeCidade">Cidade</label>
-                    <select id="nomeCidade" name="cidade" required>
+                    <label for="cidade">Cidade</label>
+                    <select id="cidade" th:field="*{cidade}" required>
                         <option value="" disabled selected>Selecione sua cidade</option>
                         <option value="Camaçari">Camaçari</option>
                         <option value="Salvador">Salvador</option>
@@ -85,15 +76,15 @@
             <div class="form-group">
                 <label>Escolha seu perfil</label>
                 <div class="profile-selection">
-                    <label class="profile-option">
-                        <input type="radio" name="tipoConta" value="cliente" checked>
+                    <label class="profile-option selected">
+                        <input type="radio" th:field="*{perfil}" value="comprador" checked>
                         <div>
-                            <strong>Cliente</strong>
+                            <strong>Comprador</strong>
                             <p class="profile-description">Quero comprar produtos</p>
                         </div>
                     </label>
                     <label class="profile-option">
-                        <input type="radio" name="tipoConta" value="vendedor">
+                        <input type="radio" th:field="*{perfil}" value="vendedor">
                         <div>
                             <strong>Vendedor</strong>
                             <p class="profile-description">Quero vender produtos</p>
@@ -101,10 +92,9 @@
                     </label>
                 </div>
             </div>
-            
+
             <button type="submit" class="btn btn-gradient">Criar Conta</button>
         </form>
-
         <div class="final-box">
             <p>Já tem uma conta? <a th:href="@{/login}">Faça login</a></p>
             <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">Ao criar uma conta, você concorda com nossos <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a>.</p>
