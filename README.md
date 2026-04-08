@@ -63,8 +63,7 @@ Esta seção descreve o modelo ER enviado no diagrama, de forma simples e direta
 	<img src="./src/main/resources/static/assets/diagrama er board.png" alt="Diagrama ER do CampuShop" width="100%" height="auto">
 </div>
 
-## 📁 Scripts de BD versionados, ordenados e testáveis
-
+## 📁 Scripts de BD
 Os scripts ficam em `db/scripts` e seguem ordem numérica:
 
 1. `db/scripts/001_schema.sql` → cria a estrutura base do banco, seguindo o ER.
