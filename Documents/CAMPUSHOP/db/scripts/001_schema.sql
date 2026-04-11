@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   ra VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   cidade VARCHAR(100),
-  nomeCliente VARCHAR(100) NOT NULL,
+  nome_cliente VARCHAR(100) NOT NULL,
   senha VARCHAR(255) NOT NULL,
   telefone VARCHAR(15),
   tipo_conta VARCHAR(20),

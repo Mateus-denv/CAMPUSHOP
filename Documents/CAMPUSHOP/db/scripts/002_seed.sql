@@ -11,7 +11,7 @@ INSERT INTO usuario (
   ra,
   email,
   cidade,
-  nomeCliente,
+  nome_cliente,
   senha,
   telefone,
   tipo_conta,
