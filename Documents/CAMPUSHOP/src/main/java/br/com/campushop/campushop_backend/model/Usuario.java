@@ -1,14 +1,15 @@
 package br.com.campushop.campushop_backend.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuario")
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id; // No diagrama é Integer
 
     @Column(nullable = false)
     private String nomeCompleto;
@@ -19,17 +20,36 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String senha;
-
-    @Column(nullable = false)
-    private String instituicao;
-
-    @Column(nullable = false)
+    @Column(name = "cidade", length = 100)
     private String cidade;
 
-    @Column(nullable = false)
-    private String perfil;
+    // Forçando o nome exato do diagrama
+    @Column(name = "nomeCliente", nullable = false, length = 100)
+    private String nomeCliente;
+
+    @Column(name = "senha", nullable = false, length = 255)
+    private String senha;
+
+    @Column(name = "telefone", length = 15)
+    private String telefone;
+
+    @Column(name = "tipo_conta", length = 20)
+    private String tipoConta;
+
+    @Column(name = "cpf_cnpj", length = 20)
+    private String cpfCnpj;
+
+    @Column(name = "instituicao_ensino", length = 100)
+    private String instituicaoEnsino;
+
+    @Column(name = "localizacao_gps", length = 50)
+    private String localizacaoGps;
+
+    @Column(name = "ativado", nullable = false)
+    private Boolean ativado;
+
+    @Column(name = "data_cadastro", nullable = false)
+    private LocalDate dataCadastro;
 
     // Constructors
     public Usuario() {
@@ -41,17 +61,19 @@ public class Usuario {
         this.ra = ra;
         this.email = email;
         this.senha = senha;
-        this.instituicao = instituicao;
+        this.instituicaoEnsino = instituicao;
         this.cidade = cidade;
-        this.perfil = perfil;
+        this.tipoConta = perfil;
+        this.ativado = true; // default
+        this.dataCadastro = LocalDate.now();
     }
 
     // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -79,22 +101,6 @@ public class Usuario {
         this.email = email;
     }
 
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
-    public String getInstituicao() {
-        return instituicao;
-    }
-
-    public void setInstituicao(String instituicao) {
-        this.instituicao = instituicao;
-    }
-
     public String getCidade() {
         return cidade;
     }
@@ -103,12 +109,76 @@ public class Usuario {
         this.cidade = cidade;
     }
 
-    public String getPerfil() {
-        return perfil;
+    public String getNomeCliente() {
+        return nomeCliente;
     }
 
-    public void setPerfil(String perfil) {
-        this.perfil = perfil;
+    public void setNomeCliente(String nomeCliente) {
+        this.nomeCliente = nomeCliente;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getTipoConta() {
+        return tipoConta;
+    }
+
+    public void setTipoConta(String tipoConta) {
+        this.tipoConta = tipoConta;
+    }
+
+    public String getCpfCnpj() {
+        return cpfCnpj;
+    }
+
+    public void setCpfCnpj(String cpfCnpj) {
+        this.cpfCnpj = cpfCnpj;
+    }
+
+    public String getInstituicaoEnsino() {
+        return instituicaoEnsino;
+    }
+
+    public void setInstituicaoEnsino(String instituicaoEnsino) {
+        this.instituicaoEnsino = instituicaoEnsino;
+    }
+
+    public String getLocalizacaoGps() {
+        return localizacaoGps;
+    }
+
+    public void setLocalizacaoGps(String localizacaoGps) {
+        this.localizacaoGps = localizacaoGps;
+    }
+
+    public Boolean getAtivado() {
+        return ativado;
+    }
+
+    public void setAtivado(Boolean ativado) {
+        this.ativado = ativado;
+    }
+
+    public LocalDate getDataCadastro() {
+        return dataCadastro;
+    }
+
+    public void setDataCadastro(LocalDate dataCadastro) {
+        this.dataCadastro = dataCadastro;
     }
 
     @Override
@@ -118,9 +188,15 @@ public class Usuario {
                 ", nomeCompleto='" + nomeCompleto + '\'' +
                 ", ra='" + ra + '\'' +
                 ", email='" + email + '\'' +
-                ", instituicao='" + instituicao + '\'' +
                 ", cidade='" + cidade + '\'' +
-                ", perfil='" + perfil + '\'' +
+                ", nomeCliente='" + nomeCliente + '\'' +
+                ", telefone='" + telefone + '\'' +
+                ", tipoConta='" + tipoConta + '\'' +
+                ", cpfCnpj='" + cpfCnpj + '\'' +
+                ", instituicaoEnsino='" + instituicaoEnsino + '\'' +
+                ", localizacaoGps='" + localizacaoGps + '\'' +
+                ", ativado=" + ativado +
+                ", dataCadastro=" + dataCadastro +
                 '}';
     }
 }

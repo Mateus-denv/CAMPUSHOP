@@ -1,69 +1,55 @@
 package br.com.campushop.campushop_backend.model;
 
-import jakarta.persistence.*;
-import java.math.BigDecimal;
+import jakarta.persistence.*; // Importando as anotações JPA para mapear a classe como entidade e definir as colunas
 
 @Entity
-@Table(name = "produtos")
+@Table(name = "produto")
 public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_produto")
+    private Integer idProduto;
 
-    @Column(nullable = false)
-    private String nome;
+    @Column(name = "nome_produto", nullable = false, length = 200)
+    private String nomeProduto;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal preco;
-
     @Column(nullable = false)
     private Integer estoque;
 
+    @Column(nullable = false)
+    private Double preco;
+
+    @Column(length = 20)
+    private String status;
+
+    private String dimensoes;
+    private Double peso;
+
     @ManyToOne
-    @JoinColumn(name = "vendedor_id", nullable = false)
-    private Usuario vendedor;
+    @JoinColumn(name = "idCategoria")
+    private Categoria categoria; // O produto pode ser sim vinculado com o id mas na hora do usurio vizualizar o produto ele vai ver o nome da categoria e nao o id, entao aqui a gente tem que usar a classe Categoria mesmo.
 
-    @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private java.time.LocalDateTime dataCriacao;
+    // --- GETTERS E SETTERS ---
+    // Eles permitem que o Spring leia e grave os dados nos campos privados
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-    private java.time.LocalDateTime dataAtualizacao;
-
-    // Constructors
-    public Produto() {
-        this.dataCriacao = java.time.LocalDateTime.now();
-        this.dataAtualizacao = java.time.LocalDateTime.now();
+    public Integer getIdProduto() {
+        return idProduto;
     }
 
-    public Produto(String nome, String descricao, BigDecimal preco, Integer estoque, Usuario vendedor) {
-        this.nome = nome;
-        this.descricao = descricao;
-        this.preco = preco;
-        this.estoque = estoque;
-        this.vendedor = vendedor;
-        this.dataCriacao = java.time.LocalDateTime.now();
-        this.dataAtualizacao = java.time.LocalDateTime.now();
+    public void setIdProduto(Integer idProduto) {
+        this.idProduto = idProduto;
     }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
+    public String getNomeProduto() {
+        return nomeProduto;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setNomeProduto(String nomeProduto) {
+        this.nomeProduto = nomeProduto;
     }
 
     public String getDescricao() {
@@ -74,14 +60,6 @@ public class Produto {
         this.descricao = descricao;
     }
 
-    public BigDecimal getPreco() {
-        return preco;
-    }
-
-    public void setPreco(BigDecimal preco) {
-        this.preco = preco;
-    }
-
     public Integer getEstoque() {
         return estoque;
     }
@@ -90,37 +68,43 @@ public class Produto {
         this.estoque = estoque;
     }
 
-    public Usuario getVendedor() {
-        return vendedor;
+    public Double getPreco() {
+        return preco;
     }
 
-    public void setVendedor(Usuario vendedor) {
-        this.vendedor = vendedor;
+    public void setPreco(Double preco) {
+        this.preco = preco;
     }
 
-    public java.time.LocalDateTime getDataCriacao() {
-        return dataCriacao;
+    public String getStatus() {
+        return status;
     }
 
-    public void setDataCriacao(java.time.LocalDateTime dataCriacao) {
-        this.dataCriacao = dataCriacao;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public java.time.LocalDateTime getDataAtualizacao() {
-        return dataAtualizacao;
+    public String getDimensoes() {
+        return dimensoes;
     }
 
-    public void setDataAtualizacao(java.time.LocalDateTime dataAtualizacao) {
-        this.dataAtualizacao = dataAtualizacao;
+    public void setDimensoes(String dimensoes) {
+        this.dimensoes = dimensoes;
     }
 
-    @Override
-    public String toString() {
-        return "Produto{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", preco=" + preco +
-                ", estoque=" + estoque +
-                '}';
+    public Double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(Double peso) {
+        this.peso = peso;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
 }

@@ -45,12 +45,23 @@ public class UsuarioService {
             logger.error("Email não fornecido");
             throw new IllegalArgumentException("Email é obrigatório");
         }
+        String email = usuario.getEmail().trim().toLowerCase();
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            logger.error("Email inválido: {}", email);
+            throw new IllegalArgumentException("Email inválido");
+        }
+
         if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
             logger.error("Senha não fornecida");
             throw new IllegalArgumentException("Senha é obrigatória");
         }
+        if (usuario.getSenha().length() < 6) {
+            logger.error("Senha muito curta para o email: {}", email);
+            throw new IllegalArgumentException("A senha deve ter pelo menos 6 caracteres");
+        }
 
         usuario.setRa(ra);
+        usuario.setEmail(email);
 
         // Criptografar senha
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
@@ -69,7 +80,19 @@ public class UsuarioService {
 
     public boolean autenticar(String email, String senha) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        return usuarioOpt.map(usuario -> passwordEncoder.matches(senha, usuario.getSenha())).orElse(false);
+        return usuarioOpt.map(usuario -> {
+            String senhaSalva = usuario.getSenha();
+
+            if (senhaSalva == null) {
+                return false;
+            }
+
+            if (senhaSalva.startsWith("$2a$") || senhaSalva.startsWith("$2b$") || senhaSalva.startsWith("$2y$")) {
+                return passwordEncoder.matches(senha, senhaSalva);
+            }
+
+            return senhaSalva.equals(senha);
+        }).orElse(false);
     }
 
     public boolean emailJaCadastrado(String email) {
