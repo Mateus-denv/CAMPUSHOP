@@ -1,8 +1,46 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { categories, products } from '@/lib/mock-data'
 
 export function CategoriasPage() {
+  const [busca, setBusca] = useState('')
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState('Todas as categorias')
+  const [condicaoSelecionada, setCondicaoSelecionada] = useState('Todas as condições')
+  const [ordenacao, setOrdenacao] = useState('Mais recente')
+
+  const produtosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase()
+
+    return [...products]
+      .filter((product) => {
+        const correspondeBusca =
+          !termo ||
+          product.nome.toLowerCase().includes(termo) ||
+          product.descricao.toLowerCase().includes(termo) ||
+          product.vendedor.toLowerCase().includes(termo)
+
+        const correspondeCategoria =
+          categoriaSelecionada === 'Todas as categorias' || product.categoria === categoriaSelecionada
+
+        const correspondeCondicao =
+          condicaoSelecionada === 'Todas as condições' || product.condicao === condicaoSelecionada
+
+        return correspondeBusca && correspondeCategoria && correspondeCondicao
+      })
+      .sort((a, b) => {
+        if (ordenacao === 'Menor preço') {
+          return a.preco - b.preco
+        }
+
+        if (ordenacao === 'Maior preço') {
+          return b.preco - a.preco
+        }
+
+        return b.id - a.id
+      })
+  }, [busca, categoriaSelecionada, condicaoSelecionada, ordenacao])
+
   return (
     <Layout>
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -25,19 +63,45 @@ export function CategoriasPage() {
 
         <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm md:flex-row md:items-center">
           <span className="font-semibold text-slate-700">Filtros</span>
-          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none">
-            <option>Todos os tipos</option>
+          <input
+            value={busca}
+            onChange={(event) => setBusca(event.target.value)}
+            placeholder="Buscar produtos, vendedores ou descrições"
+            className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
+          />
+          <select
+            value={categoriaSelecionada}
+            onChange={(event) => setCategoriaSelecionada(event.target.value)}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
+          >
+            <option>Todas as categorias</option>
+            {categories.map((category) => (
+              <option key={category.id}>{category.nome}</option>
+            ))}
           </select>
-          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none">
+          <select
+            value={condicaoSelecionada}
+            onChange={(event) => setCondicaoSelecionada(event.target.value)}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
+          >
             <option>Todas as condições</option>
+            <option>Novo</option>
+            <option>Seminovo</option>
+            <option>Usado</option>
           </select>
-          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none md:ml-auto">
+          <select
+            value={ordenacao}
+            onChange={(event) => setOrdenacao(event.target.value)}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none md:ml-auto"
+          >
             <option>Mais recente</option>
+            <option>Menor preço</option>
+            <option>Maior preço</option>
           </select>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {products.map((product) => (
+          {produtosFiltrados.map((product) => (
             <div key={product.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="flex h-40 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">Imagem</div>
               <div className="p-5">
@@ -53,6 +117,12 @@ export function CategoriasPage() {
             </div>
           ))}
         </div>
+
+        {produtosFiltrados.length === 0 && (
+          <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+            Nenhum produto encontrado com os filtros atuais.
+          </div>
+        )}
       </section>
     </Layout>
   )

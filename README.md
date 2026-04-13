@@ -15,7 +15,7 @@ Em vez de procurar em vários grupos e chats, a ideia é ter tudo em um só luga
 - **Banco de Dados:** MySQL 8
 - **Ferramentas de Deploy:** Docker, Docker Compose
 
-## 🧩 Visão geral 
+## 🧩 Visão geral
 
 Pense no sistema como uma feira universitária organizada:
 
@@ -64,6 +64,7 @@ Esta seção descreve o modelo ER enviado no diagrama, de forma simples e direta
 </div>
 
 ## 📁 Scripts de BD
+
 Os scripts ficam em `db/scripts` e seguem ordem numérica:
 
 1. `db/scripts/001_schema.sql` → cria a estrutura base do banco, seguindo o ER.
@@ -77,6 +78,7 @@ Os scripts ficam em `db/scripts` e seguem ordem numérica:
 - `docker compose` disponível no terminal
 - Porta `3306` livre (MySQL)
 - Porta `8080` livre (aplicação)
+- Porta `8081` livre (phpMyAdmin)
 
 ## 🚀 Guia de implantação do zero
 
@@ -115,11 +117,20 @@ docker compose ps
 
 Acesse: `http://localhost:8080`
 
+phpMyAdmin: `http://localhost:8081`
+
+Credenciais do phpMyAdmin:
+
+- Servidor: `mysql`
+- Usuário: `root`
+- Senha: `123456`
+
 ## ✅ Validação pós-implantação
 
 - Execute `db/scripts/003_validate.sql`
 - Confirme que as tabelas retornam contagem sem erro
 - Acesse a aplicação em `http://localhost:8080`
+- Acesse o phpMyAdmin em `http://localhost:8081`
 - Valide login/cadastro e listagem de produtos
 
 Consulta rápida de conferência:
@@ -127,8 +138,8 @@ Consulta rápida de conferência:
 ```sql
 USE campushop;
 SHOW TABLES;
-SELECT COUNT(*) FROM usuarios;
-SELECT COUNT(*) FROM produtos;
+SELECT COUNT(*) FROM usuario;
+SELECT COUNT(*) FROM produto;
 ```
 
 ## ♻️ Rollback / Limpeza

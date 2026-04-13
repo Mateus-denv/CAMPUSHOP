@@ -29,7 +29,7 @@ export function ProdutoDetalhePage() {
             <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{product.nome}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">{product.condicao}</span>
-              <span className="text-xs text-slate-500">Publicado em 05/10/2025</span>
+              <span className="text-xs text-slate-500">Publicação recente</span>
             </div>
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <p className="text-3xl font-black text-blue-700 sm:text-4xl">R$ {product.preco.toFixed(2)}</p>
@@ -49,7 +49,7 @@ export function ProdutoDetalhePage() {
             <div className="mt-4 rounded-[1.5rem] border border-slate-200 p-5">
               <h3 className="text-lg font-black text-slate-900">Vendedor</h3>
               <p className="mt-1 font-semibold text-slate-800">{product.vendedor}</p>
-              <p className="text-xs text-slate-500">Universidade Federal da Bahia (UFBA)</p>
+              <p className="text-xs text-slate-500">Comunidade acadêmica</p>
               <div className="mt-3 flex justify-between text-xs text-slate-600">
                 <span>Membro desde: Junho/2024</span>
                 <span>Vendas realizadas: 12</span>

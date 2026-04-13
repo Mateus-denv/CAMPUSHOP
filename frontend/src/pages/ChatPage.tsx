@@ -1,6 +1,8 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 
-const mensagens = [
+const mensagensIniciais = [
   { lado: 'direita', texto: 'Olá! Tenho interesse no livro. Ainda está disponível?', hora: '14:32' },
   { lado: 'esquerda', texto: 'Oi! Sim, ainda está disponível. É um livro em ótimo estado!', hora: '14:33' },
   { lado: 'direita', texto: 'Perfeito! Podemos combinar a entrega na UFBA mesmo?', hora: '14:35' },
@@ -8,11 +10,25 @@ const mensagens = [
 ]
 
 export function ChatPage() {
+  const [mensagens, setMensagens] = useState(mensagensIniciais)
+  const [texto, setTexto] = useState('')
+
+  const enviarMensagem = () => {
+    const conteudo = texto.trim()
+    if (!conteudo) {
+      return
+    }
+
+    const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    setMensagens((prev) => [...prev, { lado: 'direita', texto: conteudo, hora }])
+    setTexto('')
+  }
+
   return (
     <Layout>
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center gap-4 border-b border-slate-200 p-4">
-          <button className="font-semibold text-slate-600 transition hover:text-blue-700">← Voltar</button>
+          <Link to="/carrinho" className="font-semibold text-slate-600 transition hover:text-blue-700">← Voltar</Link>
           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-100" />
           <div>
             <p className="font-bold text-slate-900">João Silva</p>
@@ -40,8 +56,24 @@ export function ChatPage() {
         </div>
 
         <div className="flex gap-3 border-t border-slate-200 bg-white p-4">
-          <input className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" placeholder="Digite sua mensagem..." />
-          <button className="rounded-2xl bg-slate-900 px-5 font-semibold text-white">➤</button>
+          <input
+            className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            placeholder="Digite sua mensagem..."
+            value={texto}
+            onChange={(event) => setTexto(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                enviarMensagem()
+              }
+            }}
+          />
+          <button onClick={enviarMensagem} className="rounded-2xl bg-slate-900 px-5 font-semibold text-white">➤</button>
+        </div>
+
+        <div className="border-t border-slate-200 bg-slate-50 p-4 text-right">
+          <Link to="/pedidos" className="text-sm font-semibold text-slate-600 transition hover:text-blue-700">
+            Ir para meus pedidos →
+          </Link>
         </div>
       </section>
     </Layout>

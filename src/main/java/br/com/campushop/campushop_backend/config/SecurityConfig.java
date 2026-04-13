@@ -1,5 +1,6 @@
 package br.com.campushop.campushop_backend.config;
 
+import br.com.campushop.campushop_backend.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -8,46 +9,67 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // Desabilita para facilitar o desenvolvimento inicial
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/login", "/cadastro", "/error", "/produtos", "/produtos/**", "/cadastrar-produto", "/cadastrar-produto/**").permitAll() // Permite acesso público a essas rotas
-                .anyRequest().authenticated() // Bloqueia o resto
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .usernameParameter("username")
-                .passwordParameter("password")
-                .defaultSuccessUrl("/home", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/")
-                .permitAll()
-            );
-            
-        return http.build();
-    }
+        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    // Forma correta de expor o AuthenticationManager no Spring Boot 3+
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(authorize -> authorize
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/index.html",
+                                                                "/assets/**",
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/img/**",
+                                                                "/login",
+                                                                "/cadastro",
+                                                                "/home",
+                                                                "/categorias",
+                                                                "/produto/**",
+                                                                "/carrinho",
+                                                                "/pedidos",
+                                                                "/conta",
+                                                                "/chat",
+                                                                "/actuator/health",
+                                                                "/error",
+                                                                "/produtos",
+                                                                "/produtos/**",
+                                                                "/api/auth/**")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .formLogin(form -> form.disable())
+                                .httpBasic(httpBasic -> httpBasic.disable())
+                                .logout(logout -> logout.disable())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        // Forma correta de expor o AuthenticationManager no Spring Boot 3+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+                        throws Exception {
+                return authenticationConfiguration.getAuthenticationManager();
+        }
 }

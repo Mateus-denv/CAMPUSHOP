@@ -62,11 +62,16 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("message", "A senha deve ter pelo menos 6 caracteres"));
             }
 
-            if (request.getConfirmarSenha() == null || !request.getSenha().equals(request.getConfirmarSenha())) {
+            String confirmarSenha = request.getConfirmarSenha();
+            if (confirmarSenha == null || confirmarSenha.trim().isEmpty()) {
+                confirmarSenha = request.getSenha();
+            }
+
+            if (!request.getSenha().equals(confirmarSenha)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "As senhas não coincidem"));
             }
 
-            if (usuarioService.emailJaCadastrado(request.getEmail())) {
+            if (usuarioService.emailJaCadastrado(email)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Email já cadastrado"));
             }
 
@@ -87,9 +92,10 @@ public class AuthController {
             novoUsuario.setRa(ra);
             novoUsuario.setEmail(email);
             novoUsuario.setSenha(request.getSenha());
-            novoUsuario.setInstituicaoEnsino(request.getInstituicao() != null && !request.getInstituicao().trim().isEmpty()
-                    ? request.getInstituicao().trim()
-                    : "Não informado");
+            novoUsuario
+                    .setInstituicaoEnsino(request.getInstituicao() != null && !request.getInstituicao().trim().isEmpty()
+                            ? request.getInstituicao().trim()
+                            : "Não informado");
             novoUsuario.setCidade(request.getCidade() != null && !request.getCidade().trim().isEmpty()
                     ? request.getCidade().trim()
                     : "Não informado");
@@ -108,13 +114,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        boolean autenticado = usuarioService.autenticar(request.getEmail(), request.getSenha());
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+        boolean autenticado = usuarioService.autenticar(email, request.getSenha());
         if (!autenticado) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Credenciais inválidas"));
         }
 
-        Usuario usuario = usuarioService.buscarPorEmail(request.getEmail())
+        Usuario usuario = usuarioService.buscarPorEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(usuario.getEmail());
@@ -149,5 +156,3 @@ public class AuthController {
         return user;
     }
 }
-
-

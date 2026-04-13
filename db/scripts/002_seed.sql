@@ -1,13 +1,66 @@
 USE campushop;
 
-INSERT INTO usuarios (nome_completo, ra, email, senha, instituicao, cidade, perfil)
+INSERT INTO categoria (nome_categoria, descricao)
 VALUES
-  ('Maria Souza', '202400001', 'maria@campushop.com', 'senha_hash_demo', 'UFBA', 'Camaçari', 'ESTUDANTE'),
-  ('Joao Lima', '202400002', 'joao@campushop.com', 'senha_hash_demo', 'UFBA', 'Salvador', 'ESTUDANTE')
+  ('Livros', 'Materiais de estudo e leitura'),
+  ('Eletrônicos', 'Itens eletrônicos e acessórios')
+ON DUPLICATE KEY UPDATE nome_categoria = VALUES(nome_categoria);
+
+INSERT INTO usuario (
+  nome_completo,
+  ra,
+  email,
+  cidade,
+  nomeCliente,
+  senha,
+  telefone,
+  tipo_conta,
+  cpf_cnpj,
+  instituicao_ensino,
+  localizacao_gps,
+  ativado,
+  data_cadastro
+)
+VALUES
+  (
+    'Maria Souza',
+    '202400001',
+    'maria@campushop.com',
+    'Camaçari',
+    'Maria Souza',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    NULL,
+    'comprador',
+    NULL,
+    'UFBA',
+    NULL,
+    1,
+    CURRENT_DATE
+  ),
+  (
+    'Joao Lima',
+    '202400002',
+    'joao@campushop.com',
+    'Salvador',
+    'Joao Lima',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    NULL,
+    'vendedor',
+    NULL,
+    'UFBA',
+    NULL,
+    1,
+    CURRENT_DATE
+  )
 ON DUPLICATE KEY UPDATE email = VALUES(email);
 
-INSERT INTO produtos (nome, descricao, preco, estoque, vendedor_id)
-SELECT 'Livro de Lógica de Programação', 'Livro para disciplinas iniciais', 150.00, 3, u.id
-FROM usuarios u
-WHERE u.email = 'maria@campushop.com'
+INSERT INTO produto (nome_produto, descricao, estoque, preco, status, idCategoria)
+SELECT 'Livro de Lógica de Programação', 'Livro para disciplinas iniciais', 3, 150.00, 'ATIVO', c.id_categoria
+FROM categoria c
+WHERE c.nome_categoria = 'Livros'
+AND NOT EXISTS (
+  SELECT 1
+  FROM produto p
+  WHERE p.nome_produto = 'Livro de Lógica de Programação'
+)
 LIMIT 1;

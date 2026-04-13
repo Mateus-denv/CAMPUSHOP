@@ -3,6 +3,8 @@
 # Marketplace Estudantil - Ambiente Completo
 # ============================================
 
+name: campushop
+
 # ============================================
 # SERVIÇOS
 # ============================================
@@ -41,7 +43,17 @@ services:
 
     # Healthcheck robusto
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456" ]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p123456",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,7 +102,7 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
 
       # JPA/Hibernate
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
@@ -103,7 +115,12 @@ services:
 
       # JVM Options
       JAVA_OPTS: >-
-        -Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom -Duser.timezone=America/Sao_Paulo
+        -Xmx512m
+        -Xms256m
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+        -Duser.timezone=America/Sao_Paulo
 
     # Dependências entre serviços
     depends_on:
@@ -121,7 +138,7 @@ services:
 
     # Healthcheck da aplicação
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -144,17 +161,21 @@ services:
     image: phpmyadmin:latest
     container_name: campushop-phpmyadmin
     restart: unless-stopped
+
     ports:
       - "8081:80"
+
     environment:
-      # O PMA_HOST já preenche o campo "Server" automaticamente para você!
       PMA_HOST: mysql
       PMA_PORT: 3306
-    networks:
-      - campushop-network
+      MYSQL_ROOT_PASSWORD: 123456
+
     depends_on:
       mysql:
         condition: service_healthy
+
+    networks:
+      - campushop-network
 
 # ============================================
 # VOLUMES (Persistência de Dados)
@@ -162,22 +183,22 @@ services:
 volumes:
   # Volume para dados do MySQL (tabelas, índices, etc.)
   mysql_data:
-    driver: local
+    external: true
     name: campushop_mysql_data
 
   # Volume para configurações do MySQL
   mysql_config:
-    driver: local
+    external: true
     name: campushop_mysql_config
 
   # Volume para logs da aplicação
   app_logs:
-    driver: local
+    external: true
     name: campushop_app_logs
 
   # Volume para arquivos temporários
   app_temp:
-    driver: local
+    external: true
     name: campushop_app_temp
 
 # ============================================
@@ -185,8 +206,5 @@ volumes:
 # ============================================
 networks:
   campushop-network:
-    driver: bridge
+    external: true
     name: campushop_network
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16

@@ -55,11 +55,11 @@ export function LoginPage() {
           <div className="space-y-3 text-sm text-blue-50/90">
             <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
               <ShieldCheck className="h-5 w-5" />
-              <span>Autenticação real com JWT e sessão persistente</span>
+              <span>Acesso rápido e protegido para sua conta</span>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
               <Store className="h-5 w-5" />
-              <span>Uma experiência única para front e back no mesmo localhost</span>
+              <span>Compre, venda e acompanhe pedidos em um só lugar</span>
             </div>
           </div>
         </div>
@@ -132,10 +132,6 @@ export function LoginPage() {
             >
               Criar conta
             </Link>
-
-            <p className="mt-6 text-center text-xs text-slate-500">
-              Email: demo@example.com • Senha: 123456
-            </p>
           </div>
         </Card>
       </div>

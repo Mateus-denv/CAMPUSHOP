@@ -1,13 +1,31 @@
 USE campushop;
 
-SELECT 'usuarios' AS tabela, COUNT(*) AS total FROM usuarios
+SELECT 'usuario' AS tabela, COUNT(*) AS total FROM usuario
 UNION ALL
-SELECT 'produtos' AS tabela, COUNT(*) AS total FROM produtos
+SELECT 'categoria' AS tabela, COUNT(*) AS total FROM categoria
 UNION ALL
-SELECT 'carrinhos' AS tabela, COUNT(*) AS total FROM carrinhos
-UNION ALL
-SELECT 'itens_carrinho' AS tabela, COUNT(*) AS total FROM itens_carrinho
-UNION ALL
-SELECT 'pedidos' AS tabela, COUNT(*) AS total FROM pedidos
-UNION ALL
-SELECT 'itens_pedido' AS tabela, COUNT(*) AS total FROM itens_pedido;
+SELECT 'produto' AS tabela, COUNT(*) AS total FROM produto;
+
+SELECT 'usuarios_duplicados_email' AS validacao, COUNT(*) AS total
+FROM (
+	SELECT email
+	FROM usuario
+	GROUP BY email
+	HAVING COUNT(*) > 1
+) d;
+
+SELECT 'usuarios_duplicados_ra' AS validacao, COUNT(*) AS total
+FROM (
+	SELECT ra
+	FROM usuario
+	GROUP BY ra
+	HAVING COUNT(*) > 1
+) d;
+
+SELECT 'categorias_duplicadas_nome' AS validacao, COUNT(*) AS total
+FROM (
+	SELECT nome_categoria
+	FROM categoria
+	GROUP BY nome_categoria
+	HAVING COUNT(*) > 1
+) d;

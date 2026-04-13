@@ -33,7 +33,7 @@ export function HomePage() {
               {[
                 { icon: Star, title: 'Avaliações reais', text: 'Vendedores com histórico e confiança.' },
                 { icon: Truck, title: 'Entrega combinada', text: 'Negocie retirada no campus com facilidade.' },
-                { icon: ShieldCheck, title: 'Ambiente seguro', text: 'Autenticação e troca centralizadas.' },
+                { icon: ShieldCheck, title: 'Ambiente seguro', text: 'Converse e negocie com mais tranquilidade.' },
               ].map((item) => (
                 <div key={item.title} className="rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <item.icon className="h-5 w-5 text-orange-200" />

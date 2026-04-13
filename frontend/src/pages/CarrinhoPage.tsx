@@ -1,30 +1,74 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { products } from '@/lib/mock-data'
+import { createOrderFromCart, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
 
 export function CarrinhoPage() {
   const navigate = useNavigate()
-  const [quantidade1, setQuantidade1] = useState(1)
-  const [quantidade2, setQuantidade2] = useState(1)
+  const [cart, setCart] = useState(getCart())
   const [modalChat, setModalChat] = useState(false)
+  const [mensagem, setMensagem] = useState('')
 
-  const produto1 = products[2]
-  const produto2 = products[0]
-  const total = produto1.preco * quantidade1 + produto2.preco * quantidade2
+  const cartWithProducts = useMemo(
+    () =>
+      cart
+        .map((item) => {
+          const product = products.find((p) => p.id === item.productId)
+          if (!product) {
+            return null
+          }
+          return { product, quantidade: item.quantidade }
+        })
+        .filter((item): item is { product: (typeof products)[number]; quantidade: number } => item !== null),
+    [cart]
+  )
+
+  const total = cartWithProducts.reduce((acc, item) => acc + item.product.preco * item.quantidade, 0)
+
+  const atualizarQuantidade = (productId: number, quantidade: number) => {
+    updateCartItem(productId, quantidade)
+    setCart(getCart())
+  }
+
+  const excluirItem = (productId: number) => {
+    removeFromCart(productId)
+    setCart(getCart())
+  }
+
+  const finalizarPedido = () => {
+    const pedido = createOrderFromCart()
+    if (!pedido) {
+      setMensagem('Adicione produtos no carrinho antes de finalizar.')
+      return
+    }
+    setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
+    setCart(getCart())
+    setTimeout(() => navigate('/pedidos'), 700)
+  }
 
   return (
     <Layout>
       <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="mb-6">
-          <Link to="/categorias" className="text-sm font-semibold text-slate-600 transition hover:text-blue-700">← Continuar comprando</Link>
+          <Link to="/produtos" className="text-sm font-semibold text-slate-600 transition hover:text-blue-700">← Continuar comprando</Link>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Meu carrinho</h1>
-          <p className="mt-2 text-sm text-slate-500">2 produtos no seu carrinho</p>
+          <p className="mt-2 text-sm text-slate-500">{cartWithProducts.length} produtos no seu carrinho</p>
+          {mensagem && <p className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-700">{mensagem}</p>}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
-            {[{ p: produto1, q: quantidade1, set: setQuantidade1 }, { p: produto2, q: quantidade2, set: setQuantidade2 }].map(({ p, q, set }) => (
+            {cartWithProducts.length === 0 && (
+              <div className="rounded-[1.5rem] border border-slate-200 p-6 text-center">
+                <p className="font-semibold text-slate-700">Seu carrinho está vazio.</p>
+                <Link to="/produtos" className="mt-3 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                  Ver produtos
+                </Link>
+              </div>
+            )}
+
+            {cartWithProducts.map(({ product: p, quantidade: q }) => (
               <div key={p.id} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
                 <div className="flex h-24 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-2xl sm:w-24">📦</div>
                 <div className="flex-1">
@@ -34,9 +78,10 @@ export function CarrinhoPage() {
                   <p className="mt-2 text-2xl font-black text-blue-700">R$ {p.preco.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-center">
-                  <button onClick={() => set(Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
+                  <button onClick={() => atualizarQuantidade(p.id, Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
                   <span className="w-8 text-center font-semibold text-slate-700">{q}</span>
-                  <button onClick={() => set(q + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">+</button>
+                  <button onClick={() => atualizarQuantidade(p.id, q + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">+</button>
+                  <button onClick={() => excluirItem(p.id)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
                 </div>
               </div>
             ))}
@@ -55,21 +100,22 @@ export function CarrinhoPage() {
             <div className="rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
               <h3 className="text-2xl font-black tracking-tight text-slate-900">Resumo do pedido</h3>
               <div className="mt-4 space-y-2 text-sm text-slate-600">
-                <div className="flex justify-between"><span>Subtotal (2 itens)</span><strong>R$ {total.toFixed(2)}</strong></div>
+                <div className="flex justify-between"><span>Subtotal ({cartWithProducts.length} itens)</span><strong>R$ {total.toFixed(2)}</strong></div>
                 <div className="flex justify-between"><span>Entrega</span><span>A negociar</span></div>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                 <strong className="text-lg text-slate-900">Total</strong>
                 <strong className="text-xl text-blue-700">R$ {total.toFixed(2)}</strong>
               </div>
-              <button onClick={() => setModalChat(true)} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Ir para chat</button>
+              <button onClick={finalizarPedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Finalizar pedido</button>
+              <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Conversar com vendedor</button>
               <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Salvar para depois</button>
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 p-4 text-center">
               <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">🛍️</div>
               <p className="mt-2 font-bold text-slate-900">Compra segura</p>
-              <p className="mt-1 text-xs text-slate-500">Seus dados e pagamentos estão protegidos por criptografia.</p>
+              <p className="mt-1 text-xs text-slate-500">Negocie com estudantes e combine entrega com facilidade.</p>
             </div>
           </div>
         </div>

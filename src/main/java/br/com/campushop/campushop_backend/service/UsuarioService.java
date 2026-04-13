@@ -80,7 +80,19 @@ public class UsuarioService {
 
     public boolean autenticar(String email, String senha) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        return usuarioOpt.map(usuario -> passwordEncoder.matches(senha, usuario.getSenha())).orElse(false);
+        return usuarioOpt.map(usuario -> {
+            String senhaSalva = usuario.getSenha();
+
+            if (senhaSalva == null) {
+                return false;
+            }
+
+            if (senhaSalva.startsWith("$2a$") || senhaSalva.startsWith("$2b$") || senhaSalva.startsWith("$2y$")) {
+                return passwordEncoder.matches(senha, senhaSalva);
+            }
+
+            return senhaSalva.equals(senha);
+        }).orElse(false);
     }
 
     public boolean emailJaCadastrado(String email) {

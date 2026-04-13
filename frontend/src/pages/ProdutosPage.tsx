@@ -1,47 +1,41 @@
 import { useState, useEffect } from 'react'
-import { useCarrinhoStore, Produto } from '@/store'
+import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { carrinhoAPI } from '@/lib/api-service'
+import { products } from '@/lib/mock-data'
+import { addToCart, countCartItems } from '@/lib/shop-storage'
+
+type Produto = {
+  id: number
+  nome: string
+  descricao: string
+  preco: number
+  estoque: number
+  vendedor_id: number
+}
 
 export function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
-  const { setCarrinho } = useCarrinhoStore()
+  const [itensNoCarrinho, setItensNoCarrinho] = useState(0)
 
   useEffect(() => {
     carregarProdutos()
+    setItensNoCarrinho(countCartItems())
   }, [])
 
   const carregarProdutos = async () => {
     try {
       setCarregando(true)
-      // Simulação de dados - em produção viria da API
       setProdutos([
-        {
-          id: 1,
-          nome: 'Caderno A5',
-          descricao: 'Caderno pequeno para anotações',
-          preco: 19.90,
+        ...products.map((item) => ({
+          id: item.id,
+          nome: item.nome,
+          descricao: item.descricao,
+          preco: item.preco,
           estoque: 10,
-          vendedor_id: 1,
-        },
-        {
-          id: 2,
-          nome: 'Caneta Azul',
-          descricao: 'Caneta esferográfica azul',
-          preco: 2.50,
-          estoque: 50,
-          vendedor_id: 1,
-        },
-        {
-          id: 3,
-          nome: 'Mochila Escolar',
-          descricao: 'Mochila grande com vários compartimentos',
-          preco: 89.90,
-          estoque: 5,
-          vendedor_id: 2,
-        },
+          vendedor_id: item.id,
+        })),
       ])
     } catch (err: any) {
       setErro('Erro ao carregar produtos')
@@ -50,15 +44,9 @@ export function ProdutosPage() {
     }
   }
 
-  const adicionarAoCarrinho = async (produtoId: number) => {
-    try {
-      await carrinhoAPI.adicionar(produtoId, 1)
-      const carrinhoData = await carrinhoAPI.obter()
-      setCarrinho(carrinhoData.data)
-      alert('Produto adicionado ao carrinho!')
-    } catch (err) {
-      alert('Erro ao adicionar ao carrinho')
-    }
+  const adicionarAoCarrinho = (produtoId: number) => {
+    addToCart(produtoId, 1)
+    setItensNoCarrinho(countCartItems())
   }
 
   if (carregando) {
@@ -74,7 +62,12 @@ export function ProdutosPage() {
   return (
     <Layout>
       <div>
-        <h1 className="text-4xl font-bold mb-8">Produtos</h1>
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-4xl font-bold">Produtos</h1>
+          <Link to="/carrinho" className="inline-flex w-fit items-center rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50">
+            Ir para carrinho ({itensNoCarrinho})
+          </Link>
+        </div>
 
         {erro && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -84,15 +77,15 @@ export function ProdutosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {produtos.map((produto) => (
-            <div key={produto.id} className="card">
-              <h3 className="text-xl font-bold mb-2">{produto.nome}</h3>
-              <p className="text-gray-600 text-sm mb-4">{produto.descricao}</p>
+            <div key={produto.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-xl font-bold mb-2 text-slate-900">{produto.nome}</h3>
+              <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
 
               <div className="flex justify-between items-center mb-4">
-                <span className="text-2xl font-bold text-primary-600">
+                <span className="text-2xl font-bold text-blue-700">
                   R$ {produto.preco.toFixed(2)}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-slate-500">
                   {produto.estoque} em estoque
                 </span>
               </div>
@@ -100,7 +93,7 @@ export function ProdutosPage() {
               <button
                 onClick={() => adicionarAoCarrinho(produto.id)}
                 disabled={produto.estoque === 0}
-                className="w-full btn-primary"
+                className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {produto.estoque === 0 ? 'Fora de estoque' : 'Adicionar ao carrinho'}
               </button>
