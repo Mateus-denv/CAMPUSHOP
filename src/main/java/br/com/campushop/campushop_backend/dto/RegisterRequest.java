@@ -1,15 +1,50 @@
 package br.com.campushop.campushop_backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.AssertTrue;
+
 public class RegisterRequest {
 
+    @NotBlank(message = "Nome é obrigatório")
+    @Pattern(
+        regexp = "^[A-Za-zÀ-ÿ]+\\s+[A-Za-zÀ-ÿ]+.*$",
+        message = "Informe nome completo"
+    )
     private String nomeCompleto;
+
+    @NotBlank(message = "RA é obrigatório")
+    @Pattern(regexp = "\\d{9}", message = "RA deve conter 9 dígitos")
     private String ra;
+
+    @NotBlank(message = "Email é obrigatório")
+    @Email(message = "Email inválido")
     private String email;
+
+    @NotBlank(message = "Senha é obrigatória")
+    @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String senha;
+
+    @NotBlank(message = "Confirmação de senha obrigatória")
     private String confirmarSenha;
+
+    @NotBlank(message = "Instituição é obrigatória")
     private String instituicao;
+
+    @NotBlank(message = "Cidade é obrigatória")
     private String cidade;
+
+    @NotBlank(message = "Perfil é obrigatório")
     private String perfil;
+
+    // 🔥 VALIDAÇÃO IMPORTANTE (senha = confirmarSenha)
+    @AssertTrue(message = "As senhas não coincidem")
+    public boolean isSenhaValida() {
+        if (senha == null || confirmarSenha == null) return false;
+        return senha.equals(confirmarSenha);
+    }
 
     public String getNomeCompleto() {
         return nomeCompleto;

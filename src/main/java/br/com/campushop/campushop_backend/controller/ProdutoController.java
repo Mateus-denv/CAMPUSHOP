@@ -11,7 +11,7 @@ import jakarta.annotation.Nullable;
 import java.util.List;
 
 @RestController
-@RequestMapping("/produtos")
+@RequestMapping("/api/produtos")
 public class ProdutoController {
 
     @Autowired
@@ -25,7 +25,7 @@ public class ProdutoController {
 
     // 2. Ler por ID (Read)
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable @Nullable Integer id) {
+    public ResponseEntity<Produto> buscarPorId(@PathVariable Integer id) {
         return produtoRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -33,14 +33,14 @@ public class ProdutoController {
 
     // 3. Criar novo produto (Create)
     @PostMapping
-    public Produto salvar(@RequestBody @Nullable Produto produto) {
+    public Produto salvar(@RequestBody Produto produto) {
         return produtoRepository.save(produto);
     }
 
     // 4. Atualizar produto existente (Update) - NOVO!
     @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizar(@PathVariable @Nullable Integer id,
-            @RequestBody @Nullable Produto produtoAtualizado) {
+    public ResponseEntity<Produto> atualizar(@PathVariable Integer id,
+            @RequestBody Produto produtoAtualizado) {
         return produtoRepository.findById(id)
                 .map(produtoExistente -> {
                     produtoExistente.setNomeProduto(produtoAtualizado.getNomeProduto());
@@ -61,7 +61,7 @@ public class ProdutoController {
 
     // 5. Deletar produto (Delete)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable @Nullable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
         produtoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

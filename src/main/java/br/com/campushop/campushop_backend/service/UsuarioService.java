@@ -27,52 +27,29 @@ public class UsuarioService {
     public Usuario salvar(Usuario usuario) {
         logger.info("Tentando salvar usuário com email: {}", usuario.getEmail());
 
-        // Validar campos obrigatórios
-        if (usuario.getNomeCompleto() == null || usuario.getNomeCompleto().trim().isEmpty()) {
-            logger.error("Nome completo não fornecido");
-            throw new IllegalArgumentException("Nome completo é obrigatório");
-        }
-        if (usuario.getRa() == null || usuario.getRa().trim().isEmpty()) {
-            logger.error("R.A não fornecido");
-            throw new IllegalArgumentException("R.A é obrigatório");
-        }
-        String ra = usuario.getRa().trim();
-        if (!ra.matches("\\d{9}")) {
-            logger.error("R.A inválido: {}", ra);
-            throw new IllegalArgumentException("R.A deve conter exatamente 9 dígitos numéricos");
-        }
-        if (usuario.getEmail() == null || usuario.getEmail().trim().isEmpty()) {
-            logger.error("Email não fornecido");
-            throw new IllegalArgumentException("Email é obrigatório");
-        }
-        String email = usuario.getEmail().trim().toLowerCase();
-        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            logger.error("Email inválido: {}", email);
-            throw new IllegalArgumentException("Email inválido");
+        // normalização
+        usuario.setEmail(usuario.getEmail().trim().toLowerCase());
+        usuario.setRa(usuario.getRa().trim());
+
+        // regra de negócio (aqui sim!)
+        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+            throw new RuntimeException("Email já cadastrado");
         }
 
-        if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
-            logger.error("Senha não fornecida");
-            throw new IllegalArgumentException("Senha é obrigatória");
-        }
-        if (usuario.getSenha().length() < 6) {
-            logger.error("Senha muito curta para o email: {}", email);
-            throw new IllegalArgumentException("A senha deve ter pelo menos 6 caracteres");
+        if (usuarioRepository.existsByRa(usuario.getRa())) {
+            throw new RuntimeException("RA já cadastrado");
         }
 
-        usuario.setRa(ra);
-        usuario.setEmail(email);
-
-        // Criptografar senha
+        // criptografia
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-        logger.info("Senha criptografada com sucesso");
 
-        // Salvar no banco
-        Usuario usuarioSalvo = usuarioRepository.save(usuario);
-        logger.info("Usuário salvo com sucesso! ID: {}", usuarioSalvo.getId());
+        Usuario salvo = usuarioRepository.save(usuario);
 
-        return usuarioSalvo;
+        logger.info("Usuário salvo com sucesso! ID: {}", salvo.getId());
+
+        return salvo;
     }
+
 
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
@@ -80,7 +57,19 @@ public class UsuarioService {
 
     public boolean autenticar(String email, String senha) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        return usuarioOpt.map(usuario -> passwordEncoder.matches(senha, usuario.getSenha())).orElse(false);
+        return usuarioOpt.map(usuario -> {
+            String senhaSalva = usuario.getSenha();
+
+            if (senhaSalva == null) {
+                return false;
+            }
+
+            if (senhaSalva.startsWith("$2a$") || senhaSalva.startsWith("$2b$") || senhaSalva.startsWith("$2y$")) {
+                return passwordEncoder.matches(senha, senhaSalva);
+            }
+
+            return senhaSalva.equals(senha);
+        }).orElse(false);
     }
 
     public boolean emailJaCadastrado(String email) {

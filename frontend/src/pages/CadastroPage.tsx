@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card } from '@/components/UI'
 import { authAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
-import { AlertCircle, UserPlus, ShieldCheck } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ShieldCheck, UserPlus } from 'lucide-react'
 
 export function CadastroPage() {
   const navigate = useNavigate()
@@ -26,17 +26,18 @@ export function CadastroPage() {
     setCarregando(true)
 
     try {
-      const nome = nomeCompleto.trim()
-      const emailNormalizado = email.trim().toLowerCase()
-      const raLimpo = ra.replace(/\D/g, '')
-
-      if (!nome || !emailNormalizado || !raLimpo || !senha || !confirmarSenha) {
-        setErro('Preencha todos os campos obrigatórios')
+      if (!nomeCompleto.trim()) {
+        setErro('Nome completo é obrigatório')
         return
       }
 
-      if (!/^\d{9}$/.test(raLimpo)) {
-        setErro('R.A deve conter exatamente 9 dígitos numéricos')
+      if (!/^\d{9}$/.test(ra.trim())) {
+        setErro('R.A deve conter exatamente 9 dígitos')
+        return
+      }
+
+      if (!email.trim()) {
+        setErro('Email é obrigatório')
         return
       }
 
@@ -51,13 +52,13 @@ export function CadastroPage() {
       }
 
       const response = await authAPI.cadastro(
-        nome,
-        emailNormalizado,
-        raLimpo,
+        nomeCompleto.trim(),
+        email.trim(),
+        ra.trim(),
         senha,
         confirmarSenha,
-        instituicao,
-        cidade,
+        instituicao.trim(),
+        cidade.trim(),
         perfil
       )
 
@@ -72,30 +73,35 @@ export function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0,_#eff6ff_28%,_#f8fafc_58%,_#ffffff_100%)] px-4 py-8 flex items-center justify-center">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur lg:grid-cols-2">
-        <div className="hidden flex-col justify-between bg-gradient-to-br from-blue-700 via-indigo-700 to-orange-500 p-10 text-white lg:flex">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0,_#eff6ff_26%,_#f8fafc_58%,_#ffffff_100%)] px-4 py-8 flex items-center justify-center">
+      <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur lg:grid-cols-2">
+        <div className="hidden flex-col justify-between bg-gradient-to-br from-indigo-700 via-blue-700 to-orange-500 p-10 text-white lg:flex">
           <div>
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
               <UserPlus className="h-7 w-7" />
             </div>
-            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Crie sua conta e comece a vender ou comprar no CampusShop</h1>
-            <p className="mt-4 text-sm text-blue-50/90">
-              Cadastro rápido, seguro e integrado ao mesmo ambiente da plataforma.
+            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Crie sua conta e negocie com segurança</h1>
+            <p className="mt-4 max-w-md text-sm text-blue-50/90">
+              Cadastre-se para anunciar, comprar, conversar em tempo real e acompanhar tudo no CampusShop.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-blue-50/90">
-            <div className="flex items-center gap-2 font-semibold">
-              <ShieldCheck className="h-4 w-4" /> Conta protegida
+
+          <div className="space-y-3 text-sm text-blue-50/90">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <CheckCircle2 className="h-5 w-5" />
+              <span>Cadastro rápido e simples para sua conta</span>
             </div>
-            <p className="mt-2">Seu acesso usa autenticação com token e senha criptografada.</p>
+            <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <ShieldCheck className="h-5 w-5" />
+              <span>Seu acesso fica protegido com segurança</span>
+            </div>
           </div>
         </div>
 
         <Card className="border-0 shadow-none rounded-none bg-white">
           <div className="p-8 sm:p-10">
             <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Criar conta</h1>
-            <p className="text-slate-600 mb-6">Preencha os dados para entrar no CampusShop</p>
+            <p className="text-sm text-slate-600 mb-6">Preencha os dados para entrar no CampusShop</p>
 
             {erro && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex gap-3">
@@ -106,53 +112,52 @@ export function CadastroPage() {
 
             <form onSubmit={handleCadastro} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none md:col-span-2"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 md:col-span-2"
                 placeholder="Nome completo"
                 value={nomeCompleto}
                 onChange={(e) => setNomeCompleto(e.target.value)}
               />
               <input
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="R.A (9 dígitos)"
                 value={ra}
                 onChange={(e) => setRa(e.target.value)}
-                maxLength={9}
               />
               <input
                 type="email"
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
                 type="password"
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="Senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
               />
               <input
                 type="password"
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="Confirmar senha"
                 value={confirmarSenha}
                 onChange={(e) => setConfirmarSenha(e.target.value)}
               />
               <input
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="Instituição"
                 value={instituicao}
                 onChange={(e) => setInstituicao(e.target.value)}
               />
               <input
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                 placeholder="Cidade"
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
               />
               <select
-                className="px-4 py-3 border border-slate-200 bg-slate-50 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none"
+                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 md:col-span-2"
                 value={perfil}
                 onChange={(e) => setPerfil(e.target.value)}
               >
@@ -170,7 +175,7 @@ export function CadastroPage() {
 
             <p className="text-sm text-slate-600 mt-6 text-center">
               Já tem conta?{' '}
-              <Link className="text-blue-700 font-semibold hover:text-blue-800" to="/login">
+              <Link className="text-blue-600 font-semibold" to="/login">
                 Entrar
               </Link>
             </p>

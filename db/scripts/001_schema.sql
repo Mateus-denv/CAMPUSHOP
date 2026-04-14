@@ -1,69 +1,38 @@
 CREATE DATABASE IF NOT EXISTS campushop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE campushop;
 
-CREATE TABLE IF NOT EXISTS usuarios (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS usuario (
+  id INT AUTO_INCREMENT PRIMARY KEY,
   nome_completo VARCHAR(255) NOT NULL,
   ra VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
+  cidade VARCHAR(100),
+  nome_cliente VARCHAR(100) NOT NULL,
   senha VARCHAR(255) NOT NULL,
-  instituicao VARCHAR(255) NOT NULL,
-  cidade VARCHAR(255) NOT NULL,
-  perfil VARCHAR(100) NOT NULL
+  telefone VARCHAR(15),
+  tipo_conta VARCHAR(20),
+  cpf_cnpj VARCHAR(20),
+  instituicao_ensino VARCHAR(100),
+  localizacao_gps VARCHAR(50),
+  ativado TINYINT(1) NOT NULL DEFAULT 1,
+  data_cadastro DATE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS produtos (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS categoria (
+  id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+  nome_categoria VARCHAR(100) NOT NULL UNIQUE,
+  descricao TEXT
+);
+
+CREATE TABLE IF NOT EXISTS produto (
+  id_produto INT AUTO_INCREMENT PRIMARY KEY,
+  nome_produto VARCHAR(200) NOT NULL,
   descricao TEXT,
-  preco DECIMAL(10,2) NOT NULL,
   estoque INT NOT NULL,
-  vendedor_id BIGINT NOT NULL,
-  data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_produtos_vendedor FOREIGN KEY (vendedor_id) REFERENCES usuarios(id)
-);
-
-CREATE TABLE IF NOT EXISTS carrinhos (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  cliente_id BIGINT NOT NULL UNIQUE,
-  data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_carrinhos_cliente FOREIGN KEY (cliente_id) REFERENCES usuarios(id)
-);
-
-CREATE TABLE IF NOT EXISTS itens_carrinho (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  carrinho_id BIGINT NOT NULL,
-  produto_id BIGINT NOT NULL,
-  quantidade INT NOT NULL,
-  preco_unitario DECIMAL(10,2) NOT NULL,
-  data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_itens_carrinho_carrinho FOREIGN KEY (carrinho_id) REFERENCES carrinhos(id) ON DELETE CASCADE,
-  CONSTRAINT fk_itens_carrinho_produto FOREIGN KEY (produto_id) REFERENCES produtos(id),
-  CONSTRAINT uk_itens_carrinho UNIQUE (carrinho_id, produto_id)
-);
-
-CREATE TABLE IF NOT EXISTS pedidos (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  cliente_id BIGINT NOT NULL,
-  total_pedido DECIMAL(12,2) NOT NULL,
-  status_pedido VARCHAR(50) NOT NULL,
-  data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  observacoes TEXT,
-  CONSTRAINT fk_pedidos_cliente FOREIGN KEY (cliente_id) REFERENCES usuarios(id)
-);
-
-CREATE TABLE IF NOT EXISTS itens_pedido (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  pedido_id BIGINT NOT NULL,
-  produto_id BIGINT NOT NULL,
-  quantidade INT NOT NULL,
-  preco_unitario DECIMAL(10,2) NOT NULL,
-  subtotal DECIMAL(12,2) NOT NULL,
-  data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_itens_pedido_pedido FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
-  CONSTRAINT fk_itens_pedido_produto FOREIGN KEY (produto_id) REFERENCES produtos(id)
+  preco DOUBLE NOT NULL,
+  status VARCHAR(20),
+  dimensoes VARCHAR(255),
+  peso DOUBLE,
+  id_categoria INT,
+  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );

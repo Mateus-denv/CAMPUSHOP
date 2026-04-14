@@ -1,199 +1,488 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{home}">
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${produto.idProduto != null ? 'Editar Produto' : 'Cadastrar Produto'}">Cadastrar Produto</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${produto.idProduto != null ? 'Editar Produto' : 'Anunciar Produto'}">Anunciar Produto</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        .info-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 16px;
+        :root {
+            --cs-bg: #f8fafc;
+            --cs-card: #ffffff;
+            --cs-border: #e2e8f0;
+            --cs-text: #0f172a;
+            --cs-muted: #64748b;
+            --cs-primary: #2563eb;
+            --cs-primary-hover: #4338ca;
+            --cs-blue: #2563eb;
+            --cs-blue-soft: #eff6ff;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 0%, #eff6ff 0, #f8fafc 30%, #f8fafc 100%);
+            color: var(--cs-text);
+            margin: 0;
+        }
+
+        .cs-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(226, 232, 240, .85);
+            background: rgba(255, 255, 255, .88);
+            backdrop-filter: blur(8px);
+        }
+
+        .cs-topbar-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .cs-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .75rem;
+            text-decoration: none;
+            color: #0f172a;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .cs-brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #2563eb, #4338ca);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, .25);
+        }
+
+        .cs-brand-name {
+            font-size: 1.2rem;
+        }
+
+        .cs-desktop-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: .2rem;
+            border: 1px solid var(--cs-border);
+            background: #f8fafc;
+            border-radius: 999px;
+            padding: .25rem;
+        }
+
+        .cs-nav-link {
+            text-decoration: none;
+            color: #64748b;
+            font-size: .88rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: .5rem .9rem;
+            transition: .2s ease;
+        }
+
+        .cs-nav-link:hover {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .cs-nav-link.active {
+            background: #0f172a;
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(2, 6, 23, .2);
+        }
+
+        .cs-top-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .cs-top-btn {
+            border: 1px solid var(--cs-border);
+            border-radius: 999px;
+            text-decoration: none;
+            color: #334155;
+            font-size: .86rem;
+            font-weight: 700;
+            padding: .55rem .95rem;
+            background: #fff;
+        }
+
+        .cs-top-btn.primary {
+            border-color: #0f172a;
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .cs-mobile-nav-wrap {
+            border-bottom: 1px solid rgba(226, 232, 240, .85);
+            background: rgba(255, 255, 255, .92);
+            padding: .55rem 1rem;
+        }
+
+        .cs-mobile-nav {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            gap: .45rem;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .cs-mobile-nav .cs-nav-link {
+            white-space: nowrap;
+            background: #f1f5f9;
+        }
+
+        .cs-mobile-nav .cs-nav-link.active {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .cs-shell {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .cs-header {
+            border: 1px solid var(--cs-border);
+            border-radius: 2rem;
+            background: linear-gradient(120deg, #ffffff 0%, #f8fafc 55%, #eff6ff 100%);
+            padding: 1.4rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .cs-title {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .cs-subtitle {
+            margin: .35rem 0 0;
+            color: var(--cs-muted);
+        }
+
+        .cs-card {
+            border: 1px solid var(--cs-border);
+            border-radius: 1.5rem;
+            background: var(--cs-card);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .cs-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select,
+        .input-group-text {
+            border-radius: .85rem !important;
+            border-color: var(--cs-border);
+            min-height: 46px;
+        }
+
+        textarea.form-control {
+            min-height: 130px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, .15);
+        }
+
+        .btn-cs-primary {
+            border: 0;
+            border-radius: 1rem;
+            min-height: 48px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--cs-primary), var(--cs-primary-hover));
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+        }
+
+        .btn-cs-primary:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            filter: brightness(1.02);
+        }
+
+        .btn-cs-soft {
+            border: 1px solid var(--cs-border);
+            border-radius: 1rem;
+            min-height: 48px;
+            font-weight: 600;
+            color: #334155;
+            background: #fff;
+        }
+
+        .btn-cs-soft:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .cs-tip {
+            border: 1px solid #bfdbfe;
+            border-radius: 1rem;
+            background: var(--cs-blue-soft);
+            color: #1e3a8a;
+            padding: 1rem;
+        }
+
+        .cs-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: .82rem;
+            font-weight: 600;
+            padding: .38rem .75rem;
+            margin-bottom: .6rem;
+        }
+
+        .cs-actions {
+            position: sticky;
+            top: 1.25rem;
+        }
+
+        @media (max-width: 992px) {
+            .cs-actions {
+                position: static;
+            }
+
+            .cs-desktop-nav {
+                display: none;
+            }
+
+            .cs-top-actions {
+                display: none;
+            }
+        }
+
+        @media (min-width: 993px) {
+            .cs-mobile-nav-wrap {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
+<header class="cs-topbar">
+    <div class="cs-topbar-inner">
+        <a href="/home" class="cs-brand">
+            <span class="cs-brand-icon">📦</span>
+            <span class="cs-brand-name">CampusShop</span>
+        </a>
 
-<div layout:fragment="content">
+        <nav class="cs-desktop-nav" aria-label="Navegação principal">
+            <a class="cs-nav-link" href="/home">Home</a>
+            <a class="cs-nav-link" href="/categorias">Categorias</a>
+            <a class="cs-nav-link" href="/produtos">Produtos</a>
+            <a class="cs-nav-link" href="/carrinho">Carrinho</a>
+            <a class="cs-nav-link" href="/pedidos">Pedidos</a>
+            <a class="cs-nav-link" href="/chat">Chat</a>
+            <a class="cs-nav-link" href="/conta">Conta</a>
+            <a class="cs-nav-link active" href="/cadastrar-produto">Anunciar</a>
+        </nav>
 
-    <div class="container py-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                </a>
-                <h1 class="h3 fw-bold" th:text="${produto.idProduto != null ? 'Editar Produto' : 'Cadastrar Novo Produto'}">
-                    Cadastrar Produto
-                </h1>
-                <p class="text-muted">Preencha as informações do produto de acordo com o sistema</p>
-            </div>
+        <div class="cs-top-actions">
+            <a href="/conta" class="cs-top-btn">Minha conta</a>
+            <a href="/cadastrar-produto" class="cs-top-btn primary">Anunciar</a>
         </div>
-
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${sucesso}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <form th:action="@{/cadastrar-produto}" th:object="${produto}" method="post">
-            <input type="hidden" th:field="*{idProduto}"/>
-            
-            <div class="row g-4">
-                <div class="col-12 col-lg-8">
-                    
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-body p-4">
-                            <h5 class="card-title mb-3">
-                                <i class="bi bi-info-circle me-2 text-primary"></i>Informações Básicas
-                            </h5>
-
-                            <div class="mb-3">
-                                <label for="nomeProduto" class="form-label fw-medium">Nome do Produto <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control form-control-lg" 
-                                       id="nomeProduto" 
-                                       th:field="*{nomeProduto}"
-                                       maxlength="200"
-                                       placeholder="Ex: Calculadora HP 12C Gold" 
-                                       required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="descricao" class="form-label fw-medium">Descrição Completa</label>
-                                <textarea class="form-control" 
-                                          id="descricao" 
-                                          th:field="*{descricao}"
-                                          rows="5" 
-                                          placeholder="Descreva os detalhes do produto..."></textarea>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label for="categoria" class="form-label fw-medium">Categoria</label>
-                                    <select class="form-select" 
-                                            id="categoria" 
-                                            th:field="*{categoria.idCategoria}">
-                                        <option value="">Selecione...</option>
-                                        <option th:each="cat : ${categorias}" 
-                                                th:value="${cat.idCategoria}" 
-                                                th:text="${cat.nome_categoria}">
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="status" class="form-label fw-medium">Status</label>
-                                    <select class="form-select" 
-                                            id="status" 
-                                            th:field="*{status}">
-                                        <option value="ATIVO">Ativo</option>
-                                        <option value="INATIVO">Inativo</option>
-                                        <option value="ESGOTADO">Esgotado</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-body p-4">
-                            <h5 class="card-title mb-3">
-                                <i class="bi bi-box-seam me-2 text-primary"></i>Preço, Estoque e Detalhes
-                            </h5>
-
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label for="preco" class="form-label fw-medium">Preço (R$) <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               id="preco" 
-                                               th:field="*{preco}"
-                                               placeholder="0.00" 
-                                               step="0.01" 
-                                               min="0.00"
-                                               required>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <label for="estoque" class="form-label fw-medium">Estoque <span class="text-danger">*</span></label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="estoque" 
-                                           th:field="*{estoque}"
-                                           placeholder="Ex: 10" 
-                                           min="0"
-                                           required>
-                                </div>
-                                
-                                <div class="col-12 col-md-6 mt-3">
-                                    <label for="dimensoes" class="form-label fw-medium">Dimensões</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="dimensoes" 
-                                           th:field="*{dimensoes}"
-                                           placeholder="Ex: 10x20x5 cm">
-                                </div>
-
-                                <div class="col-12 col-md-6 mt-3">
-                                    <label for="peso" class="form-label fw-medium">Peso (kg)</label>
-                                    <div class="input-group">
-                                        <input type="number" 
-                                               class="form-control" 
-                                               id="peso" 
-                                               th:field="*{peso}"
-                                               placeholder="0.00" 
-                                               step="0.01" 
-                                               min="0.00">
-                                        <span class="input-group-text">kg</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="col-12 col-lg-4">
-                    
-                    <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-                        <div class="card-body p-4">
-                            <h5 class="card-title mb-4">Ações</h5>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-save me-2"></i>
-                                    <span th:text="${produto.idProduto != null ? 'Atualizar Produto' : 'Salvar Produto'}">Salvar Produto</span>
-                                </button>
-                                <a th:href="@{/produtos}" class="btn btn-outline-secondary">
-                                    Cancelar
-                                </a>
-                            </div>
-                            
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </form>
     </div>
+</header>
 
+<div class="cs-mobile-nav-wrap">
+    <nav class="cs-mobile-nav" aria-label="Navegação principal mobile">
+        <a class="cs-nav-link" href="/home">Home</a>
+        <a class="cs-nav-link" href="/categorias">Categorias</a>
+        <a class="cs-nav-link" href="/produtos">Produtos</a>
+        <a class="cs-nav-link" href="/carrinho">Carrinho</a>
+        <a class="cs-nav-link" href="/pedidos">Pedidos</a>
+        <a class="cs-nav-link" href="/chat">Chat</a>
+        <a class="cs-nav-link" href="/conta">Conta</a>
+        <a class="cs-nav-link active" href="/cadastrar-produto">Anunciar</a>
+    </nav>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<main class="cs-shell">
+    <section class="cs-header mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="cs-pill"><i class="bi bi-megaphone"></i>Anúncio de produto</span>
+                <h1 class="cs-title" th:text="${produto.idProduto != null ? 'Editar Produto' : 'Anunciar Novo Produto'}">Anunciar Novo Produto</h1>
+                <p class="cs-subtitle">Preencha os dados com atenção para manter seu anúncio claro e atrativo.</p>
+            </div>
+            <a href="/conta" class="btn btn-cs-soft px-4">
+                <i class="bi bi-arrow-left me-2"></i>Voltar para Conta
+            </a>
+        </div>
+    </section>
 
+    <div th:if="${sucesso}" class="alert alert-success rounded-4 border-0 shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${sucesso}"></span>
+    </div>
+
+    <div th:if="${erro}" class="alert alert-danger rounded-4 border-0 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${erro}"></span>
+    </div>
+
+    <form th:action="@{/cadastrar-produto}" th:object="${produto}" method="post">
+        <input type="hidden" th:field="*{idProduto}"/>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <section class="cs-card p-4 mb-4">
+                    <h2 class="cs-card-title"><i class="bi bi-info-circle text-primary me-2"></i>Informações Básicas</h2>
+
+                    <div class="mb-3">
+                        <label for="nomeProduto" class="form-label">Nome do Produto <span class="text-danger">*</span></label>
+                        <input
+                                type="text"
+                                class="form-control"
+                                id="nomeProduto"
+                                th:field="*{nomeProduto}"
+                                maxlength="200"
+                                placeholder="Ex: Calculadora HP 12C Gold"
+                                required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea
+                                class="form-control"
+                                id="descricao"
+                                th:field="*{descricao}"
+                                placeholder="Descreva detalhes, estado de uso e diferenciais do produto..."></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="categoria" th:field="*{categoria.idCategoria}">
+                                <option value="">Selecione...</option>
+                                <option th:each="cat : ${categorias}" th:value="${cat.idCategoria}" th:text="${cat.nome_categoria}"></option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" th:field="*{status}">
+                                <option value="ATIVO">Ativo</option>
+                                <option value="INATIVO">Inativo</option>
+                                <option value="ESGOTADO">Esgotado</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="cs-card p-4">
+                    <h2 class="cs-card-title"><i class="bi bi-box-seam text-primary me-2"></i>Preço, Estoque e Entrega</h2>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="preco" class="form-label">Preço (R$) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input
+                                        type="number"
+                                        class="form-control"
+                                        id="preco"
+                                        th:field="*{preco}"
+                                        placeholder="0,00"
+                                        step="0.01"
+                                        min="0.00"
+                                        required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="estoque" class="form-label">Estoque <span class="text-danger">*</span></label>
+                            <input
+                                    type="number"
+                                    class="form-control"
+                                    id="estoque"
+                                    th:field="*{estoque}"
+                                    placeholder="Ex: 10"
+                                    min="0"
+                                    required>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="dimensoes" class="form-label">Dimensões</label>
+                            <input
+                                    type="text"
+                                    class="form-control"
+                                    id="dimensoes"
+                                    th:field="*{dimensoes}"
+                                    placeholder="Ex: 30x20x10 cm">
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="peso" class="form-label">Peso (kg)</label>
+                            <div class="input-group">
+                                <input
+                                        type="number"
+                                        class="form-control"
+                                        id="peso"
+                                        th:field="*{peso}"
+                                        placeholder="0,00"
+                                        step="0.01"
+                                        min="0.00">
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <aside class="cs-card cs-actions p-4">
+                    <h2 class="cs-card-title">Ações</h2>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-cs-primary">
+                            <i class="bi bi-save me-2"></i>
+                            <span th:text="${produto.idProduto != null ? 'Atualizar Produto' : 'Publicar Produto'}">Publicar Produto</span>
+                        </button>
+                        <a th:href="@{/conta}" class="btn btn-cs-soft">Cancelar</a>
+                    </div>
+
+                    <div class="cs-tip mt-4">
+                        <p class="fw-semibold mb-2"><i class="bi bi-lightbulb me-2"></i>Dica rápida</p>
+                        <p class="mb-0 small">Produtos com descrição clara e foto de boa qualidade tendem a vender mais rápido.</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
