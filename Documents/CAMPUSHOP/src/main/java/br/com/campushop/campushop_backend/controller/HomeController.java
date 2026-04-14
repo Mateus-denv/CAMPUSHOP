@@ -17,6 +17,16 @@ public class HomeController {
         return "forward:/index.html";
     }
 
+    @GetMapping("/categorias")
+    public String categorias() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/produtos")
+    public String produtos() {
+        return "forward:/index.html";
+    }
+
     @GetMapping("/carrinho")
     public String carrinho() {
         return "forward:/index.html";

@@ -47,7 +47,11 @@ public class SecurityConfig {
                                                                 "/cadastro",
                                                                 "/home",
                                                                 "/categorias",
+                                                                "/api/categorias",
+                                                                "/api/categorias/**",
                                                                 "/produto/**",
+                                                                "/cadastrar-produto",
+                                                                "/cadastrar-produto/**",
                                                                 "/carrinho",
                                                                 "/pedidos",
                                                                 "/conta",
@@ -55,7 +59,8 @@ public class SecurityConfig {
                                                                 "/actuator/health",
                                                                 "/error",
                                                                 "/produtos",
-                                                                "/produtos/**",
+                                                                "/api/produtos",
+                                                                "/api/produtos/**",
                                                                 "/api/auth/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())

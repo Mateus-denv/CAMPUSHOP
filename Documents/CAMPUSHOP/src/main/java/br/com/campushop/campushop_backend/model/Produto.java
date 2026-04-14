@@ -30,8 +30,10 @@ public class Produto {
     private Double peso;
 
     @ManyToOne
-    @JoinColumn(name = "idCategoria")
-    private Categoria categoria; // O produto pode ser sim vinculado com o id mas na hora do usurio vizualizar o produto ele vai ver o nome da categoria e nao o id, entao aqui a gente tem que usar a classe Categoria mesmo.
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria; // O produto pode ser sim vinculado com o id mas na hora do usurio vizualizar o
+                                 // produto ele vai ver o nome da categoria e nao o id, entao aqui a gente tem
+                                 // que usar a classe Categoria mesmo.
 
     // --- GETTERS E SETTERS ---
     // Eles permitem que o Spring leia e grave os dados nos campos privados

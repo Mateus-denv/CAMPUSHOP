@@ -54,7 +54,7 @@ VALUES
   )
 ON DUPLICATE KEY UPDATE email = VALUES(email);
 
-INSERT INTO produto (nome_produto, descricao, estoque, preco, status, idCategoria)
+INSERT INTO produto (nome_produto, descricao, estoque, preco, status, id_categoria)
 SELECT 'Livro de Lógica de Programação', 'Livro para disciplinas iniciais', 3, 150.00, 'ATIVO', c.id_categoria
 FROM categoria c
 WHERE c.nome_categoria = 'Livros'

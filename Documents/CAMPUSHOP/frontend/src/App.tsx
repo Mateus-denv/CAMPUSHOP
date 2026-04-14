@@ -44,10 +44,10 @@ function App() {
       <Route path="/login" element={usuario ? <Navigate to="/home" replace /> : <LoginPage />} />
       <Route path="/cadastro" element={usuario ? <Navigate to="/home" replace /> : <CadastroPage />} />
 
-      <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
-      <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
-      <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
-      <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
+      <Route path="/carrinho" element={<CarrinhoPage />} />
+      <Route path="/pedidos" element={<PedidosPage />} />
+      <Route path="/conta" element={<ContaPage />} />
+      <Route path="/chat" element={<ChatPage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
