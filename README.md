@@ -15,7 +15,7 @@ Em vez de procurar em vários grupos e chats, a ideia é ter tudo em um só luga
 - **Banco de Dados:** MySQL 8
 - **Ferramentas de Deploy:** Docker, Docker Compose
 
-## 🧩 Visão geral (não técnica)
+## 🧩 Visão geral
 
 Pense no sistema como uma feira universitária organizada:
 
@@ -27,7 +27,7 @@ Pense no sistema como uma feira universitária organizada:
 
 Assim, o banco de dados funciona como o "caderno oficial" da feira: guarda quem vende, quem compra, o que foi anunciado e o que foi comprado.
 
-## 🗄️ Banco de Dados (didático)
+## 🗄️ Banco de Dados 
 
 Esta seção foi feita para ser compreensível por dev júnior, estagiário ou pessoa não técnica.
 
@@ -46,7 +46,7 @@ Esta seção foi feita para ser compreensível por dev júnior, estagiário ou p
 	<img src="./src/main/resources/static/assets/diagrama%20er%20board.png" alt="Diagrama ER do CampuShop" width="100%" height="auto">
 </div>
 
-## 📁 Scripts de BD versionados, ordenados e testáveis
+## 📁 Scripts de BD
 
 Os scripts ficam em `db/scripts` e seguem ordem numérica:
 
@@ -62,7 +62,7 @@ Os scripts ficam em `db/scripts` e seguem ordem numérica:
 - Porta `3306` livre (MySQL)
 - Porta `8080` livre (aplicação)
 
-## 🚀 Guia de implantação do zero (máquina limpa)
+## 🚀 Guia de implantação do zero
 
 ### 🔹 Passo 1: Preparar ambiente
 
