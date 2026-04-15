@@ -32,7 +32,17 @@ export function LoginPage() {
 
       navigate('/home')
     } catch (err: any) {
-      setErro(err.response?.data?.message || 'Erro ao fazer login')
+      const mensagemApi = err?.response?.data?.message
+
+      if (mensagemApi === 'Usuário não encontrado') {
+        setErro('Usuário não encontrado. Verifique o email ou crie uma conta.')
+      } else if (mensagemApi === 'Senha incorreta') {
+        setErro('Senha incorreta. Tente novamente.')
+      } else if (mensagemApi === 'Preencha email e senha') {
+        setErro('Preencha email e senha.')
+      } else {
+        setErro(mensagemApi || 'Não foi possível fazer login no momento.')
+      }
     } finally {
       setCarregando(false)
     }

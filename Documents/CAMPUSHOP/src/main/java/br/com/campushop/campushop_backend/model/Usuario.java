@@ -34,7 +34,7 @@ public class Usuario {
     private String telefone;
 
     @Column(name = "tipo_conta", length = 20)
-    private String tipoConta;
+    private String tipoConta = "comprador";
 
     @Column(name = "cpf_cnpj", length = 20)
     private String cpfCnpj;
@@ -46,24 +46,23 @@ public class Usuario {
     private String localizacaoGps;
 
     @Column(name = "ativado", nullable = false)
-    private Boolean ativado;
+    private Boolean ativado = true;
 
     @Column(name = "data_cadastro", nullable = false)
-    private LocalDate dataCadastro;
+    private LocalDate dataCadastro = LocalDate.now();
 
     // Constructors
     public Usuario() {
     }
 
-    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade,
-            String perfil) {
+    public Usuario(String nomeCompleto, String ra, String email, String senha, String instituicao, String cidade) {
         this.nomeCompleto = nomeCompleto;
         this.ra = ra;
         this.email = email;
         this.senha = senha;
         this.instituicaoEnsino = instituicao;
         this.cidade = cidade;
-        this.tipoConta = perfil;
+        this.tipoConta = "comprador";
         this.ativado = true; // default
         this.dataCadastro = LocalDate.now();
     }

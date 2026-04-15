@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuthStore } from '@/store'
 import { authAPI } from '@/lib/api-service'
@@ -15,10 +15,28 @@ import { PedidosPage } from '@/pages/PedidosPage'
 
 function App() {
   const { usuario, setUsuario } = useAuthStore()
+  const [authCarregando, setAuthCarregando] = useState(true)
+  const token = useMemo(() => localStorage.getItem('token'), [])
+
+  const exigirLogin = (element: JSX.Element) => {
+    if (usuario) {
+      return element
+    }
+
+    if (token && authCarregando) {
+      return (
+        <div className="min-h-[50vh] flex items-center justify-center text-slate-500">
+          Validando sessão...
+        </div>
+      )
+    }
+
+    return <Navigate to="/login" replace />
+  }
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
     if (!token) {
+      setAuthCarregando(false)
       return
     }
 
@@ -31,6 +49,9 @@ function App() {
         localStorage.removeItem('token')
         setUsuario(null)
       })
+      .finally(() => {
+        setAuthCarregando(false)
+      })
   }, [setUsuario])
 
   return (
@@ -41,13 +62,19 @@ function App() {
       <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
       <Route path="/produtos" element={<ProdutosPage />} />
 
-      <Route path="/login" element={usuario ? <Navigate to="/home" replace /> : <LoginPage />} />
-      <Route path="/cadastro" element={usuario ? <Navigate to="/home" replace /> : <CadastroPage />} />
+      <Route
+        path="/login"
+        element={token && authCarregando ? <div className="min-h-[50vh] flex items-center justify-center text-slate-500">Validando sessão...</div> : usuario ? <Navigate to="/home" replace /> : <LoginPage />}
+      />
+      <Route
+        path="/cadastro"
+        element={token && authCarregando ? <div className="min-h-[50vh] flex items-center justify-center text-slate-500">Validando sessão...</div> : usuario ? <Navigate to="/home" replace /> : <CadastroPage />}
+      />
 
-      <Route path="/carrinho" element={<CarrinhoPage />} />
-      <Route path="/pedidos" element={<PedidosPage />} />
-      <Route path="/conta" element={<ContaPage />} />
-      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/carrinho" element={exigirLogin(<CarrinhoPage />)} />
+      <Route path="/pedidos" element={exigirLogin(<PedidosPage />)} />
+      <Route path="/conta" element={exigirLogin(<ContaPage />)} />
+      <Route path="/chat" element={exigirLogin(<ChatPage />)} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

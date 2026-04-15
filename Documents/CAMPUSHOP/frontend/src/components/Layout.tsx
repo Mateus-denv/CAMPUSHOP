@@ -17,9 +17,12 @@ const navItems = [
   { to: '/conta', label: 'Conta' },
 ]
 
+const privateNavPaths = new Set(['/carrinho', '/pedidos', '/chat', '/conta'])
+
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate()
   const { usuario, setUsuario } = useAuthStore()
+  const navItemsVisiveis = navItems.filter((item) => usuario || !privateNavPaths.has(item.to))
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -37,7 +40,7 @@ export function Layout({ children }: LayoutProps) {
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
-            {navItems.map((item) => (
+            {navItemsVisiveis.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -84,7 +87,7 @@ export function Layout({ children }: LayoutProps) {
 
       <div className="border-b border-slate-200/80 bg-white/90 px-4 py-2 backdrop-blur md:hidden">
         <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto">
-          {navItems.map((item) => (
+          {navItemsVisiveis.map((item) => (
             <NavLink
               key={`mobile-${item.to}`}
               to={item.to}

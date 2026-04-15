@@ -79,11 +79,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("message", "R.A já cadastrado"));
             }
 
-            String perfil = request.getPerfil() != null ? request.getPerfil().trim().toLowerCase() : "comprador";
-            if (!perfil.equals("comprador") && !perfil.equals("vendedor") && !perfil.equals("ambos")) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Perfil inválido"));
-            }
-
             Usuario novoUsuario = new Usuario();
             novoUsuario.setNomeCompleto(request.getNomeCompleto().trim());
             novoUsuario.setNomeCliente(request.getNomeCompleto().trim());
@@ -99,7 +94,7 @@ public class AuthController {
             novoUsuario.setCidade(request.getCidade() != null && !request.getCidade().trim().isEmpty()
                     ? request.getCidade().trim()
                     : "Não informado");
-            novoUsuario.setTipoConta(perfil);
+            novoUsuario.setTipoConta("comprador");
 
             Usuario salvo = usuarioService.salvar(novoUsuario);
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(salvo.getEmail());
@@ -115,10 +110,21 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+        if (email.isEmpty() || request.getSenha() == null || request.getSenha().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Preencha email e senha"));
+        }
+
+        boolean usuarioExiste = usuarioService.buscarPorEmail(email).isPresent();
+        if (!usuarioExiste) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Usuário não encontrado"));
+        }
+
         boolean autenticado = usuarioService.autenticar(email, request.getSenha());
         if (!autenticado) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Credenciais inválidas"));
+                    .body(Map.of("message", "Senha incorreta"));
         }
 
         Usuario usuario = usuarioService.buscarPorEmail(email)
@@ -152,7 +158,7 @@ public class AuthController {
         user.put("nome", usuario.getNomeCompleto());
         user.put("email", usuario.getEmail());
         user.put("ra", usuario.getRa());
-        user.put("role", usuario.getTipoConta());
+        user.put("role", "comprador");
         return user;
     }
 }

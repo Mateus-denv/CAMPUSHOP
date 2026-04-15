@@ -27,6 +27,40 @@ Pense no sistema como uma feira universitária organizada:
 
 Assim, o banco de dados funciona como o "caderno oficial" da feira: guarda quem vende, quem compra, o que foi anunciado e o que foi comprado.
 
+## 🏗️ Arquitetura do Sistema
+
+A arquitetura é crucial para o sucesso da implantação (`deployment`), pois define como o sistema será distribuído, configurado e executado no ambiente de produção.
+
+A arquitetura de software é a organização fundamental de um sistema, composta por seus componentes, os relacionamentos entre eles e as diretrizes que governam seu design e evolução. Funciona como um "plano de construção" ou esqueleto, definindo como diferentes partes do software interagem.
+
+No CampuShop, a arquitetura segue uma separação clara entre camadas e responsabilidades:
+
+- **Cliente (Frontend):** interface React responsável pela experiência do usuário.
+- **Aplicação (Backend):** API Spring Boot que centraliza regras de negócio, autenticação e integração com dados.
+- **Persistência (Banco):** MySQL para armazenamento estruturado e consistente das informações.
+- **Orquestração (Deploy):** Docker Compose para padronizar e simplificar execução local e em produção.
+
+Essa organização reduz acoplamento, facilita manutenção, melhora escalabilidade e torna o processo de deploy mais previsível.
+
+### Representação visual da arquitetura
+
+```mermaid
+flowchart LR
+		U[Usuário] --> B[Navegador]
+		B --> F[Frontend React + Vite]
+		F -->|HTTP/JSON| A[Backend Spring Boot]
+		A -->|JPA/Hibernate| D[(MySQL 8)]
+
+		subgraph Deploy com Docker Compose
+			F
+			A
+			D
+			P[phpMyAdmin]
+		end
+
+		P --> D
+```
+
 ## 🗄️ Banco de Dados
 
 Esta seção descreve o modelo ER enviado no diagrama, de forma simples e direta.

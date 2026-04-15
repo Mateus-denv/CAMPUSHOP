@@ -9,7 +9,6 @@ public class RegisterRequest {
     private String confirmarSenha;
     private String instituicao;
     private String cidade;
-    private String perfil;
 
     public String getNomeCompleto() {
         return nomeCompleto;
@@ -65,13 +64,5 @@ public class RegisterRequest {
 
     public void setCidade(String cidade) {
         this.cidade = cidade;
-    }
-
-    public String getPerfil() {
-        return perfil;
-    }
-
-    public void setPerfil(String perfil) {
-        this.perfil = perfil;
     }
 }

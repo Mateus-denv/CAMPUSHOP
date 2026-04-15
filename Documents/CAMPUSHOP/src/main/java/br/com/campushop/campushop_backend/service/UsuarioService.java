@@ -79,7 +79,9 @@ public class UsuarioService {
     }
 
     public boolean autenticar(String email, String senha) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        String emailNormalizado = email == null ? "" : email.trim().toLowerCase();
+        String senhaInformada = senha == null ? "" : senha;
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailNormalizado);
         return usuarioOpt.map(usuario -> {
             String senhaSalva = usuario.getSenha();
 
@@ -87,11 +89,32 @@ public class UsuarioService {
                 return false;
             }
 
-            if (senhaSalva.startsWith("$2a$") || senhaSalva.startsWith("$2b$") || senhaSalva.startsWith("$2y$")) {
-                return passwordEncoder.matches(senha, senhaSalva);
+            String hashNormalizado = senhaSalva;
+
+            if (senhaSalva.startsWith("{bcrypt}")) {
+                hashNormalizado = senhaSalva.substring("{bcrypt}".length());
             }
 
-            return senhaSalva.equals(senha);
+            if (senhaSalva.startsWith("{noop}")) {
+                String senhaNoop = senhaSalva.substring("{noop}".length());
+                return senhaNoop.equals(senhaInformada) || senhaNoop.equals(senhaInformada.trim());
+            }
+
+            if (hashNormalizado.startsWith("$2a$") || hashNormalizado.startsWith("$2b$")
+                    || hashNormalizado.startsWith("$2y$")) {
+                return passwordEncoder.matches(senhaInformada, hashNormalizado)
+                        || passwordEncoder.matches(senhaInformada.trim(), hashNormalizado);
+            }
+
+            boolean senhaLegadaValida = senhaSalva.equals(senhaInformada) || senhaSalva.equals(senhaInformada.trim());
+
+            if (senhaLegadaValida) {
+                usuario.setSenha(passwordEncoder.encode(senhaInformada.trim()));
+                usuarioRepository.save(usuario);
+                logger.info("Senha legada migrada para bcrypt para o usuário: {}", usuario.getEmail());
+            }
+
+            return senhaLegadaValida;
         }).orElse(false);
     }
 

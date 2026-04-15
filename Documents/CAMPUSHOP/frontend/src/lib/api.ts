@@ -21,7 +21,10 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
+      const requestUrl = String(error.config?.url ?? '')
+      if (requestUrl.includes('/api/auth/me')) {
+        localStorage.removeItem('token')
+      }
     }
     return Promise.reject(error)
   }
