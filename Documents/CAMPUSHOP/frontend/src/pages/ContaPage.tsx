@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { useAuthStore } from '@/store'
-import { getOrders } from '@/lib/shop-storage'
+import { getOrders, getFavorites, removeFromFavorites, addToCart, populateSampleFavorites } from '@/lib/shop-storage'
+import { products } from '@/lib/mock-data'
+import { Heart, ShoppingCart, MessageCircle, MapPin } from 'lucide-react'
 
 const tabs = ['Visão Geral', 'Compras', 'Favoritos', 'Configurações']
 
@@ -10,11 +12,40 @@ export function ContaPage() {
   const [aba, setAba] = useState('Visão Geral')
   const { usuario } = useAuthStore()
   const pedidos = getOrders()
+  const favoritos = getFavorites()
 
   const nome = usuario?.nomeCompleto || usuario?.nome || 'Minha conta'
   const email = usuario?.email || 'Email não informado'
   const ra = usuario?.ra ? `R.A ${usuario.ra}` : 'R.A não informado'
   const compras = pedidos.length
+
+  const produtosFavoritos = products.filter((produto) => favoritos.includes(produto.id))
+
+  useEffect(() => {
+    // Popular favoritos de exemplo se não houver nenhum (apenas para desenvolvimento)
+    if (favoritos.length === 0) {
+      populateSampleFavorites()
+      // Forçar re-render após popular
+      setAba(aba)
+    }
+
+    // Debug: mostrar no console
+    console.log('ContaPage - Aba atual:', aba)
+    console.log('ContaPage - Pedidos:', pedidos.length)
+    console.log('ContaPage - Favoritos:', favoritos.length)
+  }, [favoritos.length, aba, pedidos.length])
+
+  const removerFavorito = (productId: number) => {
+    removeFromFavorites(productId)
+    // Forçar re-render
+    setAba(aba)
+  }
+
+  const adicionarAoCarrinho = (productId: number) => {
+    addToCart(productId, 1)
+    // Forçar re-render ou mostrar feedback
+    setAba(aba)
+  }
 
   return (
     <Layout>
@@ -35,53 +66,39 @@ export function ContaPage() {
           </aside>
 
           <main className="lg:col-span-2">
-            <div className="flex flex-wrap gap-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-2 text-sm font-semibold">
-              {tabs.map((item) => (
-                <button key={item} onClick={() => setAba(item)} className={`rounded-2xl px-4 py-2.5 transition ${aba === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-white hover:text-slate-900'}`}>
-                  {item}
-                </button>
-              ))}
+            {/* Debug info - remover depois */}
+            <div className="mb-2 text-xs text-slate-400">
+              Aba atual: "{aba}" | Pedidos: {pedidos.length} | Favoritos: {favoritos.length}
             </div>
 
-            {aba === 'Visão Geral' ? (
+            {/* Conteúdo das abas */}
+            {aba === 'Visão Geral' && (
               <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-4 shadow-sm">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-200 p-4"><p className="text-sm text-slate-500">Produtos ativos</p><p className="mt-1 text-3xl font-black text-blue-700">1</p></div>
-                  <div className="rounded-2xl border border-slate-200 p-4"><p className="text-sm text-slate-500">Produtos vendidos</p><p className="mt-1 text-3xl font-black text-orange-500">8</p></div>
-                  <div className="rounded-2xl border border-slate-200 p-4"><p className="text-sm text-slate-500">Pedidos</p><p className="mt-1 text-3xl font-black text-emerald-600">{compras}</p></div>
-                </div>
-                <div className="mt-4 min-h-[260px] rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
-                  <h3 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Atividade recente</h3>
-                  <div className="mt-4 space-y-4 text-sm text-slate-700 sm:text-base">
-                    <p>🟢 Seus produtos mais vistos aparecem aqui</p>
-                    <p>🟠 Você possui {compras} pedidos registrados</p>
-                    <p>🔵 Vendas recentes são atualizadas automaticamente</p>
-                    <div className="pt-2">
-                      <Link to="/pedidos" className="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-                        Ver meus pedidos
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <h3 className="text-xl font-bold text-slate-900">Visão Geral</h3>
+                <p className="text-slate-600">Esta é a aba de visão geral</p>
               </div>
-            ) : (
-              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
-                <h3 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Configurações da conta</h3>
-                <p className="mt-1 text-slate-500">Atualize seu código de entrega para confirmar pedidos com segurança.</p>
-                <div className="mt-4 rounded-2xl bg-blue-50 p-6 text-center">
-                  <p className="text-sm text-slate-600">Seu código atual</p>
-                  <p className="mt-2 text-4xl font-black tracking-[0.3em] text-blue-700">_ _ _ _</p>
-                </div>
-                <input className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" placeholder="Novo código de entrega" />
-                <button className="mt-3 w-full rounded-2xl bg-slate-900 py-3 font-semibold text-white">Atualizar código</button>
-                <div className="mt-4 rounded-2xl border border-slate-200 p-4 text-sm">
-                  <p className="mb-2 font-semibold text-slate-900">Importante:</p>
-                  <ul className="list-inside list-disc text-slate-600">
-                    <li>Pode ser solicitado por quem vai fazer a entrega</li>
-                    <li>Não deve ser compartilhado no chat</li>
-                    <li>Não pode ser igual aos 4 últimos dígitos do telefone</li>
-                  </ul>
-                </div>
+            )}
+
+            {aba === 'Compras' && (
+              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-4 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-900">Minhas Compras</h3>
+                <p className="text-slate-600">Esta é a aba de compras</p>
+                <p>Pedidos encontrados: {pedidos.length}</p>
+              </div>
+            )}
+
+            {aba === 'Favoritos' && (
+              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-4 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-900">Favoritos</h3>
+                <p className="text-slate-600">Esta é a aba de favoritos</p>
+                <p>Favoritos encontrados: {favoritos.length}</p>
+              </div>
+            )}
+
+            {aba === 'Configurações' && (
+              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-4 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-900">Configurações</h3>
+                <p className="text-slate-600">Esta é a aba de configurações</p>
               </div>
             )}
           </main>

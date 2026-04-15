@@ -21,6 +21,7 @@ export type Order = {
 
 const CART_KEY = 'campushop_cart'
 const ORDERS_KEY = 'campushop_orders'
+const FAVORITES_KEY = 'campushop_favorites'
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -118,4 +119,41 @@ export function createOrderFromCart(): Order | null {
 
 export function countCartItems() {
   return getCart().reduce((acc, item) => acc + item.quantidade, 0)
+}
+
+export function getFavorites(): number[] {
+  return loadJson<number[]>(FAVORITES_KEY, [])
+}
+
+export function addToFavorites(productId: number) {
+  const favorites = getFavorites()
+  if (!favorites.includes(productId)) {
+    favorites.push(productId)
+    saveJson(FAVORITES_KEY, favorites)
+  }
+}
+
+export function removeFromFavorites(productId: number) {
+  const favorites = getFavorites().filter((id) => id !== productId)
+  saveJson(FAVORITES_KEY, favorites)
+}
+
+export function isFavorite(productId: number): boolean {
+  return getFavorites().includes(productId)
+}
+
+export function toggleFavorite(productId: number) {
+  if (isFavorite(productId)) {
+    removeFromFavorites(productId)
+  } else {
+    addToFavorites(productId)
+  }
+}
+
+// Função para popular favoritos de exemplo (apenas para desenvolvimento)
+export function populateSampleFavorites() {
+  const sampleFavorites = [1, 2, 3] // IDs dos primeiros produtos
+  const currentFavorites = getFavorites()
+  const newFavorites = [...new Set([...currentFavorites, ...sampleFavorites])]
+  saveJson(FAVORITES_KEY, newFavorites)
 }
