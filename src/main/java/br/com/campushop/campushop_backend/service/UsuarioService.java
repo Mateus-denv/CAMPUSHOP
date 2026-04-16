@@ -2,6 +2,7 @@ package br.com.campushop.campushop_backend.service;
 
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.UsuarioRepository;
+import br.com.campushop.campushop_backend.validation.UsuarioValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +18,26 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioValidator usuarioValidator;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+            UsuarioValidator usuarioValidator) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuarioValidator = usuarioValidator;
     }
 
     public Usuario salvar(Usuario usuario) {
         logger.info("Tentando salvar usuário com email: {}", usuario.getEmail());
+
+        // Validações
+        usuarioValidator.validarUsuario(
+                usuario.getNomeCompleto(),
+                usuario.getEmail(),
+                usuario.getCpfCnpj(),
+                usuario.getDataNascimento(),
+                usuario.getRa());
 
         // normalização
         usuario.setEmail(usuario.getEmail().trim().toLowerCase());
@@ -49,7 +61,6 @@ public class UsuarioService {
 
         return salvo;
     }
-
 
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
@@ -78,6 +89,18 @@ public class UsuarioService {
 
     public boolean raJaCadastrado(String ra) {
         return usuarioRepository.existsByRa(ra);
+    }
+
+    public void excluirUsuario(Integer id) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            usuario.setAtivado(false);
+            usuarioRepository.save(usuario);
+            logger.info("Usuário desativado com sucesso! ID: {}", id);
+        } else {
+            throw new RuntimeException("Usuário não encontrado");
+        }
     }
 
 }

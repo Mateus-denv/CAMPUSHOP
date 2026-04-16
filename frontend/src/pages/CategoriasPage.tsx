@@ -1,45 +1,94 @@
-import { useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { categories, products } from '@/lib/mock-data'
+import { categoriaAPI, produtoAPI } from '@/lib/api-service'
+
+type Categoria = {
+  id: number
+  nome: string
+  descricao?: string
+}
+
+type Produto = {
+  id: number
+  nome: string
+  descricao: string
+  preco: number
+  estoque: number
+  categoria: Categoria
+}
 
 export function CategoriasPage() {
   const [busca, setBusca] = useState('')
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('Todas as categorias')
-  const [condicaoSelecionada, setCondicaoSelecionada] = useState('Todas as condições')
   const [ordenacao, setOrdenacao] = useState('Mais recente')
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [produtosFiltrados, setProdutosFiltrados] = useState<Produto[]>([])
+  const [carregando, setCarregando] = useState(true)
 
-  const produtosFiltrados = useMemo(() => {
+  // Carrega dados ao montar
+  useEffect(() => {
+    carregarDados()
+  }, [])
+
+  // Aplica filtros quando busca, categoria ou ordenação mudam
+  useEffect(() => {
+    aplicarFiltros()
+  }, [busca, categoriaSelecionada, ordenacao, produtos])
+
+  const carregarDados = async () => {
+    try {
+      setCarregando(true)
+      const [categoriasRes, produtosRes] = await Promise.all([
+        categoriaAPI.listar(),
+        produtoAPI.listarTodos()
+      ])
+      setCategorias(categoriasRes.data)
+      setProdutos(produtosRes.data)
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err)
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  const aplicarFiltros = () => {
     const termo = busca.trim().toLowerCase()
 
-    return [...products]
-      .filter((product) => {
-        const correspondeBusca =
-          !termo ||
-          product.nome.toLowerCase().includes(termo) ||
-          product.descricao.toLowerCase().includes(termo) ||
-          product.vendedor.toLowerCase().includes(termo)
+    let filtrados = produtos.filter((produto) => {
+      const correspondeBusca =
+        !termo ||
+        produto.nome.toLowerCase().includes(termo) ||
+        produto.descricao.toLowerCase().includes(termo)
 
-        const correspondeCategoria =
-          categoriaSelecionada === 'Todas as categorias' || product.categoria === categoriaSelecionada
+      const correspondeCategoria =
+        categoriaSelecionada === 'Todas as categorias' ||
+        produto.categoria.nome === categoriaSelecionada
 
-        const correspondeCondicao =
-          condicaoSelecionada === 'Todas as condições' || product.condicao === condicaoSelecionada
+      return correspondeBusca && correspondeCategoria
+    })
 
-        return correspondeBusca && correspondeCategoria && correspondeCondicao
-      })
-      .sort((a, b) => {
-        if (ordenacao === 'Menor preço') {
-          return a.preco - b.preco
-        }
+    if (ordenacao === 'Menor preço') {
+      filtrados.sort((a, b) => a.preco - b.preco)
+    } else if (ordenacao === 'Maior preço') {
+      filtrados.sort((a, b) => b.preco - a.preco)
+    } else {
+      filtrados.sort((a, b) => b.id - a.id)
+    }
 
-        if (ordenacao === 'Maior preço') {
-          return b.preco - a.preco
-        }
+    setProdutosFiltrados(filtrados)
+  }
 
-        return b.id - a.id
-      })
-  }, [busca, categoriaSelecionada, condicaoSelecionada, ordenacao])
+  if (carregando) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-96">
+          <p>Carregando categorias...</p>
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -47,18 +96,6 @@ export function CategoriasPage() {
         <div className="text-center">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Todas as categorias</h1>
           <p className="mt-2 text-sm text-slate-500 sm:text-base">Explore todos os produtos disponíveis</p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((category) => (
-            <div key={category.id} className="rounded-[1.5rem] border border-slate-200 px-4 py-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${category.color}`}>
-                {category.icon}
-              </div>
-              <p className="mt-4 font-bold text-slate-900">{category.nome}</p>
-              <p className="mt-1 text-xs text-slate-500">{category.quantidade} produtos</p>
-            </div>
-          ))}
         </div>
 
         <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm md:flex-row md:items-center">
@@ -75,19 +112,9 @@ export function CategoriasPage() {
             className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
           >
             <option>Todas as categorias</option>
-            {categories.map((category) => (
-              <option key={category.id}>{category.nome}</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id}>{categoria.nome}</option>
             ))}
-          </select>
-          <select
-            value={condicaoSelecionada}
-            onChange={(event) => setCondicaoSelecionada(event.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
-          >
-            <option>Todas as condições</option>
-            <option>Novo</option>
-            <option>Seminovo</option>
-            <option>Usado</option>
           </select>
           <select
             value={ordenacao}
@@ -100,21 +127,27 @@ export function CategoriasPage() {
           </select>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {produtosFiltrados.map((product) => (
-            <div key={product.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="flex h-40 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">Imagem</div>
-              <div className="p-5">
-                <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em]">
-                  <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700">{product.categoria}</span>
-                  <span className="px-2 py-1 rounded-full bg-green-100 text-green-700">{product.condicao}</span>
-                </div>
-                <h3 className="text-lg font-bold tracking-tight text-slate-900">{product.nome}</h3>
-                <p className="mt-2 text-2xl font-black text-blue-700">R$ {product.preco.toFixed(2)}</p>
-                <p className="mt-1 text-xs text-slate-500">{product.vendedor} • {product.local}</p>
-                <Link to={`/produto/${product.id}`} className="mt-4 block w-full rounded-2xl bg-slate-900 py-3 text-center font-semibold text-white transition-transform hover:scale-[1.01]">Ver produto</Link>
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {produtosFiltrados.map((produto) => (
+            <Link key={produto.id} to={`/produto/${produto.id}`} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="flex h-40 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
+                Imagem
               </div>
-            </div>
+              <div className="p-5">
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
+                  {produto.categoria.nome}
+                </span>
+                <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-900 line-clamp-2">
+                  {produto.nome}
+                </h3>
+                <p className="mt-2 text-2xl font-black text-blue-700">
+                  R$ {produto.preco.toFixed(2).replace('.', ',')}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {produto.estoque > 0 ? `${produto.estoque} em estoque` : 'Fora de estoque'}
+                </p>
+              </div>
+            </Link>
           ))}
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { products } from '@/lib/mock-data'
+import { produtoAPI } from '@/lib/api-service'
 import { addToCart, countCartItems } from '@/lib/shop-storage'
 
 type Produto = {
@@ -10,7 +10,7 @@ type Produto = {
   descricao: string
   preco: number
   estoque: number
-  vendedor_id: number
+  vendedor_id?: number
 }
 
 export function ProdutosPage() {
@@ -27,18 +27,11 @@ export function ProdutosPage() {
   const carregarProdutos = async () => {
     try {
       setCarregando(true)
-      setProdutos([
-        ...products.map((item) => ({
-          id: item.id,
-          nome: item.nome,
-          descricao: item.descricao,
-          preco: item.preco,
-          estoque: 10,
-          vendedor_id: item.id,
-        })),
-      ])
+      const response = await produtoAPI.listarTodos()
+      setProdutos(response.data)
     } catch (err: any) {
-      setErro('Erro ao carregar produtos')
+      setErro('Erro ao carregar produtos da API')
+      console.error('Erro:', err)
     } finally {
       setCarregando(false)
     }

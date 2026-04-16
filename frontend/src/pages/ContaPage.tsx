@@ -1,15 +1,44 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { useAuthStore } from '@/store'
 import { getOrders } from '@/lib/shop-storage'
+import { produtoAPI } from '@/lib/api-service'
 
-const tabs = ['Visão Geral', 'Compras', 'Favoritos', 'Configurações']
+type UsuarioProduto = {
+  idProduto: number
+  nomeProduto: string
+  descricao: string
+  estoque: number
+  preco?: number
+  categoria?: {
+    idCategoria: number
+    nome_categoria: string
+  }
+}
+
+const tabs = ['Visão Geral', 'Meus Produtos', 'Compras', 'Favoritos', 'Configurações']
 
 export function ContaPage() {
   const [aba, setAba] = useState('Visão Geral')
+  const [produtos, setProdutos] = useState<UsuarioProduto[]>([])
   const { usuario } = useAuthStore()
   const pedidos = getOrders()
+
+  useEffect(() => {
+    if (aba === 'Meus Produtos') {
+      carregarMeusProdutos()
+    }
+  }, [aba])
+
+  const carregarMeusProdutos = async () => {
+    try {
+      const response = await produtoAPI.listarMeus()
+      setProdutos(response.data)
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error)
+    }
+  }
 
   const nome = usuario?.nomeCompleto || usuario?.nome || 'Minha conta'
   const email = usuario?.email || 'Email não informado'
@@ -63,6 +92,30 @@ export function ContaPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            ) : aba === 'Meus Produtos' ? (
+              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
+                <h3 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Meus produtos</h3>
+                <p className="mt-1 text-slate-500">Gerencie os produtos que você anunciou.</p>
+                {produtos.length === 0 ? (
+                  <div className="mt-4 text-center">
+                    <p className="text-slate-500">Você ainda não anunciou nenhum produto.</p>
+                    <Link to="/cadastrar-produto" className="mt-4 inline-block rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white">
+                      Anunciar primeiro produto
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {produtos.map((produto) => (
+                      <div key={produto.idProduto} className="rounded-2xl border border-slate-200 p-4 shadow-sm">
+                        <h4 className="font-bold text-slate-900">{produto.nomeProduto}</h4>
+                        <p className="text-sm text-slate-600">{produto.descricao}</p>
+                        <p className="mt-2 font-semibold text-blue-600">R$ {produto.preco?.toFixed(2)}</p>
+                        <p className="text-sm text-slate-500">Estoque: {produto.estoque}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">

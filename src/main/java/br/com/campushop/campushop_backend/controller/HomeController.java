@@ -47,6 +47,11 @@ public class HomeController {
         return "forward:/index.html";
     }
 
+    @GetMapping("/cadastrar-produto")
+    public String cadastrarProduto() {
+        return "forward:/index.html";
+    }
+
     @GetMapping("/produto/{id}")
     public String produtoDetalhe(@PathVariable String id) {
         return "forward:/index.html";

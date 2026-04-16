@@ -48,6 +48,9 @@ public class Usuario {
     @Column(name = "ativado", nullable = false)
     private Boolean ativado;
 
+    @Column(name = "data_nascimento")
+    private LocalDate dataNascimento;
+
     @Column(name = "data_cadastro", nullable = false)
     private LocalDate dataCadastro;
 
@@ -181,6 +184,14 @@ public class Usuario {
         this.dataCadastro = dataCadastro;
     }
 
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
     @Override
     public String toString() {
         return "Usuario{" +
@@ -196,6 +207,7 @@ public class Usuario {
                 ", instituicaoEnsino='" + instituicaoEnsino + '\'' +
                 ", localizacaoGps='" + localizacaoGps + '\'' +
                 ", ativado=" + ativado +
+                ", dataNascimento=" + dataNascimento +
                 ", dataCadastro=" + dataCadastro +
                 '}';
     }

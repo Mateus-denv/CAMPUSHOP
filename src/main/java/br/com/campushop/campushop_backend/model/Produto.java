@@ -1,6 +1,7 @@
 package br.com.campushop.campushop_backend.model;
 
 import jakarta.persistence.*; // Importando as anotações JPA para mapear a classe como entidade e definir as colunas
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "produto")
@@ -9,9 +10,11 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_produto")
+    @JsonProperty("id")
     private Integer idProduto;
 
     @Column(name = "nome_produto", nullable = false, length = 200)
+    @JsonProperty("nome")
     private String nomeProduto;
 
     @Column(columnDefinition = "TEXT")
@@ -34,6 +37,10 @@ public class Produto {
     private Categoria categoria; // O produto pode ser sim vinculado com o id mas na hora do usurio vizualizar o
                                  // produto ele vai ver o nome da categoria e nao o id, entao aqui a gente tem
                                  // que usar a classe Categoria mesmo.
+
+    @ManyToOne
+    @JoinColumn(name = "id_usuario")
+    private Usuario usuario; // Usuário que criou o produto
 
     // --- GETTERS E SETTERS ---
     // Eles permitem que o Spring leia e grave os dados nos campos privados
@@ -108,5 +115,13 @@ public class Produto {
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

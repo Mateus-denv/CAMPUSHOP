@@ -3,7 +3,15 @@ USE campushop;
 INSERT INTO categoria (nome_categoria, descricao)
 VALUES
   ('Livros', 'Materiais de estudo e leitura'),
-  ('Eletrônicos', 'Itens eletrônicos e acessórios')
+  ('Eletrônicos', 'Itens eletrônicos e acessórios'),
+  ('Roupas', 'Vestuário e acessórios'),
+  ('Alimentos', 'Produtos alimentícios e bebidas'),
+  ('Móveis', 'Móveis e decoração'),
+  ('Esportes', 'Equipamentos e acessórios esportivos'),
+  ('Beleza', 'Produtos de beleza e cuidados pessoais'),
+  ('Informática', 'Computadores, periféricos e software'),
+  ('Automotivo', 'Peças e acessórios para veículos'),
+  ('Casa e Jardim', 'Itens para casa e jardim')
 ON DUPLICATE KEY UPDATE nome_categoria = VALUES(nome_categoria);
 
 INSERT INTO usuario (

@@ -14,11 +14,42 @@ export function CadastroPage() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [instituicao, setInstituicao] = useState('SENAI')
-  const [cidade, setCidade] = useState('São Paulo')
-  const [perfil, setPerfil] = useState('comprador')
+  const [cpf, setCpf] = useState('')
+  const [dataNascimento, setDataNascimento] = useState('')
+  const [instituicao, setInstituicao] = useState('')
+  const [cidade, setCidade] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+
+  const cidades = ['Salvador', 'Camaçari']
+  const universidades = {
+    'Salvador': [
+      // Públicas
+      'Universidade Federal da Bahia (UFBA)',
+      'Universidade do Estado da Bahia (UNEB)',
+      'Universidade Estadual de Feira de Santana (UEFS)',
+      'Instituto Federal da Bahia (IFBA)',
+      // Particulares
+      'Universidade Salvador (UNIFACS)',
+      'Faculdade Baiana de Direito',
+      'Faculdade Ruy Barbosa',
+      'Escola Bahiana de Medicina e Saúde Pública',
+      'Faculdade de Tecnologia e Ciências (FTC)',
+      'Centro Universitário Jorge Amado (UNIJORGE)',
+      'Faculdade de Ciências Humanas (FCH)',
+      'Instituto de Ensino Superior da Bahia (IESB)',
+      'Faculdade Metropolitana da Bahia (FAMEB)',
+      'Centro Universitário Estácio da Bahia'
+    ],
+    'Camaçari': [
+      // Públicas
+      'Instituto Federal da Bahia - Campus Camaçari (IFBA)',
+      // Particulares
+      'Faculdade de Tecnologia e Ciências - Polo Camaçari (FTC)',
+      'Centro Universitário Jorge Amado - Polo Camaçari (UNIJORGE)',
+      'Faculdade Metropolitana da Bahia - Polo Camaçari (FAMEB)'
+    ]
+  }
 
   const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +72,21 @@ export function CadastroPage() {
         return
       }
 
+      if (!cpf.trim() || !/^\d{11}$/.test(cpf.trim())) {
+        setErro('CPF deve conter 11 dígitos numéricos')
+        return
+      }
+
+      if (!cidade) {
+        setErro('Cidade é obrigatória')
+        return
+      }
+
+      if (!instituicao) {
+        setErro('Instituição é obrigatória')
+        return
+      }
+
       if (senha.length < 6) {
         setErro('A senha deve ter pelo menos 6 caracteres')
         return
@@ -51,6 +97,16 @@ export function CadastroPage() {
         return
       }
 
+      // Converter dataNascimento para formato ISO (YYYY-MM-DD) se necessário
+      let dataFormatada = dataNascimento
+      if (dataNascimento && typeof dataNascimento === 'string') {
+        // Se estiver no formato DD/MM/YYYY, converter para YYYY-MM-DD
+        if (dataNascimento.includes('/')) {
+          const [dia, mes, ano] = dataNascimento.split('/')
+          dataFormatada = `${ano}-${mes}-${dia}`
+        }
+      }
+
       const response = await authAPI.cadastro(
         nomeCompleto.trim(),
         email.trim(),
@@ -59,11 +115,15 @@ export function CadastroPage() {
         confirmarSenha,
         instituicao.trim(),
         cidade.trim(),
-        perfil
+        'usuario', // perfil padrão
+        cpf.trim(),
+        dataFormatada
       )
 
       localStorage.setItem('token', response.data.token)
-      setUsuario(response.data.user)
+      const userData = response.data.user || response.data
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUsuario(userData)
       navigate('/home')
     } catch (err: any) {
       setErro(err.response?.data?.message || 'Erro ao criar conta')
@@ -146,25 +206,49 @@ export function CadastroPage() {
               />
               <input
                 className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                placeholder="Instituição"
-                value={instituicao}
-                onChange={(e) => setInstituicao(e.target.value)}
+                placeholder="CPF (11 dígitos)"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
               />
               <input
+                type="date"
                 className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                placeholder="Cidade"
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
+                placeholder="Data de nascimento"
+                value={dataNascimento}
+                onChange={(e) => setDataNascimento(e.target.value)}
               />
-              <select
-                className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 md:col-span-2"
-                value={perfil}
-                onChange={(e) => setPerfil(e.target.value)}
-              >
-                <option value="comprador">Comprador</option>
-                <option value="vendedor">Vendedor</option>
-                <option value="ambos">Ambos</option>
-              </select>
+              <div>
+                <select
+                  className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 w-full"
+                  value={cidade}
+                  onChange={(e) => {
+                    setCidade(e.target.value)
+                    setInstituicao('') // Reset instituição quando cidade muda
+                  }}
+                >
+                  <option value="">Selecione uma cidade</option>
+                  {cidades.map((cidadeOption) => (
+                    <option key={cidadeOption} value={cidadeOption}>
+                      {cidadeOption}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <select
+                  className="px-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 w-full"
+                  value={instituicao}
+                  onChange={(e) => setInstituicao(e.target.value)}
+                  disabled={!cidade}
+                >
+                  <option value="">Selecione uma instituição</option>
+                  {cidade && universidades[cidade as keyof typeof universidades]?.map((uni) => (
+                    <option key={uni} value={uni}>
+                      {uni}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div className="md:col-span-2">
                 <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
