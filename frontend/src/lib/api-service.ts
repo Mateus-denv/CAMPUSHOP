@@ -1,9 +1,8 @@
 import api from './api'
-import { Carrinho, Produto } from '@/store'
+import { Carrinho } from '@/store'
 
-export const produtoAPI = {
-  listar: () => api.get<Produto[]>('/api/produtos'),
-  obter: (id: number) => api.get<Produto>(`/api/produtos/${id}`),
+export const categoriaAPI = {
+  listar: () => api.get('/api/categorias'),
 }
 
 export const carrinhoAPI = {
@@ -40,9 +39,19 @@ export const authAPI = {
     confirmarSenha: string,
     instituicao: string,
     cidade: string,
-    perfil: string
-  ) =>
-    api.post('/api/auth/register', {
+    perfil: string,
+    cpfCnpj: string,
+    dataNascimento: string
+  ) => {
+    // Garantir que dataNascimento está no formato ISO (YYYY-MM-DD)
+    let dataFormatada = dataNascimento
+    if (dataNascimento && typeof dataNascimento === 'string') {
+      if (dataNascimento.includes('/')) {
+        const [dia, mes, ano] = dataNascimento.split('/')
+        dataFormatada = `${ano}-${mes}-${dia}`
+      }
+    }
+    return api.post('/api/auth/register', {
       nomeCompleto,
       email,
       ra,
@@ -51,6 +60,18 @@ export const authAPI = {
       instituicao,
       cidade,
       perfil,
-    }),
+      cpfCnpj,
+      dataNascimento: dataFormatada,
+    })
+  },
   me: () => api.get('/api/auth/me'),
+}
+
+export const produtoAPI = {
+  listarTodos: () => api.get('/api/produtos'),
+  listar: () => api.get('/api/produtos'),
+  salvar: (produto: any) => api.post('/api/produtos', produto),
+  listarMeus: () => api.get('/api/produtos/usuario'),
+  obterPorUsuario: () => api.get('/api/produtos/usuario'),
+  deletar: (id: number) => api.delete(`/api/produtos/${id}`),
 }

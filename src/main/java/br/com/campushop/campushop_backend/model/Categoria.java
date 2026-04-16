@@ -1,6 +1,7 @@
 package br.com.campushop.campushop_backend.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "categoria") // Especifica o nome da tabela no banco de dados, que é "categoria"
@@ -8,15 +9,17 @@ public class Categoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_categoria")
+    @JsonProperty("id")
     private Integer idCategoria;
-    
-@Column(name = "nome_categoria", nullable = false, length = 100)
+
+    @Column(name = "nome_categoria", nullable = false, length = 100)
+    @JsonProperty("nome")
     private String nome_categoria;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
-   public Integer getIdCategoria() {
+    public Integer getIdCategoria() {
         return idCategoria;
     }
 

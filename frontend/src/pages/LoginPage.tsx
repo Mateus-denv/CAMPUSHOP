@@ -18,17 +18,23 @@ export function LoginPage() {
     setErro('')
 
     try {
-      if (!email || !senha) {
-        setErro('Preencha email e senha')
+      if (!email.trim()) {
+        setErro('Email é obrigatório')
+        return
+      }
+      if (!senha) {
+        setErro('Senha é obrigatória')
         return
       }
 
       const response = await authAPI.login(email, senha)
       localStorage.setItem('token', response.data.token)
-      const usuario = response.data.user
+      const usuario = response.data.user ?? response.data
+      localStorage.setItem('user', JSON.stringify(usuario))
 
       const { setUsuario } = useAuthStore.getState()
       setUsuario(usuario)
+      window.location.replace('/home')
 
       navigate('/home')
     } catch (err: any) {

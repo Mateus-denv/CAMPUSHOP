@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import br.com.campushop.campushop_backend.config.LocalDateDeserializer;
+import java.time.LocalDate;
 
 public class RegisterRequest {
 
@@ -38,6 +42,14 @@ public class RegisterRequest {
 
     @NotBlank(message = "Perfil é obrigatório")
     private String perfil;
+
+    @NotBlank(message = "CPF é obrigatório")
+    @Pattern(regexp = "\\d{11}", message = "CPF deve conter 11 dígitos")
+    private String cpfCnpj;
+
+    @NotNull(message = "Data de nascimento é obrigatória")
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    private LocalDate dataNascimento;
 
     // 🔥 VALIDAÇÃO IMPORTANTE (senha = confirmarSenha)
     @AssertTrue(message = "As senhas não coincidem")
@@ -108,5 +120,21 @@ public class RegisterRequest {
 
     public void setPerfil(String perfil) {
         this.perfil = perfil;
+    }
+
+    public String getCpfCnpj() {
+        return cpfCnpj;
+    }
+
+    public void setCpfCnpj(String cpfCnpj) {
+        this.cpfCnpj = cpfCnpj;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
     }
 }

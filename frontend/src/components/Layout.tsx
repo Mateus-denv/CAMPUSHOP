@@ -23,8 +23,9 @@ export function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     setUsuario(null)
-    navigate('/home')
+    navigate('/login', { replace: true })
   }
 
   return (
