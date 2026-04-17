@@ -3,6 +3,7 @@
 ## 📋 Visão Geral
 
 Os controladores (Controllers) são responsáveis por:
+
 - Receber requisições HTTP
 - Validar dados de entrada
 - Chamar serviços para processar a lógica de negócio
@@ -25,9 +26,11 @@ Os controladores (Controllers) são responsáveis por:
 ### Métodos
 
 #### 1. **POST /api/auth/register**
+
 Registra um novo usuário na plataforma.
 
 **Entrada (JSON):**
+
 ```json
 {
   "nomeCompleto": "João Silva",
@@ -43,12 +46,14 @@ Registra um novo usuário na plataforma.
 ```
 
 **Validações:**
+
 - Email deve ser único
 - RA deve ser único
 - Todos os campos obrigatórios devem ser preenchidos
 - Email deve ter formato válido
 
 **Retorno (Sucesso - 201 Created):**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -62,13 +67,15 @@ Registra um novo usuário na plataforma.
 ```
 
 **Retorno (Erro - 400 Bad Request):**
+
 ```json
 {
-  "message": "Email já cadastrado" 
+  "message": "Email já cadastrado"
 }
 ```
 
 **Lógica Interna:**
+
 1. Normaliza email (lowercase) e RA (trim)
 2. Valida se email/RA já existem
 3. Cria novo Usuario
@@ -80,9 +87,11 @@ Registra um novo usuário na plataforma.
 ---
 
 #### 2. **POST /api/auth/login**
+
 Autentica um usuário existente.
 
 **Entrada (JSON):**
+
 ```json
 {
   "email": "joao@example.com",
@@ -91,11 +100,13 @@ Autentica um usuário existente.
 ```
 
 **Validações:**
+
 - Email é obrigatório
 - Senha é obrigatória
 - Credenciais devem estar corretas
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -109,6 +120,7 @@ Autentica um usuário existente.
 ```
 
 **Retorno (Erro - 401 Unauthorized):**
+
 ```json
 {
   "message": "Email ou senha inválidos"
@@ -116,6 +128,7 @@ Autentica um usuário existente.
 ```
 
 **Lógica Interna:**
+
 1. Valida campos obrigatórios
 2. Busca usuário por email
 3. Compara senha fornecida com senha criptografada
@@ -125,14 +138,17 @@ Autentica um usuário existente.
 ---
 
 #### 3. **GET /api/auth/me**
+
 Retorna dados do usuário autenticado (requer token JWT).
 
 **Headers Necessários:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "id": 1,
@@ -144,6 +160,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Retorno (Erro - 401 Unauthorized):**
+
 ```json
 {
   "message": "Token inválido ou expirado"
@@ -163,12 +180,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Métodos
 
 #### 1. **GET /api/usuarios/{id}**
+
 Retorna dados de um usuário específico.
 
 **Parâmetros:**
+
 - `id` (Path): ID do usuário
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "id": 1,
@@ -182,6 +202,7 @@ Retorna dados de um usuário específico.
 ```
 
 **Retorno (Erro - 404 Not Found):**
+
 ```json
 {
   "message": "Usuário não encontrado"
@@ -191,9 +212,11 @@ Retorna dados de um usuário específico.
 ---
 
 #### 2. **PUT /api/usuarios/{id}**
+
 Atualiza dados de um usuário (requer autenticação).
 
 **Entrada (JSON):**
+
 ```json
 {
   "nomeCompleto": "João Silva Atualizado",
@@ -203,10 +226,12 @@ Atualiza dados de um usuário (requer autenticação).
 ```
 
 **Validações:**
+
 - Usuário deve estar autenticado
 - Apenas o próprio usuário pode atualizar seus dados (ou admin)
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "id": 1,
@@ -219,16 +244,20 @@ Atualiza dados de um usuário (requer autenticação).
 ---
 
 #### 3. **DELETE /api/usuarios/{id}**
+
 Desativa um usuário (soft delete - apenas marca como inativo).
 
 **Parâmetros:**
+
 - `id` (Path): ID do usuário
 
 **Validações:**
+
 - Usuário deve estar autenticado
 - Apenas o próprio usuário pode deletar sua conta
 
 **Retorno (Sucesso - 204 No Content):**
+
 ```
 [Sem corpo na resposta]
 ```
@@ -246,14 +275,17 @@ Desativa um usuário (soft delete - apenas marca como inativo).
 ### Métodos
 
 #### 1. **GET /api/produtos**
+
 Lista todos os produtos (com paginação opcional).
 
 **Query Parameters:**
+
 ```
 ?categoria=1&pagina=0&tamanho=10&busca=notebook
 ```
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "conteudo": [
@@ -261,7 +293,7 @@ Lista todos os produtos (com paginação opcional).
       "idProduto": 1,
       "nomeProduto": "Notebook Gamer",
       "descricao": "Notebook com RTX 4090",
-      "preco": 5000.00,
+      "preco": 5000.0,
       "estoque": 10,
       "status": "ATIVO",
       "categoria": {
@@ -279,18 +311,21 @@ Lista todos os produtos (com paginação opcional).
 ---
 
 #### 2. **GET /api/produtos/{id}**
+
 Retorna detalhes de um produto específico.
 
 **Parâmetros:**
+
 - `id` (Path): ID do produto
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idProduto": 1,
   "nomeProduto": "Notebook Gamer",
   "descricao": "Notebook com RTX 4090",
-  "preco": 5000.00,
+  "preco": 5000.0,
   "estoque": 10,
   "peso": 2.5,
   "dimensoes": "35x25x2cm",
@@ -309,14 +344,16 @@ Retorna detalhes de um produto específico.
 ---
 
 #### 3. **POST /api/produtos**
+
 Cria um novo produto (requer autenticação e ser vendedor).
 
 **Entrada (JSON):**
+
 ```json
 {
   "nomeProduto": "Novo Produto",
   "descricao": "Descrição do produto",
-  "preco": 100.00,
+  "preco": 100.0,
   "estoque": 20,
   "idCategoria": 1,
   "peso": 1.5,
@@ -325,6 +362,7 @@ Cria um novo produto (requer autenticação e ser vendedor).
 ```
 
 **Validações:**
+
 - Usuário deve estar autenticado
 - Usuário deve ser vendedor (tipoConta == "VENDEDOR")
 - Preço deve ser positivo
@@ -332,11 +370,12 @@ Cria um novo produto (requer autenticação e ser vendedor).
 - Categoria deve existir
 
 **Retorno (Sucesso - 201 Created):**
+
 ```json
 {
   "idProduto": 101,
   "nomeProduto": "Novo Produto",
-  "preco": 100.00,
+  "preco": 100.0,
   "estoque": 20,
   "status": "ATIVO"
 }
@@ -345,27 +384,31 @@ Cria um novo produto (requer autenticação e ser vendedor).
 ---
 
 #### 4. **PUT /api/produtos/{id}**
+
 Atualiza um produto existente.
 
 **Entrada (JSON):**
+
 ```json
 {
   "nomeProduto": "Produto Atualizado",
-  "preco": 120.00,
+  "preco": 120.0,
   "estoque": 15
 }
 ```
 
 **Validações:**
+
 - Apenas o criador do produto pode atualizar
 - Dados devem ser válidos
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idProduto": 1,
   "nomeProduto": "Produto Atualizado",
-  "preco": 120.00,
+  "preco": 120.0,
   "estoque": 15
 }
 ```
@@ -373,13 +416,16 @@ Atualiza um produto existente.
 ---
 
 #### 5. **DELETE /api/produtos/{id}**
+
 Deleta um produto.
 
 **Validações:**
+
 - Apenas o criador pode deletar
 - Produto não pode estar em nenhum carrinho ativo
 
 **Retorno (Sucesso - 204 No Content):**
+
 ```
 [Sem corpo]
 ```
@@ -397,9 +443,11 @@ Deleta um produto.
 ### Métodos
 
 #### 1. **GET /api/carrinho**
+
 Retorna o carrinho do usuário autenticado.
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idCarrinho": 1,
@@ -409,22 +457,24 @@ Retorna o carrinho do usuário autenticado.
       "produto": {
         "idProduto": 1,
         "nomeProduto": "Notebook",
-        "preco": 5000.00
+        "preco": 5000.0
       },
       "quantidade": 1,
-      "precoTotal": 5000.00
+      "precoTotal": 5000.0
     }
   ],
-  "precoTotal": 5000.00
+  "precoTotal": 5000.0
 }
 ```
 
 ---
 
 #### 2. **POST /api/carrinho/adicionar**
+
 Adiciona um produto ao carrinho.
 
 **Entrada (JSON):**
+
 ```json
 {
   "idProduto": 1,
@@ -433,12 +483,14 @@ Adiciona um produto ao carrinho.
 ```
 
 **Validações:**
+
 - Produto deve existir
 - Quantidade deve ser > 0
 - Deve haver estoque suficiente
 - Usuário deve estar autenticado
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idCarrinho": 1,
@@ -450,12 +502,15 @@ Adiciona um produto ao carrinho.
 ---
 
 #### 3. **DELETE /api/carrinho/remover/{idProduto}**
+
 Remove um produto do carrinho.
 
 **Parâmetros:**
+
 - `idProduto` (Path): ID do produto a remover
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idCarrinho": 1,
@@ -467,14 +522,16 @@ Remove um produto do carrinho.
 ---
 
 #### 4. **POST /api/carrinho/limpar**
+
 Esvazia o carrinho completamente.
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idCarrinho": 1,
   "itens": [],
-  "precoTotal": 0.00
+  "precoTotal": 0.0
 }
 ```
 
@@ -491,9 +548,11 @@ Esvazia o carrinho completamente.
 ### Métodos
 
 #### 1. **GET /api/categorias**
+
 Lista todas as categorias ativas.
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 [
   {
@@ -514,9 +573,11 @@ Lista todas as categorias ativas.
 ---
 
 #### 2. **GET /api/categorias/{id}**
+
 Retorna uma categoria específica.
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "idCategoria": 1,
@@ -540,9 +601,11 @@ Retorna uma categoria específica.
 ### Métodos
 
 #### 1. **GET /**
+
 Retorna status da aplicação.
 
 **Retorno:**
+
 ```
 Bem-vindo ao CampusShop API!
 ```
@@ -550,9 +613,11 @@ Bem-vindo ao CampusShop API!
 ---
 
 #### 2. **GET /health**
+
 Health check da aplicação (monitoramento).
 
 **Retorno (Sucesso - 200 OK):**
+
 ```json
 {
   "status": "UP",
@@ -587,6 +652,7 @@ Authorization: Bearer <token_jwt>
 ```
 
 Exemplo em cURL:
+
 ```bash
 curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   http://localhost:8080/api/auth/me
@@ -594,33 +660,33 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
 
 ### Tratamento de Erros
 
-| Status | Significado | Exemplo |
-|--------|-----------|---------|
-| 200 | OK - Requisição bem-sucedida | Login realizado com sucesso |
-| 201 | Created - Recurso criado | Produto cadastrado |
-| 204 | No Content - Sucesso sem corpo | Produto deletado |
-| 400 | Bad Request - Dados inválidos | Email duplicado |
-| 401 | Unauthorized - Não autenticado | Token ausente/inválido |
-| 403 | Forbidden - Sem permissão | Tentou atualizar produto de outro |
-| 404 | Not Found - Recurso não existe | Produto com ID 999 não encontrado |
-| 500 | Server Error - Erro interno | Erro de banco de dados |
+| Status | Significado                    | Exemplo                           |
+| ------ | ------------------------------ | --------------------------------- |
+| 200    | OK - Requisição bem-sucedida   | Login realizado com sucesso       |
+| 201    | Created - Recurso criado       | Produto cadastrado                |
+| 204    | No Content - Sucesso sem corpo | Produto deletado                  |
+| 400    | Bad Request - Dados inválidos  | Email duplicado                   |
+| 401    | Unauthorized - Não autenticado | Token ausente/inválido            |
+| 403    | Forbidden - Sem permissão      | Tentou atualizar produto de outro |
+| 404    | Not Found - Recurso não existe | Produto com ID 999 não encontrado |
+| 500    | Server Error - Erro interno    | Erro de banco de dados            |
 
 ---
 
 ## 📝 Anotações Spring Usadas
 
-| Anotação | Descrição |
-|----------|-----------|
+| Anotação          | Descrição                                 |
+| ----------------- | ----------------------------------------- |
 | `@RestController` | Indica que a classe é um controlador REST |
-| `@RequestMapping` | Define rota base do controlador |
-| `@PostMapping` | HTTP POST |
-| `@GetMapping` | HTTP GET |
-| `@PutMapping` | HTTP PUT |
-| `@DeleteMapping` | HTTP DELETE |
-| `@PathVariable` | Extrai valor da URL |
-| `@RequestBody` | Mapeia corpo JSON para objeto |
-| `@RequestParam` | Parâmetro query da URL |
-| `@Valid` | Valida objeto usando validators |
+| `@RequestMapping` | Define rota base do controlador           |
+| `@PostMapping`    | HTTP POST                                 |
+| `@GetMapping`     | HTTP GET                                  |
+| `@PutMapping`     | HTTP PUT                                  |
+| `@DeleteMapping`  | HTTP DELETE                               |
+| `@PathVariable`   | Extrai valor da URL                       |
+| `@RequestBody`    | Mapeia corpo JSON para objeto             |
+| `@RequestParam`   | Parâmetro query da URL                    |
+| `@Valid`          | Valida objeto usando validators           |
 
 ---
 

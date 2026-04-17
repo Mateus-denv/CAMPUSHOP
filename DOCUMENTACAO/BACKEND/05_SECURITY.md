@@ -3,6 +3,7 @@
 ## 📋 Visão Geral
 
 A segurança da aplicação é baseada em:
+
 - **Spring Security** - Framework de segurança
 - **JWT (JSON Web Tokens)** - Tokens stateless para autenticação
 - **BCrypt** - Criptografia de senhas
@@ -18,6 +19,7 @@ JWT (JSON Web Token) é um padrão para criar tokens de autenticação stateless
 **Estrutura:** `header.payload.signature`
 
 ### Exemplo Real:
+
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 .eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvYW8gU2lsdmEiLCJpYXQiOjE1MTYyMzkwMjJ9
@@ -27,6 +29,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### Partes:
 
 1. **Header (Base64)**
+
 ```json
 {
   "alg": "HS256",
@@ -35,6 +38,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 2. **Payload (Base64)**
+
 ```json
 {
   "sub": "1",
@@ -45,6 +49,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 3. **Signature (Criptografado)**
+
 ```
 HMACSHA256(
   base64UrlEncode(header) + "." + base64UrlEncode(payload),
@@ -65,13 +70,13 @@ HMACSHA256(
 ```java
 @Component
 public class JwtTokenProvider {
-    
+
     @Value("${jwt.secret}")
     private String jwtSecret;  // Chave secreta para assinar
-    
+
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;  // Tempo de expiração (em ms)
-    
+
     // Exemplo em application.properties:
     // jwt.secret=sua_chave_secreta_super_segura_aqui
     // jwt.expiration=86400000  (24 horas)
@@ -79,16 +84,17 @@ public class JwtTokenProvider {
 ```
 
 ### Método 1: **generateToken(UserDetails userDetails)**
+
 Gera um novo JWT token.
 
 ```java
 public String generateToken(UserDetails userDetails) {
     Map<String, Object> claims = new HashMap<>();
-    
+
     // Adiciona informações do usuário ao token
     claims.put("email", userDetails.getUsername());
     claims.put("roles", userDetails.getAuthorities());
-    
+
     return Jwts.builder()
         .setClaims(claims)
         .setSubject(userDetails.getUsername())
@@ -100,6 +106,7 @@ public String generateToken(UserDetails userDetails) {
 ```
 
 **Exemplo de token gerado:**
+
 ```
 eyJhbGciOiJIUzUxMiJ9.eyJlbWFpbCI6ImpvYW9AZXhhbXBsZS5jb20iLCJzdWIiOiJqb2FvQGV4YW1wbGUuY29tIiwiaWF0IjoxNjEzMzcxMTAxLCJleHAiOjE2MTMzNzcxMDF9.sig_here
 ```
@@ -107,6 +114,7 @@ eyJhbGciOiJIUzUxMiJ9.eyJlbWFpbCI6ImpvYW9AZXhhbXBsZS5jb20iLCJzdWIiOiJqb2FvQGV4YW1
 ---
 
 ### Método 2: **getUserEmailFromToken(String token)**
+
 Extrai email do token.
 
 ```java
@@ -120,6 +128,7 @@ public String getUserEmailFromToken(String token) {
 ```
 
 **Uso:**
+
 ```java
 String token = "eyJhbGciOiJIUzUxMiJ9...";
 String email = jwtTokenProvider.getUserEmailFromToken(token);
@@ -129,6 +138,7 @@ String email = jwtTokenProvider.getUserEmailFromToken(token);
 ---
 
 ### Método 3: **validateToken(String token)**
+
 Valida se o token é válido e não expirou.
 
 ```java
@@ -155,6 +165,7 @@ public boolean validateToken(String token) {
 ```
 
 **Exceções Possíveis:**
+
 - `ExpiredJwtException` - Token expirou
 - `MalformedJwtException` - Token inválido
 - `UnsupportedJwtException` - Tipo de token não suportado
@@ -174,56 +185,56 @@ public boolean validateToken(String token) {
 @Component
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     @Autowired
     private JwtTokenProvider tokenProvider;
-    
+
     @Autowired
     private CustomUserDetailsService userDetailsService;
-    
+
     @Override
     protected void doFilterInternal(
-        HttpServletRequest request, 
+        HttpServletRequest request,
         HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
-        
+
         try {
             // 1. Extrai token do header Authorization
             String jwt = getJwtFromRequest(request);
-            
+
             // 2. Se houver token, valida
             if (jwt != null && tokenProvider.validateToken(jwt)) {
                 // 3. Extrai email do token
                 String email = tokenProvider.getUserEmailFromToken(jwt);
-                
+
                 // 4. Carrega dados do usuário
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                
+
                 // 5. Cria autenticação
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                     );
-                
+
                 // 6. Define no SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
             logger.error("Não foi possível definir autenticação: {}", e);
         }
-        
+
         // 7. Continua o filtro
         filterChain.doFilter(request, response);
     }
-    
+
     // Extrai token do header "Authorization: Bearer <token>"
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        
+
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);  // Remove "Bearer "
         }
-        
+
         return null;
     }
 }
@@ -278,35 +289,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
+
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();  // Criptografia BCrypt
     }
-    
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             // Desabilita CSRF (não precisa em API REST com JWT)
             .csrf().disable()
-            
+
             // Permite acesso público aos endpoints de auth
             .authorizeRequests()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/").permitAll()
                 .anyRequest().authenticated()  // Resto precisa autenticação
-            
+
             // Adiciona JWT filter
             .and()
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            
+
             // Sem sessão (stateless)
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        
+
         return http.build();
     }
 }
@@ -317,6 +328,7 @@ public class SecurityConfig {
 ## 🛡️ BCrypt - Criptografia de Senhas
 
 **O que é BCrypt?**
+
 - Algoritmo de hash one-way (não reversível)
 - Adiciona salt automático
 - Adaptativo (fica mais lento com tempo)
@@ -462,6 +474,7 @@ Response:
 ### ⚠️ Precauções Importantes
 
 **Nunca:**
+
 - ❌ Armazene senhas em plaintext
 - ❌ Exponha chaves secretas no código
 - ❌ Use HTTP em produção (sem HTTPS)
@@ -469,6 +482,7 @@ Response:
 - ❌ Expresse senhas em logs ou erros
 
 **Sempre:**
+
 - ✅ Use variáveis de ambiente para secrets
 - ✅ Configure expiração de token apropriada
 - ✅ Valide input do usuário
@@ -492,12 +506,12 @@ server.servlet.session.tracking-modes=none
 
 ## 📋 Endpoints de Autenticação
 
-| Método | Endpoint | Autenticação | Descrição |
-|--------|----------|-------------|-----------|
-| POST | `/api/auth/register` | Não | Registrar novo usuário |
-| POST | `/api/auth/login` | Não | Fazer login |
-| GET | `/api/auth/me` | Sim | Dados do usuário autenticado |
-| POST | `/api/auth/logout` | Sim | Fazer logout |
+| Método | Endpoint             | Autenticação | Descrição                    |
+| ------ | -------------------- | ------------ | ---------------------------- |
+| POST   | `/api/auth/register` | Não          | Registrar novo usuário       |
+| POST   | `/api/auth/login`    | Não          | Fazer login                  |
+| GET    | `/api/auth/me`       | Sim          | Dados do usuário autenticado |
+| POST   | `/api/auth/logout`   | Sim          | Fazer logout                 |
 
 ---
 

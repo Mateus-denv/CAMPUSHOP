@@ -56,8 +56,8 @@ export function HomePage() {
 ### Dados Carregados
 
 ```typescript
-GET /api/categorias              // Lista categorias
-GET /api/produtos                // Lista produtos
+GET / api / categorias; // Lista categorias
+GET / api / produtos; // Lista produtos
 ```
 
 ---
@@ -180,16 +180,16 @@ export function LoginPage() {
 
 ```typescript
 {
-  nomeCompleto: string      // Campo obrigatório
-  email: string             // Campo obrigatório, deve ser único
-  ra: string                // Registro acadêmico, obrigatório e único
-  senha: string             // Campo obrigatório
-  confirmarSenha: string    // Validar igualdade
-  cpfCnpj: string          // Opcional
-  dataNascimento: string   // Formato: YYYY-MM-DD
-  instituicao: string      // Nome da universidade
-  cidade: string           // Cidade
-  perfil: string           // CLIENTE ou VENDEDOR
+  nomeCompleto: string; // Campo obrigatório
+  email: string; // Campo obrigatório, deve ser único
+  ra: string; // Registro acadêmico, obrigatório e único
+  senha: string; // Campo obrigatório
+  confirmarSenha: string; // Validar igualdade
+  cpfCnpj: string; // Opcional
+  dataNascimento: string; // Formato: YYYY-MM-DD
+  instituicao: string; // Nome da universidade
+  cidade: string; // Cidade
+  perfil: string; // CLIENTE ou VENDEDOR
 }
 ```
 
@@ -632,23 +632,28 @@ HomePage (/)
 ## 📊 Estado Global por Página
 
 ### HomePage
+
 - Produtos destacados
 - Categorias
 
 ### LoginPage
+
 - Email
 - Senha
 
 ### ProdutosPage
+
 - Lista de produtos
 - Filtros
 - Paginação
 
 ### CarrinhoPage
+
 - Carrinho (from store)
 - Itens
 
 ### ContaPage
+
 - Usuário (from store)
 - Endereços
 

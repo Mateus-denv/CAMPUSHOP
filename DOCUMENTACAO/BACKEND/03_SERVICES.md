@@ -3,6 +3,7 @@
 ## 📋 Visão Geral
 
 Os serviços (Services) contêm toda a lógica de negócio da aplicação. Eles:
+
 - Realizam validações complexas
 - Executam operações sobre dados
 - Chamam repositórios para persistência
@@ -22,6 +23,7 @@ Os serviços (Services) contêm toda a lógica de negócio da aplicação. Eles:
 **Descrição:** Gerencia operações relacionadas a usuários.
 
 ### Anotação
+
 ```java
 @Service
 public class UsuarioService { }
@@ -43,6 +45,7 @@ private UsuarioValidator usuarioValidator;
 ### Métodos Principais
 
 #### 1. **salvar(Usuario usuario)**
+
 Salva um novo usuário no banco de dados.
 
 ```java
@@ -55,11 +58,11 @@ public Usuario salvar(Usuario usuario) {
         usuario.getDataNascimento(),
         usuario.getRa()
     );
-    
+
     // Normalização
     usuario.setEmail(usuario.getEmail().trim().toLowerCase());
     usuario.setRa(usuario.getRa().trim());
-    
+
     // Verificações de negócio
     if (usuarioRepository.existsByEmail(usuario.getEmail())) {
         throw new RuntimeException("Email já cadastrado");
@@ -67,19 +70,20 @@ public Usuario salvar(Usuario usuario) {
     if (usuarioRepository.existsByRa(usuario.getRa())) {
         throw new RuntimeException("RA já cadastrado");
     }
-    
+
     // Criptografa a senha
     usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-    
+
     // Persiste no BD
     Usuario salvo = usuarioRepository.save(usuario);
-    
+
     logger.info("Usuário salvo com sucesso! ID: {}", salvo.getId());
     return salvo;
 }
 ```
 
 **Lógica:**
+
 1. Valida dados usando UsuarioValidator
 2. Normaliza email e RA
 3. Verifica se email/RA já existem (regra de negócio)
@@ -88,11 +92,13 @@ public Usuario salvar(Usuario usuario) {
 6. Retorna usuário com ID gerado
 
 **Exceções:**
+
 - `RuntimeException` se email ou RA já cadastrado
 
 ---
 
 #### 2. **buscarPorEmail(String email)**
+
 Busca um usuário pelo email.
 
 ```java
@@ -102,10 +108,12 @@ public Optional<Usuario> buscarPorEmail(String email) {
 ```
 
 **Retorno:**
+
 - `Optional.of(usuario)` se encontrado
 - `Optional.empty()` se não encontrado
 
 **Uso:**
+
 ```java
 Optional<Usuario> usuario = usuarioService.buscarPorEmail("joao@example.com");
 if (usuario.isPresent()) {
@@ -118,6 +126,7 @@ if (usuario.isPresent()) {
 ---
 
 #### 3. **autenticar(String email, String senha)**
+
 Verifica se as credenciais estão corretas.
 
 ```java
@@ -125,18 +134,18 @@ public boolean autenticar(String email, String senha) {
     Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
     return usuarioOpt.map(usuario -> {
         String senhaSalva = usuario.getSenha();
-        
+
         if (senhaSalva == null) {
             return false;
         }
-        
+
         // Verifica se é BCrypt (com hash "$2a$", "$2b$" ou "$2y$")
-        if (senhaSalva.startsWith("$2a$") || 
-            senhaSalva.startsWith("$2b$") || 
+        if (senhaSalva.startsWith("$2a$") ||
+            senhaSalva.startsWith("$2b$") ||
             senhaSalva.startsWith("$2y$")) {
             return passwordEncoder.matches(senha, senhaSalva);
         }
-        
+
         // Fallback para comparação simples (dados antigos sem hash)
         return senhaSalva.equals(senha);
     }).orElse(false);
@@ -144,17 +153,20 @@ public boolean autenticar(String email, String senha) {
 ```
 
 **Lógica:**
+
 1. Busca usuário por email
 2. Compara senha fornecida com senha salva
 3. Suporta tanto BCrypt quanto plaintext (compatibilidade)
 
 **Retorno:**
+
 - `true` se credenciais válidas
 - `false` se inválidas ou usuário não existe
 
 ---
 
 #### 4. **emailJaCadastrado(String email)**
+
 Verifica se um email já existe no sistema.
 
 ```java
@@ -164,12 +176,14 @@ public boolean emailJaCadastrado(String email) {
 ```
 
 **Retorno:**
+
 - `true` se existe
 - `false` se disponível
 
 ---
 
 #### 5. **raJaCadastrado(String ra)**
+
 Verifica se um RA já existe no sistema.
 
 ```java
@@ -181,6 +195,7 @@ public boolean raJaCadastrado(String ra) {
 ---
 
 #### 6. **excluirUsuario(Integer id)**
+
 Desativa (soft delete) um usuário.
 
 ```java
@@ -208,9 +223,11 @@ public void excluirUsuario(Integer id) {
 ### Métodos Principais
 
 #### 1. **criarProduto(Produto produto)**
+
 Cria um novo produto.
 
 **Lógica:**
+
 1. Valida dados usando ProdutoValidator
 2. Verifica estoque (não pode ser negativo)
 3. Define status como "ATIVO"
@@ -220,11 +237,11 @@ Cria um novo produto.
 ```java
 public Produto criarProduto(Produto produto) {
     produtoValidator.validarProduto(produto);
-    
+
     if (produto.getEstoque() < 0) {
         throw new IllegalArgumentException("Estoque não pode ser negativo");
     }
-    
+
     produto.setStatus("ATIVO");
     return produtoRepository.save(produto);
 }
@@ -233,6 +250,7 @@ public Produto criarProduto(Produto produto) {
 ---
 
 #### 2. **buscarPorId(Integer id)**
+
 Busca um produto pelo ID.
 
 ```java
@@ -244,6 +262,7 @@ public Optional<Produto> buscarPorId(Integer id) {
 ---
 
 #### 3. **listarPorCategoria(Integer idCategoria)**
+
 Lista todos os produtos de uma categoria.
 
 ```java
@@ -255,6 +274,7 @@ public List<Produto> listarPorCategoria(Integer idCategoria) {
 ---
 
 #### 4. **listarPorUsuario(Integer idUsuario)**
+
 Lista produtos criados por um usuário específico.
 
 ```java
@@ -266,24 +286,25 @@ public List<Produto> listarPorUsuario(Integer idUsuario) {
 ---
 
 #### 5. **atualizarEstoque(Integer idProduto, Integer novaQuantidade)**
+
 Atualiza a quantidade em estoque.
 
 ```java
 public void atualizarEstoque(Integer idProduto, Integer novaQuantidade) {
     Optional<Produto> produtoOpt = produtoRepository.findById(idProduto);
-    
+
     if (produtoOpt.isPresent()) {
         Produto produto = produtoOpt.get();
-        
+
         if (novaQuantidade < 0) {
             throw new IllegalArgumentException("Estoque não pode ser negativo");
         }
-        
+
         // Se estoque ficou zero, desativa produto
         if (novaQuantidade == 0) {
             produto.setStatus("INATIVO");
         }
-        
+
         produto.setEstoque(novaQuantidade);
         produtoRepository.save(produto);
     }
@@ -293,6 +314,7 @@ public void atualizarEstoque(Integer idProduto, Integer novaQuantidade) {
 ---
 
 #### 6. **buscar(String termo)**
+
 Busca produtos por nome ou descrição.
 
 ```java
@@ -314,22 +336,23 @@ public List<Produto> buscar(String termo) {
 ### Métodos Principais
 
 #### 1. **obterCarrinho(Usuario usuario)**
+
 Obtém ou cria o carrinho do usuário.
 
 ```java
 public Carrinho obterCarrinho(Usuario usuario) {
     Optional<Carrinho> carrinhoOpt = carrinhoRepository.findByUsuario(usuario);
-    
+
     if (carrinhoOpt.isPresent()) {
         return carrinhoOpt.get();
     }
-    
+
     // Criar novo carrinho se não existir
     Carrinho novoCarrinho = new Carrinho();
     novoCarrinho.setUsuario(usuario);
     novoCarrinho.setDataCriacao(LocalDate.now());
     novoCarrinho.setItens(new ArrayList<>());
-    
+
     return carrinhoRepository.save(novoCarrinho);
 }
 ```
@@ -337,6 +360,7 @@ public Carrinho obterCarrinho(Usuario usuario) {
 ---
 
 #### 2. **adicionarProduto(Carrinho carrinho, Produto produto, Integer quantidade)**
+
 Adiciona um produto ao carrinho.
 
 ```java
@@ -345,17 +369,17 @@ public void adicionarProduto(Carrinho carrinho, Produto produto, Integer quantid
     if (quantidade <= 0) {
         throw new IllegalArgumentException("Quantidade deve ser maior que zero");
     }
-    
+
     if (produto.getEstoque() < quantidade) {
         throw new IllegalArgumentException("Estoque insuficiente");
     }
-    
+
     // Verifica se produto já está no carrinho
     CarrinhoItem itemExistente = carrinho.getItens().stream()
         .filter(item -> item.getProduto().getIdProduto().equals(produto.getIdProduto()))
         .findFirst()
         .orElse(null);
-    
+
     if (itemExistente != null) {
         // Aumenta quantidade do item existente
         itemExistente.setQuantidade(itemExistente.getQuantidade() + quantidade);
@@ -367,7 +391,7 @@ public void adicionarProduto(Carrinho carrinho, Produto produto, Integer quantid
         novoItem.setQuantidade(quantidade);
         carrinho.getItens().add(novoItem);
     }
-    
+
     carrinho.setDataAtualizacao(LocalDate.now());
     carrinhoRepository.save(carrinho);
 }
@@ -376,14 +400,15 @@ public void adicionarProduto(Carrinho carrinho, Produto produto, Integer quantid
 ---
 
 #### 3. **removerProduto(Carrinho carrinho, Integer idProduto)**
+
 Remove um produto do carrinho.
 
 ```java
 public void removerProduto(Carrinho carrinho, Integer idProduto) {
-    carrinho.getItens().removeIf(item -> 
+    carrinho.getItens().removeIf(item ->
         item.getProduto().getIdProduto().equals(idProduto)
     );
-    
+
     carrinho.setDataAtualizacao(LocalDate.now());
     carrinhoRepository.save(carrinho);
 }
@@ -392,6 +417,7 @@ public void removerProduto(Carrinho carrinho, Integer idProduto) {
 ---
 
 #### 4. **calcularTotal(Carrinho carrinho)**
+
 Calcula o valor total do carrinho.
 
 ```java
@@ -405,6 +431,7 @@ public Double calcularTotal(Carrinho carrinho) {
 ---
 
 #### 5. **limpar(Carrinho carrinho)**
+
 Esvazia o carrinho.
 
 ```java
@@ -426,6 +453,7 @@ public void limpar(Carrinho carrinho) {
 ### Métodos
 
 #### 1. **loadUserByUsername(String email)**
+
 Carrega dados do usuário para autenticação.
 
 ```java
@@ -433,7 +461,7 @@ Carrega dados do usuário para autenticação.
 public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
     Usuario usuario = usuarioRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
-    
+
     return User.builder()
         .username(usuario.getEmail())
         .password(usuario.getSenha())
@@ -447,6 +475,7 @@ public UserDetails loadUserByUsername(String email) throws UsernameNotFoundExcep
 ```
 
 **Lógica:**
+
 1. Busca usuário por email
 2. Cria objeto UserDetails do Spring
 3. Define authorities (permissões) com base no tipo de conta
@@ -489,7 +518,7 @@ CarrinhoController
 2. Se autenticado:
    └─> CustomUserDetailsService.loadUserByUsername(email)
        └─> Cria UserDetails
-   
+
 3. JwtTokenProvider.generateToken(userDetails)
    └─> Cria token JWT
 

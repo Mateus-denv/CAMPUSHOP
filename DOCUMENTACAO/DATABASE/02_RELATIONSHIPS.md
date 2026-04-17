@@ -62,7 +62,7 @@ Usuário: João Silva (id=1)
 -- Todos os produtos do João em Eletrônicos
 SELECT p.* FROM produto p
   JOIN categoria c ON p.idCategoria = c.idCategoria
-WHERE p.idUsuario = 1 
+WHERE p.idUsuario = 1
   AND c.idCategoria = 1
   AND p.status = 'ATIVO';
 ```
@@ -114,7 +114,7 @@ Usuário: João Silva (id=1)
    └─ POST /api/carrinho/adicionar
       ├─ idProduto: 1
       ├─ quantidade: 1
-   
+
 2. Backend:
    ├─ Busca Carrinho de João (idUsuario=1)
    ├─ Verifica estoque: 10 >= 1 ✓
@@ -123,7 +123,7 @@ Usuário: João Silva (id=1)
    │  ├─ idProduto: 1
    │  ├─ quantidade: 1
    └─ Salva
-   
+
 3. Response: 200 OK
    {
      idCarrinho: 1,
@@ -141,7 +141,7 @@ Usuário: João Silva (id=1)
 
 ```sql
 -- Carrinho do João com detalhes dos produtos
-SELECT 
+SELECT
   c.idCarrinho,
   u.nomeCompleto as usuarioNome,
   ci.idItem,
@@ -225,7 +225,7 @@ Pedido (1) ──────────► PedidoItem (M)
 
 ```sql
 -- Pedido completo com detalhes dos produtos
-SELECT 
+SELECT
   p.idPedido,
   u.nomeCompleto,
   p.dataPedido,
@@ -387,7 +387,7 @@ Exemplo:
 ### Relatório de Vendas por Período
 
 ```sql
-SELECT 
+SELECT
   DATE(p.dataPedido) as data,
   COUNT(p.idPedido) as pedidos,
   SUM(p.total) as faturamento

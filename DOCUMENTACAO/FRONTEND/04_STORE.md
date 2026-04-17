@@ -7,6 +7,7 @@ O gerenciamento de estado global é feito com **Zustand**, uma biblioteca leve e
 **Localização:** `frontend/src/store.ts`
 
 **Por que Zustand?**
+
 - Simples e direto (sem boilerplate)
 - Funciona com React Hooks
 - Pequeno (~2KB)
@@ -17,55 +18,55 @@ O gerenciamento de estado global é feito com **Zustand**, uma biblioteca leve e
 ## 🏗️ Estrutura do Store
 
 ```typescript
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from "react";
 
 // 1. Definir tipos
 export type Usuario = {
-  id?: number
-  nome?: string
-  email?: string
-  ra?: string
-  perfil?: string
-  token?: string
-}
+  id?: number;
+  nome?: string;
+  email?: string;
+  ra?: string;
+  perfil?: string;
+  token?: string;
+};
 
 export type Produto = {
-  id: number
-  nome: string
-  preco: number
-  estoque: number
-}
+  id: number;
+  nome: string;
+  preco: number;
+  estoque: number;
+};
 
 // 2. Definir estado inicial
 const authState: AuthState = {
-  usuario: null
-}
+  usuario: null,
+};
 
 // 3. Criar listeners para notificar mudanças
-const authListeners = new Set<() => void>()
+const authListeners = new Set<() => void>();
 
 // 4. Função para notificar
 function notify(listeners: Set<() => void>) {
-  listeners.forEach(listener => listener())
+  listeners.forEach((listener) => listener());
 }
 
 // 5. Criar hook
 export function useAuthStore() {
   const snapshot = useSyncExternalStore(
     (listener) => {
-      authListeners.add(listener)
-      return () => authListeners.delete(listener)
+      authListeners.add(listener);
+      return () => authListeners.delete(listener);
     },
-    () => authState
-  )
+    () => authState,
+  );
 
   return {
     usuario: snapshot.usuario,
     setUsuario: (user) => {
-      authState.usuario = user
-      notify(authListeners)
-    }
-  }
+      authState.usuario = user;
+      notify(authListeners);
+    },
+  };
 }
 ```
 
@@ -79,12 +80,12 @@ export function useAuthStore() {
 
 ```typescript
 type AuthState = {
-  usuario: Usuario | null
-}
+  usuario: Usuario | null;
+};
 
 const authState: AuthState = {
-  usuario: null
-}
+  usuario: null,
+};
 ```
 
 ### Hook: useAuthStore()
@@ -92,7 +93,7 @@ const authState: AuthState = {
 ```typescript
 export function useAuthStore() {
   const snapshot = useSyncExternalStore(...)
-  
+
   return {
     usuario: snapshot.usuario,
     setUsuario: setAuthUsuario
@@ -103,56 +104,60 @@ export function useAuthStore() {
 ### Métodos
 
 #### setUsuario(user)
+
 Define o usuário autenticado.
 
 ```typescript
 function setAuthUsuario(usuario: Usuario | null) {
-  authState.usuario = usuario
-  notify(authListeners)
+  authState.usuario = usuario;
+  notify(authListeners);
 }
 ```
 
 **Uso:**
+
 ```typescript
-const { setUsuario } = useAuthStore()
+const { setUsuario } = useAuthStore();
 
 // Após login
 setUsuario({
   id: 1,
-  email: 'joao@example.com',
-  nome: 'João Silva',
-  perfil: 'CLIENTE',
-  token: 'eyJ...'
-})
+  email: "joao@example.com",
+  nome: "João Silva",
+  perfil: "CLIENTE",
+  token: "eyJ...",
+});
 
 // Após logout
-setUsuario(null)
+setUsuario(null);
 ```
 
 ### Casos de Uso
 
 **1. Verificar se usuário está logado**
+
 ```typescript
 export function HomePage() {
   const usuario = useAuthStore().usuario
-  
+
   if (!usuario) {
     return <Navigate to="/login" />
   }
-  
+
   return <h1>Bem-vindo, {usuario.nome}!</h1>
 }
 ```
 
 **2. Obter dados do usuário**
+
 ```typescript
 export function Header() {
   const usuario = useAuthStore().usuario
-  
+
   if (!usuario) {
     return <div>Não autenticado</div>
   }
-  
+
   return (
     <div className="flex items-center gap-2">
       <span>{usuario.nome}</span>
@@ -163,15 +168,16 @@ export function Header() {
 ```
 
 **3. Fazer logout**
+
 ```typescript
 function handleLogout() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  
-  const { setUsuario } = useAuthStore.getState()
-  setUsuario(null)
-  
-  navigate('/login')
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  const { setUsuario } = useAuthStore.getState();
+  setUsuario(null);
+
+  navigate("/login");
 }
 ```
 
@@ -195,19 +201,19 @@ useAuthStore.setUsuario({...})
 
 ```typescript
 type CarrinhoState = {
-  carrinho: Carrinho
-}
+  carrinho: Carrinho;
+};
 
 type Carrinho = {
-  itens: CarrinhoItem[]
-}
+  itens: CarrinhoItem[];
+};
 
 type CarrinhoItem = {
-  id: number
-  produtoId: number
-  produto: Produto
-  quantidade: number
-}
+  id: number;
+  produtoId: number;
+  produto: Produto;
+  quantidade: number;
+};
 ```
 
 ### Hook: useCarrinhoStore()
@@ -215,7 +221,7 @@ type CarrinhoItem = {
 ```typescript
 export function useCarrinhoStore() {
   const snapshot = useSyncExternalStore(...)
-  
+
   return {
     carrinho: snapshot.carrinho,
     setCarrinho: setCarrinhoState
@@ -226,32 +232,35 @@ export function useCarrinhoStore() {
 ### Métodos
 
 #### setCarrinho(carrinho)
+
 Define o carrinho completo.
 
 ```typescript
 function setCarrinhoState(carrinho: Carrinho) {
-  carrinhoState.carrinho = carrinho
-  notify(carrinhoListeners)
+  carrinhoState.carrinho = carrinho;
+  notify(carrinhoListeners);
 }
 ```
 
 **Uso:**
+
 ```typescript
-const { setCarrinho } = useCarrinhoStore()
+const { setCarrinho } = useCarrinhoStore();
 
 // Carrega carrinho da API
-const response = await carrinhoAPI.obter()
-setCarrinho(response.data)
+const response = await carrinhoAPI.obter();
+setCarrinho(response.data);
 ```
 
 ### Casos de Uso
 
 **1. Exibir quantidade de itens**
+
 ```typescript
 export function CartIcon() {
   const carrinho = useCarrinhoStore().carrinho
   const quantidade = carrinho.itens.length
-  
+
   return (
     <Link to="/carrinho">
       🛒 ({quantidade})
@@ -261,10 +270,11 @@ export function CartIcon() {
 ```
 
 **2. Listar itens do carrinho**
+
 ```typescript
 export function CarrinhoPage() {
   const carrinho = useCarrinhoStore().carrinho
-  
+
   return (
     <div>
       {carrinho.itens.map(item => (
@@ -279,28 +289,30 @@ export function CarrinhoPage() {
 ```
 
 **3. Calcular total**
+
 ```typescript
 export function ResumoCarrinho() {
   const carrinho = useCarrinhoStore().carrinho
-  
+
   const total = carrinho.itens.reduce((sum, item) => {
     return sum + (item.produto.preco * item.quantidade)
   }, 0)
-  
+
   return <h2>Total: R$ {total.toFixed(2)}</h2>
 }
 ```
 
 **4. Limpar carrinho**
+
 ```typescript
 function handleFinalizarCompra() {
   // Processa pedido
-  
+
   // Limpa carrinho
-  const { setCarrinho } = useCarrinhoStore.getState()
-  setCarrinho({ itens: [] })
-  
-  navigate('/pedidos')
+  const { setCarrinho } = useCarrinhoStore.getState();
+  setCarrinho({ itens: [] });
+
+  navigate("/pedidos");
 }
 ```
 
@@ -336,15 +348,15 @@ export function App() {
 async function handleAdicionarAoCarrinho(produtoId: number) {
   try {
     // Chamada à API
-    await carrinhoAPI.adicionar(produtoId, 1)
-    
+    await carrinhoAPI.adicionar(produtoId, 1);
+
     // Recarrega carrinho
-    const response = await carrinhoAPI.obter()
-    useCarrinhoStore.setCarrinho(response.data)
-    
-    showToast('Adicionado ao carrinho!')
+    const response = await carrinhoAPI.obter();
+    useCarrinhoStore.setCarrinho(response.data);
+
+    showToast("Adicionado ao carrinho!");
   } catch (err) {
-    showToast('Erro ao adicionar', 'error')
+    showToast("Erro ao adicionar", "error");
   }
 }
 ```
@@ -360,7 +372,7 @@ async function handleAdicionarAoCarrinho(produtoId: number) {
 export function App() {
   useEffect(() => {
     const { usuario } = useAuthStore()
-    
+
     if (usuario) {
       localStorage.setItem('user', JSON.stringify(usuario))
     } else {
@@ -408,17 +420,17 @@ export function ProtectedRoute({
   requiredRole
 }: ProtectedRouteProps) {
   const usuario = useAuthStore().usuario
-  
+
   // Sem autenticação
   if (!usuario) {
     return <Navigate to="/login" />
   }
-  
+
   // Role obrigatório não coincide
   if (requiredRole && usuario.perfil !== requiredRole) {
     return <Navigate to="/" />
   }
-  
+
   // Autorizado
   return <>{children}</>
 }
@@ -462,7 +474,7 @@ App.tsx
 // 1. Usar hook dentro de componentes
 export function MyComponent() {
   const usuario = useAuthStore().usuario
-  
+
   return <div>{usuario?.email}</div>
 }
 
@@ -500,6 +512,7 @@ const [user, setUser] = useState()  // ❌ Se já existe no store
 ## 🔌 Alternativas ao Zustand
 
 Se preferir, pode usar:
+
 - **Redux** - Mais robusto, mais boilerplate
 - **Context API** - Nativo do React, simpler
 - **Recoil** - Facebook, experimental

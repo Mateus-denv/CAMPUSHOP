@@ -5,6 +5,7 @@ Documentação completa sobre a estrutura e operações do banco de dados MySQL 
 ## 📑 Índice
 
 ### 1. [01_SCHEMA.md](./01_SCHEMA.md) - Estrutura das Tabelas
+
 - **O que:** Definição de todas as 7 tabelas principais
 - **Para quem:** DBAs, desenvolvedores backend, anyone querendo entender a estrutura
 - **Conteúdo:**
@@ -15,6 +16,7 @@ Documentação completa sobre a estrutura e operações do banco de dados MySQL 
   - Scripts de inicialização (Flyway)
 
 ### 2. [02_RELATIONSHIPS.md](./02_RELATIONSHIPS.md) - Fluxo de Dados
+
 - **O que:** Como as tabelas se relacionam e fluxo de operações
 - **Para quem:** Desenvolvedores que querem entender a lógica de negócio
 - **Conteúdo:**
@@ -26,6 +28,7 @@ Documentação completa sobre a estrutura e operações do banco de dados MySQL 
   - Exemplo: João compra Notebook do João
 
 ### 3. [03_QUERIES.md](./03_QUERIES.md) - Exemplos de SQL
+
 - **O que:** Queries prontas para usar
 - **Para quem:** Desenvolvedores, DBAs, analytics
 - **Conteúdo:**
@@ -55,15 +58,15 @@ database/
 
 ### Tabelas Principais
 
-| Tabela | Linhas | Propósito |
-|--------|--------|----------|
-| usuario | ~200 | Usuários/clientes/vendedores |
-| categoria | ~20 | Categorias de produtos |
-| produto | ~500 | Produtos à venda |
-| carrinho | ~200 | 1 por usuário |
-| carrinhoItem | ~500 | Items no carrinho |
-| pedido | ~300 | Pedidos finalizados |
-| pedidoItem | ~900 | Items dos pedidos |
+| Tabela       | Linhas | Propósito                    |
+| ------------ | ------ | ---------------------------- |
+| usuario      | ~200   | Usuários/clientes/vendedores |
+| categoria    | ~20    | Categorias de produtos       |
+| produto      | ~500   | Produtos à venda             |
+| carrinho     | ~200   | 1 por usuário                |
+| carrinhoItem | ~500   | Items no carrinho            |
+| pedido       | ~300   | Pedidos finalizados          |
+| pedidoItem   | ~900   | Items dos pedidos            |
 
 ### Relacionamentos Chave
 

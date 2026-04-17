@@ -23,15 +23,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <nav className="bg-blue-600 text-white">
         <NavigationMenu />
       </nav>
-      
+
       <main className="flex-1 container mx-auto py-8">
         {children}
       </main>
-      
+
       <Footer />
     </div>
   )
@@ -41,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 ### Sub-componentes
 
 #### Header
+
 - Logo do site
 - Search bar
 - Link do usuário (nome + dropdown com logout)
@@ -55,9 +56,9 @@ function Header() {
     <header className="bg-white shadow">
       <div className="flex items-center justify-between p-4">
         <Logo href="/" />
-        
+
         <SearchBar />
-        
+
         <div className="flex gap-4">
           {usuario ? (
             <UserMenu usuario={usuario} />
@@ -67,7 +68,7 @@ function Header() {
               <Link to="/cadastro">Cadastro</Link>
             </div>
           )}
-          
+
           <CartIcon quantidade={carrinho.itens.length} />
         </div>
       </div>
@@ -77,12 +78,14 @@ function Header() {
 ```
 
 #### NavigationMenu
+
 - Links para categorias principais
 - Link para home
 - Link para meus pedidos (se autenticado)
 - Link para minha loja (se vendedor)
 
 #### Footer
+
 - Informações da empresa
 - Links úteis
 - Redes sociais
@@ -99,6 +102,7 @@ function Header() {
 ### Componentes Disponíveis
 
 #### Button
+
 ```typescript
 interface ButtonProps {
   children: React.ReactNode
@@ -118,19 +122,19 @@ export function Button({
   size = 'md'
 }: ButtonProps) {
   const baseClasses = 'font-semibold rounded-lg transition'
-  
+
   const variantClasses = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700',
     secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
     danger: 'bg-red-600 text-white hover:bg-red-700'
   }
-  
+
   const sizeClasses = {
     sm: 'px-3 py-1 text-sm',
     md: 'px-4 py-2',
     lg: 'px-6 py-3 text-lg'
   }
-  
+
   return (
     <button
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''}`}
@@ -144,6 +148,7 @@ export function Button({
 ```
 
 **Uso:**
+
 ```typescript
 <Button onClick={handleClick}>Clique aqui</Button>
 <Button variant="secondary" size="lg">Grande</Button>
@@ -153,6 +158,7 @@ export function Button({
 ---
 
 #### Card
+
 ```typescript
 interface CardProps {
   children: React.ReactNode
@@ -169,6 +175,7 @@ export function Card({ children, className }: CardProps) {
 ```
 
 **Uso:**
+
 ```typescript
 <Card>
   <h2>Título</h2>
@@ -179,6 +186,7 @@ export function Card({ children, className }: CardProps) {
 ---
 
 #### Input
+
 ```typescript
 interface InputProps {
   type?: string
@@ -214,6 +222,7 @@ export function Input({
 ```
 
 **Uso:**
+
 ```typescript
 <Input
   label="Email"
@@ -228,6 +237,7 @@ export function Input({
 ---
 
 #### Select
+
 ```typescript
 interface Option {
   value: string | number
@@ -269,6 +279,7 @@ export function Select({
 ---
 
 #### Badge
+
 ```typescript
 export function Badge({
   children,
@@ -282,7 +293,7 @@ export function Badge({
     success: 'bg-green-100 text-green-800',
     danger: 'bg-red-100 text-red-800'
   }
-  
+
   return (
     <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${colors[variant]}`}>
       {children}
@@ -294,6 +305,7 @@ export function Badge({
 ---
 
 #### Alert
+
 ```typescript
 export function Alert({
   type = 'info',
@@ -308,7 +320,7 @@ export function Alert({
     warning: 'bg-yellow-100 text-yellow-800 border-yellow-300',
     error: 'bg-red-100 text-red-800 border-red-300'
   }
-  
+
   return (
     <div className={`border-l-4 p-4 ${colors[type]}`}>
       {message}
@@ -322,6 +334,7 @@ export function Alert({
 ## 🖼️ Componentes de Produto
 
 ### ProdutoCard
+
 ```typescript
 interface ProdutoCardProps {
   produto: Produto
@@ -361,6 +374,7 @@ export function ProdutoCard({ produto }: ProdutoCardProps) {
 ---
 
 ### GridProdutos
+
 ```typescript
 interface GridProdutosProps {
   produtos: Produto[]
@@ -372,7 +386,7 @@ export function GridProdutos({
   loading
 }: GridProdutosProps) {
   if (loading) return <LoadingSpinner />
-  
+
   if (produtos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -380,7 +394,7 @@ export function GridProdutos({
       </div>
     )
   }
-  
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {produtos.map(p => (
@@ -396,6 +410,7 @@ export function GridProdutos({
 ## 🛒 Componentes do Carrinho
 
 ### CarrinhoItem
+
 ```typescript
 interface CarrinhoItemProps {
   item: CarrinhoItem
@@ -415,12 +430,12 @@ export function CarrinhoItem({
         alt={item.produto.nome}
         className="w-20 h-20 object-cover rounded"
       />
-      
+
       <div className="flex-1">
         <h3 className="font-bold">{item.produto.nome}</h3>
         <p className="text-gray-600">R$ {item.produto.preco}</p>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -430,7 +445,7 @@ export function CarrinhoItem({
           className="w-12 px-2 py-1 border rounded"
         />
       </div>
-      
+
       <div className="text-right">
         <p className="font-bold">
           R$ {(item.produto.preco * item.quantidade).toFixed(2)}
@@ -453,6 +468,7 @@ export function CarrinhoItem({
 ## 🔄 Componentes Utilitários
 
 ### LoadingSpinner
+
 ```typescript
 export function LoadingSpinner() {
   return (
@@ -466,6 +482,7 @@ export function LoadingSpinner() {
 ---
 
 ### EmptyState
+
 ```typescript
 export function EmptyState({
   title,
@@ -489,6 +506,7 @@ export function EmptyState({
 ---
 
 ### Modal
+
 ```typescript
 interface ModalProps {
   open: boolean
@@ -504,7 +522,7 @@ export function Modal({
   children
 }: ModalProps) {
   if (!open) return null
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <Card className="max-w-md">
@@ -524,6 +542,7 @@ export function Modal({
 ## 🔐 Componentes de Autenticação
 
 ### ProtectedRoute
+
 ```typescript
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -535,20 +554,21 @@ export function ProtectedRoute({
   requiredRole
 }: ProtectedRouteProps) {
   const usuario = useAuthStore().usuario
-  
+
   if (!usuario) {
     return <Navigate to="/login" />
   }
-  
+
   if (requiredRole && usuario.perfil !== requiredRole) {
     return <Navigate to="/acesso-negado" />
   }
-  
+
   return <>{children}</>
 }
 ```
 
 **Uso:**
+
 ```typescript
 <Route
   path="/cadastrar-produto"

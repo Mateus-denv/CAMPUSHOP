@@ -17,39 +17,39 @@ Os arquivos de configuração definem como a aplicação se comporta em diferent
 ```java
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
-    
+
     @Autowired
     private CategoriaRepository categoriaRepository;
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Override
     public void run(String... args) throws Exception {
         // Executado automaticamente ao iniciar a aplicação
         seedDatabase();
     }
-    
+
     private void seedDatabase() {
         // Se dados já existem, não faz nada
         if (categoriaRepository.count() > 0) {
             return;
         }
-        
+
         // Cria categorias
         Categoria eletronicos = new Categoria();
         eletronicos.setNomeCategoria("Eletrônicos");
         eletronicos.setDescricao("Produtos eletrônicos em geral");
         categoriaRepository.save(eletronicos);
-        
+
         Categoria livros = new Categoria();
         livros.setNomeCategoria("Livros");
         livros.setDescricao("Livros acadêmicos e técnicos");
         categoriaRepository.save(livros);
-        
+
         // Cria usuários de teste
         Usuario usuarioTeste = new Usuario();
         usuarioTeste.setNomeCompleto("Usuário Teste");
@@ -58,7 +58,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         usuarioTeste.setSenha(passwordEncoder.encode("senha123"));
         usuarioTeste.setAtivado(true);
         usuarioRepository.save(usuarioTeste);
-        
+
         System.out.println("✅ Banco de dados populado com sucesso!");
     }
 }
@@ -88,16 +88,16 @@ public class DatabaseSeeder implements CommandLineRunner {
 
 ```java
 public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
-    
-    private static final DateTimeFormatter formatter = 
+
+    private static final DateTimeFormatter formatter =
         DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    
+
     @Override
     public LocalDate deserialize(
-        JsonParser jsonParser, 
-        DeserializationContext deserializationContext) 
+        JsonParser jsonParser,
+        DeserializationContext deserializationContext)
         throws IOException {
-        
+
         String date = jsonParser.getText();
         return LocalDate.parse(date, formatter);
     }
@@ -114,6 +114,7 @@ private LocalDate dataNascimento;
 ### Exemplo de Conversão
 
 **JSON de entrada:**
+
 ```json
 {
   "dataNascimento": "2000-05-15"
@@ -121,6 +122,7 @@ private LocalDate dataNascimento;
 ```
 
 **Convertido para:**
+
 ```java
 LocalDate dataNascimento = LocalDate.of(2000, 5, 15);
 ```
@@ -137,16 +139,16 @@ LocalDate dataNascimento = LocalDate.of(2000, 5, 15);
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) 
+    public SecurityFilterChain filterChain(HttpSecurity http)
         throws Exception {
-        
+
         // Configurações de autenticação e autorização
         http
             .csrf().disable()
@@ -156,7 +158,7 @@ public class SecurityConfig {
             .and()
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        
+
         return http.build();
     }
 }
@@ -212,6 +214,7 @@ spring.servlet.multipart.max-request-size=10MB
 ### Variáveis por Ambiente
 
 **Development (application-dev.properties):**
+
 ```properties
 spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.show-sql=true
@@ -219,6 +222,7 @@ logging.level.root=DEBUG
 ```
 
 **Production (application-prod.properties):**
+
 ```properties
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=false
@@ -249,7 +253,7 @@ Se necessário configurar CORS customizado:
 ```java
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
-    
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
@@ -303,17 +307,17 @@ public class CorsConfig implements WebMvcConfigurer {
 
 ## 📋 Anotações de Configuração
 
-| Anotação | Escopo | Descrição |
-|----------|--------|-----------|
-| `@Configuration` | Classe | Define classe de configuração |
-| `@Bean` | Método | Define bean gerenciado por Spring |
-| `@Service` | Classe | Marca como serviço (lógica de negócio) |
-| `@Component` | Classe | Marca como componente genérico |
-| `@Repository` | Classe | Marca como repositório (acesso a dados) |
-| `@RestController` | Classe | Controlador REST (retorna JSON) |
-| `@Autowired` | Campo | Injeção de dependência |
-| `@Value` | Campo | Injeta valor de properties |
-| `@Transactional` | Método | Define transação de BD |
+| Anotação          | Escopo | Descrição                               |
+| ----------------- | ------ | --------------------------------------- |
+| `@Configuration`  | Classe | Define classe de configuração           |
+| `@Bean`           | Método | Define bean gerenciado por Spring       |
+| `@Service`        | Classe | Marca como serviço (lógica de negócio)  |
+| `@Component`      | Classe | Marca como componente genérico          |
+| `@Repository`     | Classe | Marca como repositório (acesso a dados) |
+| `@RestController` | Classe | Controlador REST (retorna JSON)         |
+| `@Autowired`      | Campo  | Injeção de dependência                  |
+| `@Value`          | Campo  | Injeta valor de properties              |
+| `@Transactional`  | Método | Define transação de BD                  |
 
 ---
 
@@ -357,6 +361,7 @@ public class CorsConfig implements WebMvcConfigurer {
 ## 🔧 Configuração de Logging
 
 ### application.properties
+
 ```properties
 logging.level.root=INFO
 logging.level.br.com.campushop=DEBUG
@@ -367,6 +372,7 @@ logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
 ```
 
 ### Arquivo de saída
+
 ```properties
 logging.file.name=logs/application.log
 logging.file.max-size=10MB
@@ -388,26 +394,26 @@ Dependências principais:
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    
+
     <!-- Spring Security -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
-    
+
     <!-- Spring Data JPA -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
-    
+
     <!-- JWT -->
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
         <version>0.11.5</version>
     </dependency>
-    
+
     <!-- MySQL -->
     <dependency>
         <groupId>com.mysql</groupId>

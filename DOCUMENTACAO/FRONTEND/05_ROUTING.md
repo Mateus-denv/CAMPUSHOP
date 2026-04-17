@@ -29,6 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 ```
 
 **O que faz:**
+
 1. Envolve aplicação com `<BrowserRouter>`
 2. Habilita roteamento client-side
 3. Renderiza App principal
@@ -116,19 +117,19 @@ export function App() {
 
 ## 📊 Tabela de Rotas
 
-| Rota | Componente | Autenticação | Descrição |
-|------|-----------|-------------|-----------|
-| `/` | HomePage | Pública | Página inicial |
-| `/login` | LoginPage | Pública | Fazer login |
-| `/cadastro` | CadastroPage | Pública | Registrar nova conta |
-| `/produtos` | ProdutosPage | Pública | Listar todos os produtos |
-| `/produtos/:id` | ProdutoDetalhePage | Pública | Detalhes de um produto |
-| `/categorias` | CategoriasPage | Pública | Listar categorias |
-| `/carrinho` | CarrinhoPage | ✅ Obrigatória | Carrinho de compras |
-| `/pedidos` | PedidosPage | ✅ Obrigatória | Meus pedidos |
-| `/conta` | ContaPage | ✅ Obrigatória | Configurações da conta |
-| `/chat` | ChatPage | ✅ Obrigatória | Chat com vendedor |
-| `/cadastrar-produto` | CadastrarProdutoPage | ✅ VENDEDOR | Cadastrar novo produto |
+| Rota                 | Componente           | Autenticação   | Descrição                |
+| -------------------- | -------------------- | -------------- | ------------------------ |
+| `/`                  | HomePage             | Pública        | Página inicial           |
+| `/login`             | LoginPage            | Pública        | Fazer login              |
+| `/cadastro`          | CadastroPage         | Pública        | Registrar nova conta     |
+| `/produtos`          | ProdutosPage         | Pública        | Listar todos os produtos |
+| `/produtos/:id`      | ProdutoDetalhePage   | Pública        | Detalhes de um produto   |
+| `/categorias`        | CategoriasPage       | Pública        | Listar categorias        |
+| `/carrinho`          | CarrinhoPage         | ✅ Obrigatória | Carrinho de compras      |
+| `/pedidos`           | PedidosPage          | ✅ Obrigatória | Meus pedidos             |
+| `/conta`             | ContaPage            | ✅ Obrigatória | Configurações da conta   |
+| `/chat`              | ChatPage             | ✅ Obrigatória | Chat com vendedor        |
+| `/cadastrar-produto` | CadastrarProdutoPage | ✅ VENDEDOR    | Cadastrar novo produto   |
 
 ---
 
@@ -144,12 +145,12 @@ export function MyComponent() {
     <div>
       {/* Link simples */}
       <Link to="/">Home</Link>
-      
+
       {/* Link com parâmetro */}
       <Link to={`/produtos/${produtoId}`}>
         Ver Produto
       </Link>
-      
+
       {/* Link com query params */}
       <Link to="/produtos?categoria=1&busca=notebook">
         Notebooks
@@ -169,13 +170,13 @@ export function LoginPage() {
 
   const handleLogin = async (email, senha) => {
     // ... autenticação ...
-    
+
     // Navega para home após login
     navigate('/home')
-    
+
     // Navega para trás
     navigate(-1)
-    
+
     // Navega com replace (não deixa no histórico)
     navigate('/', { replace: true })
   }
@@ -193,22 +194,24 @@ export function LoginPage() {
 ### Path Parameters `:id`
 
 **Definição:**
+
 ```typescript
 <Route path="/produtos/:id" element={<ProdutoDetalhePage />} />
 ```
 
 **Acesso:**
+
 ```typescript
 import { useParams } from 'react-router-dom'
 
 export function ProdutoDetalhePage() {
   const { id } = useParams<{ id: string }>()
-  
+
   useEffect(() => {
     // Carrega produto com ID
     carregarProduto(Number(id))
   }, [id])
-  
+
   return <div>Produto {id}</div>
 }
 ```
@@ -222,20 +225,21 @@ export function ProdutoDetalhePage() {
 **Definição:** Não precisa definir na rota
 
 **Acesso:**
+
 ```typescript
 import { useSearchParams } from 'react-router-dom'
 
 export function ProdutosPage() {
   const [searchParams] = useSearchParams()
-  
+
   const categoria = searchParams.get('categoria')
   const busca = searchParams.get('busca')
   const pagina = searchParams.get('pagina') || '0'
-  
+
   useEffect(() => {
     carregarProdutos(categoria, busca, pagina)
   }, [searchParams])
-  
+
   return <div>Categoria: {categoria}</div>
 }
 ```
@@ -307,42 +311,45 @@ function ProtectedRoute({
 ## 🔄 Redirecionar Após Ação
 
 ### Login
+
 ```typescript
 async function handleLogin(email: string, senha: string) {
-  const response = await authAPI.login(email, senha)
-  
+  const response = await authAPI.login(email, senha);
+
   // Salva token
-  localStorage.setItem('token', response.data.token)
-  
+  localStorage.setItem("token", response.data.token);
+
   // Atualiza store
-  useAuthStore.setUsuario(response.data.user)
-  
+  useAuthStore.setUsuario(response.data.user);
+
   // Redireciona para home
-  navigate('/home')
+  navigate("/home");
 }
 ```
 
 ### Logout
+
 ```typescript
 function handleLogout() {
-  localStorage.removeItem('token')
-  useAuthStore.setUsuario(null)
-  
+  localStorage.removeItem("token");
+  useAuthStore.setUsuario(null);
+
   // Redireciona para login
-  navigate('/login', { replace: true })
+  navigate("/login", { replace: true });
 }
 ```
 
 ### Após Compra
+
 ```typescript
 async function handleCheckout() {
-  const response = await pedidoAPI.criar(carrinho)
-  
+  const response = await pedidoAPI.criar(carrinho);
+
   // Limpa carrinho
-  useCarrinhoStore.setCarrinho({ itens: [] })
-  
+  useCarrinhoStore.setCarrinho({ itens: [] });
+
   // Redireciona para pedidos
-  navigate(`/pedidos/${response.data.id}`)
+  navigate(`/pedidos/${response.data.id}`);
 }
 ```
 
@@ -353,25 +360,26 @@ async function handleCheckout() {
 Obter informações da rota atual:
 
 ```typescript
-import { useLocation } from 'react-router-dom'
+import { useLocation } from "react-router-dom";
 
 export function MyComponent() {
-  const location = useLocation()
-  
-  console.log(location.pathname)  // "/produtos"
-  console.log(location.search)    // "?categoria=1"
-  console.log(location.state)     // Estado passado via navigate
+  const location = useLocation();
+
+  console.log(location.pathname); // "/produtos"
+  console.log(location.search); // "?categoria=1"
+  console.log(location.state); // Estado passado via navigate
 }
 ```
 
 **Passar estado entre rotas:**
+
 ```typescript
 // De:
-navigate('/pedidos', { state: { orderId: 123 } })
+navigate("/pedidos", { state: { orderId: 123 } });
 
 // Para:
-const location = useLocation()
-const orderId = location.state?.orderId
+const location = useLocation();
+const orderId = location.state?.orderId;
 ```
 
 ---
@@ -417,7 +425,7 @@ export function Breadcrumbs() {
       <Link to="/">Home</Link>
       {pathnames.map((pathname, index) => {
         const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`
-        
+
         return (
           <span key={index}>
             {' / '}

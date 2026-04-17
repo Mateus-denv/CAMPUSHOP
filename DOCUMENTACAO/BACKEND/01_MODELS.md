@@ -16,27 +16,28 @@ Os modelos (Models) são as entidades JPA que representam as tabelas do banco de
 
 ### Atributos Principais
 
-| Atributo | Tipo | Restrições | Descrição |
-|----------|------|-----------|-----------|
-| `id` | Integer | PK, Auto-increment | Identificador único do usuário |
-| `nomeCompleto` | String | NOT NULL, len=100 | Nome completo do usuário |
-| `ra` | String | NOT NULL, UNIQUE | Registro acadêmico (matrícula) |
-| `email` | String | NOT NULL, UNIQUE | Email do usuário |
-| `senha` | String | NOT NULL, len=255 | Senha criptografada com BCrypt |
-| `cpfCnpj` | String | len=20 | CPF ou CNPJ |
-| `dataNascimento` | LocalDate | - | Data de nascimento |
-| `cidade` | String | len=100 | Cidade onde o usuário mora |
-| `nomeCliente` | String | NOT NULL, len=100 | Nome para ser exibido (pode ser igual a nomeCompleto) |
-| `telefone` | String | len=15 | Número de telefone |
-| `tipoConta` | String | len=20 | Tipo de conta (CLIENTE, VENDEDOR, etc) |
-| `instituicaoEnsino` | String | len=100 | Universidade/Faculdade |
-| `localizacaoGps` | String | len=50 | Coordenadas GPS (latitude, longitude) |
-| `ativado` | Boolean | NOT NULL, default=true | Se a conta está ativa |
-| `dataCadastro` | LocalDate | - | Data de registro na plataforma |
+| Atributo            | Tipo      | Restrições             | Descrição                                             |
+| ------------------- | --------- | ---------------------- | ----------------------------------------------------- |
+| `id`                | Integer   | PK, Auto-increment     | Identificador único do usuário                        |
+| `nomeCompleto`      | String    | NOT NULL, len=100      | Nome completo do usuário                              |
+| `ra`                | String    | NOT NULL, UNIQUE       | Registro acadêmico (matrícula)                        |
+| `email`             | String    | NOT NULL, UNIQUE       | Email do usuário                                      |
+| `senha`             | String    | NOT NULL, len=255      | Senha criptografada com BCrypt                        |
+| `cpfCnpj`           | String    | len=20                 | CPF ou CNPJ                                           |
+| `dataNascimento`    | LocalDate | -                      | Data de nascimento                                    |
+| `cidade`            | String    | len=100                | Cidade onde o usuário mora                            |
+| `nomeCliente`       | String    | NOT NULL, len=100      | Nome para ser exibido (pode ser igual a nomeCompleto) |
+| `telefone`          | String    | len=15                 | Número de telefone                                    |
+| `tipoConta`         | String    | len=20                 | Tipo de conta (CLIENTE, VENDEDOR, etc)                |
+| `instituicaoEnsino` | String    | len=100                | Universidade/Faculdade                                |
+| `localizacaoGps`    | String    | len=50                 | Coordenadas GPS (latitude, longitude)                 |
+| `ativado`           | Boolean   | NOT NULL, default=true | Se a conta está ativa                                 |
+| `dataCadastro`      | LocalDate | -                      | Data de registro na plataforma                        |
 
 ### Relacionamentos
 
 - **1 para Muitos com Produto:** Um usuário pode criar vários produtos
+
   ```java
   @OneToMany(mappedBy = "usuario")
   private List<Produto> produtos;
@@ -92,22 +93,23 @@ usuarioRepository.save(usuario);
 
 ### Atributos Principais
 
-| Atributo | Tipo | Restrições | Descrição |
-|----------|------|-----------|-----------|
-| `idProduto` | Integer | PK, Auto-increment | Identificador único do produto |
-| `nomeProduto` | String | NOT NULL, len=200 | Nome do produto |
-| `descricao` | String | TEXT | Descrição detalhada do produto |
-| `estoque` | Integer | NOT NULL | Quantidade em estoque |
-| `preco` | Double | NOT NULL | Preço do produto |
-| `status` | String | len=20 | Status (ATIVO, INATIVO, PAUSADO) |
-| `dimensoes` | String | - | Dimensões do produto (ex: 10x10x10cm) |
-| `peso` | Double | - | Peso do produto em kg |
-| `categoria` | Categoria | FK | Categoria do produto |
-| `usuario` | Usuario | FK | Usuário que criou/vende o produto |
+| Atributo      | Tipo      | Restrições         | Descrição                             |
+| ------------- | --------- | ------------------ | ------------------------------------- |
+| `idProduto`   | Integer   | PK, Auto-increment | Identificador único do produto        |
+| `nomeProduto` | String    | NOT NULL, len=200  | Nome do produto                       |
+| `descricao`   | String    | TEXT               | Descrição detalhada do produto        |
+| `estoque`     | Integer   | NOT NULL           | Quantidade em estoque                 |
+| `preco`       | Double    | NOT NULL           | Preço do produto                      |
+| `status`      | String    | len=20             | Status (ATIVO, INATIVO, PAUSADO)      |
+| `dimensoes`   | String    | -                  | Dimensões do produto (ex: 10x10x10cm) |
+| `peso`        | Double    | -                  | Peso do produto em kg                 |
+| `categoria`   | Categoria | FK                 | Categoria do produto                  |
+| `usuario`     | Usuario   | FK                 | Usuário que criou/vende o produto     |
 
 ### Relacionamentos
 
 - **Muitos para 1 com Categoria:**
+
   ```java
   @ManyToOne
   @JoinColumn(name = "id_categoria")
@@ -115,6 +117,7 @@ usuarioRepository.save(usuario);
   ```
 
 - **Muitos para 1 com Usuario:**
+
   ```java
   @ManyToOne
   @JoinColumn(name = "id_usuario")
@@ -169,12 +172,12 @@ produtoRepository.save(produto);
 
 ### Atributos Principais
 
-| Atributo | Tipo | Restrições | Descrição |
-|----------|------|-----------|-----------|
-| `idCategoria` | Integer | PK, Auto-increment | Identificador único |
-| `nomeCategoria` | String | NOT NULL, UNIQUE | Nome da categoria |
-| `descricao` | String | - | Descrição da categoria |
-| `ativa` | Boolean | default=true | Se a categoria está visível |
+| Atributo        | Tipo    | Restrições         | Descrição                   |
+| --------------- | ------- | ------------------ | --------------------------- |
+| `idCategoria`   | Integer | PK, Auto-increment | Identificador único         |
+| `nomeCategoria` | String  | NOT NULL, UNIQUE   | Nome da categoria           |
+| `descricao`     | String  | -                  | Descrição da categoria      |
+| `ativa`         | Boolean | default=true       | Se a categoria está visível |
 
 ### Relacionamentos
 
@@ -214,17 +217,18 @@ categoriaRepository.save(categoria);
 
 ### Atributos Principais
 
-| Atributo | Tipo | Restrições | Descrição |
-|----------|------|-----------|-----------|
-| `idCarrinho` | Integer | PK, Auto-increment | Identificador único |
-| `usuario` | Usuario | FK, NOT NULL | Usuário proprietário do carrinho |
-| `dataCriacao` | LocalDate | - | Data de criação do carrinho |
-| `dataAtualizacao` | LocalDate | - | Última modificação |
-| `itens` | List\<CarrinhoItem\> | - | Items adicionados ao carrinho |
+| Atributo          | Tipo                 | Restrições         | Descrição                        |
+| ----------------- | -------------------- | ------------------ | -------------------------------- |
+| `idCarrinho`      | Integer              | PK, Auto-increment | Identificador único              |
+| `usuario`         | Usuario              | FK, NOT NULL       | Usuário proprietário do carrinho |
+| `dataCriacao`     | LocalDate            | -                  | Data de criação do carrinho      |
+| `dataAtualizacao` | LocalDate            | -                  | Última modificação               |
+| `itens`           | List\<CarrinhoItem\> | -                  | Items adicionados ao carrinho    |
 
 ### Relacionamentos
 
 - **1 para 1 com Usuario:**
+
   ```java
   @OneToOne
   @JoinColumn(name = "id_usuario")
@@ -342,17 +346,17 @@ Pode ser atualizado ou deletado
 
 ## 📝 Anotações JPA Usadas
 
-| Anotação | Descrição |
-|----------|-----------|
-| `@Entity` | Define a classe como entidade (mapeada a tabela) |
-| `@Table(name="...")` | Especifica nome da tabela no BD |
-| `@Id` | Define chave primária |
-| `@GeneratedValue` | Auto-incremento de IDs |
-| `@Column` | Define propriedades da coluna (nullable, unique, length) |
-| `@ManyToOne` | Relacionamento muitos para um |
-| `@OneToMany` | Relacionamento um para muitos |
-| `@OneToOne` | Relacionamento um para um |
-| `@JoinColumn` | Define coluna de junção (FK) |
+| Anotação             | Descrição                                                |
+| -------------------- | -------------------------------------------------------- |
+| `@Entity`            | Define a classe como entidade (mapeada a tabela)         |
+| `@Table(name="...")` | Especifica nome da tabela no BD                          |
+| `@Id`                | Define chave primária                                    |
+| `@GeneratedValue`    | Auto-incremento de IDs                                   |
+| `@Column`            | Define propriedades da coluna (nullable, unique, length) |
+| `@ManyToOne`         | Relacionamento muitos para um                            |
+| `@OneToMany`         | Relacionamento um para muitos                            |
+| `@OneToOne`          | Relacionamento um para um                                |
+| `@JoinColumn`        | Define coluna de junção (FK)                             |
 
 ---
 

@@ -3,6 +3,7 @@
 ## 📋 Visão Geral
 
 Os repositórios (Repositories) gerenciam o acesso aos dados no banco de dados. Eles:
+
 - Herdam de `JpaRepository` para operações CRUD básicas
 - Definem queries customizadas
 - Interagem diretamente com o banco de dados
@@ -49,6 +50,7 @@ deleteAll()                         // Deleta tudo
 ### Métodos Customizados
 
 #### 1. **findByEmail(String email)**
+
 Busca usuário por email.
 
 ```java
@@ -56,11 +58,13 @@ Optional<Usuario> findByEmail(String email);
 ```
 
 **SQL Gerado (aproximadamente):**
+
 ```sql
 SELECT * FROM usuario WHERE email = ?
 ```
 
 **Uso:**
+
 ```java
 Optional<Usuario> usuario = usuarioRepository.findByEmail("joao@example.com");
 ```
@@ -68,6 +72,7 @@ Optional<Usuario> usuario = usuarioRepository.findByEmail("joao@example.com");
 ---
 
 #### 2. **existsByEmail(String email)**
+
 Verifica se um email já existe.
 
 ```java
@@ -75,6 +80,7 @@ boolean existsByEmail(String email);
 ```
 
 **SQL Gerado:**
+
 ```sql
 SELECT COUNT(*) FROM usuario WHERE email = ?
 ```
@@ -82,6 +88,7 @@ SELECT COUNT(*) FROM usuario WHERE email = ?
 ---
 
 #### 3. **findByRa(String ra)**
+
 Busca usuário por RA.
 
 ```java
@@ -91,6 +98,7 @@ Optional<Usuario> findByRa(String ra);
 ---
 
 #### 4. **existsByRa(String ra)**
+
 Verifica se um RA já existe.
 
 ```java
@@ -100,6 +108,7 @@ boolean existsByRa(String ra);
 ---
 
 #### 5. **findByAtivado(Boolean ativado)**
+
 Lista usuários ativos ou inativos.
 
 ```java
@@ -109,6 +118,7 @@ List<Usuario> findByAtivado(Boolean ativado);
 ---
 
 #### 6. **findByCidade(String cidade)**
+
 Lista usuários de uma cidade.
 
 ```java
@@ -126,6 +136,7 @@ List<Usuario> findByCidade(String cidade);
 ### Métodos Customizados
 
 #### 1. **findByCategoria_IdCategoria(Integer idCategoria)**
+
 Lista produtos de uma categoria.
 
 ```java
@@ -133,6 +144,7 @@ List<Produto> findByCategoria_IdCategoria(Integer idCategoria);
 ```
 
 **SQL Gerado (aproximadamente):**
+
 ```sql
 SELECT * FROM produto WHERE id_categoria = ?
 ```
@@ -140,6 +152,7 @@ SELECT * FROM produto WHERE id_categoria = ?
 ---
 
 #### 2. **findByUsuario_Id(Integer idUsuario)**
+
 Lista produtos de um vendedor.
 
 ```java
@@ -149,6 +162,7 @@ List<Produto> findByUsuario_Id(Integer idUsuario);
 ---
 
 #### 3. **findByStatus(String status)**
+
 Lista produtos com um status específico.
 
 ```java
@@ -158,6 +172,7 @@ List<Produto> findByStatus(String status);
 ---
 
 #### 4. **findByNomeProdutoContainsIgnoreCaseOrDescricaoContainsIgnoreCase**
+
 Busca produtos por nome ou descrição (case-insensitive).
 
 ```java
@@ -167,8 +182,9 @@ List<Produto> findByNomeProdutoContainsIgnoreCaseOrDescricaoContainsIgnoreCase(
 ```
 
 **SQL Gerado (aproximadamente):**
+
 ```sql
-SELECT * FROM produto 
+SELECT * FROM produto
 WHERE LOWER(nome_produto) LIKE LOWER(CONCAT('%', ?, '%'))
    OR LOWER(descricao) LIKE LOWER(CONCAT('%', ?, '%'))
 ```
@@ -176,6 +192,7 @@ WHERE LOWER(nome_produto) LIKE LOWER(CONCAT('%', ?, '%'))
 ---
 
 #### 5. **findByEstoqueGreaterThan(Integer quantidade)**
+
 Lista produtos com estoque maior que uma quantidade.
 
 ```java
@@ -185,6 +202,7 @@ List<Produto> findByEstoqueGreaterThan(Integer quantidade);
 ---
 
 #### 6. **findByPrecoLessThanEqual(Double preco)**
+
 Lista produtos com preço menor ou igual a um valor.
 
 ```java
@@ -202,6 +220,7 @@ List<Produto> findByPrecoLessThanEqual(Double preco);
 ### Métodos Customizados
 
 #### 1. **findByNomeCategoriaIgnoreCase(String nome)**
+
 Busca categoria por nome.
 
 ```java
@@ -211,6 +230,7 @@ Optional<Categoria> findByNomeCategoriaIgnoreCase(String nome);
 ---
 
 #### 2. **findByAtiva(Boolean ativa)**
+
 Lista categorias ativas ou inativas.
 
 ```java
@@ -228,6 +248,7 @@ List<Categoria> findByAtiva(Boolean ativa);
 ### Métodos Customizados
 
 #### 1. **findByUsuario(Usuario usuario)**
+
 Busca carrinho de um usuário.
 
 ```java
@@ -237,6 +258,7 @@ Optional<Carrinho> findByUsuario(Usuario usuario);
 ---
 
 #### 2. **findByUsuario_Id(Integer idUsuario)**
+
 Busca carrinho por ID do usuário.
 
 ```java
@@ -249,17 +271,17 @@ Optional<Carrinho> findByUsuario_Id(Integer idUsuario);
 
 Spring Data JPA interpreta nomes de métodos automaticamente:
 
-| Palavra-chave | Significado | SQL |
-|---------------|-----------|-----|
-| `find` | SELECT | WHERE |
-| `By` | Onde (AND/OR) | WHERE |
-| `And` | E lógico | AND |
-| `Or` | Ou lógico | OR |
-| `GreaterThan` | Maior que | > |
-| `LessThan` | Menor que | < |
-| `Equals` | Igual | = |
-| `Contains` | Contém | LIKE '%...%' |
-| `IgnoreCase` | Case-insensitive | LOWER() |
+| Palavra-chave | Significado      | SQL          |
+| ------------- | ---------------- | ------------ |
+| `find`        | SELECT           | WHERE        |
+| `By`          | Onde (AND/OR)    | WHERE        |
+| `And`         | E lógico         | AND          |
+| `Or`          | Ou lógico        | OR           |
+| `GreaterThan` | Maior que        | >            |
+| `LessThan`    | Menor que        | <            |
+| `Equals`      | Igual            | =            |
+| `Contains`    | Contém           | LIKE '%...%' |
+| `IgnoreCase`  | Case-insensitive | LOWER()      |
 
 ### Exemplos de Queries Derivadas
 
@@ -301,7 +323,7 @@ List<Produto> findProdutosDisoniveis();
 @Query("SELECT COUNT(p) FROM Produto p WHERE p.usuario.id = ?1")
 Integer countProdutosPorUsuario(Integer idUsuario);
 
-@Query(value = "SELECT * FROM produto WHERE preco BETWEEN ?1 AND ?2", 
+@Query(value = "SELECT * FROM produto WHERE preco BETWEEN ?1 AND ?2",
        nativeQuery = true)
 List<Produto> findProdutosPorIntervaloPreco(Double precoMin, Double precoMax);
 ```
@@ -347,14 +369,14 @@ Repositories funcionam dentro de transações automáticas do Spring:
 public void realizarCompra(Usuario usuario, List<Integer> idsProdutos) {
     // Todas as operações aqui são transacionais
     // Se houver erro, tudo é revertido (rollback)
-    
+
     Carrinho carrinho = carrinhoRepository.findByUsuario(usuario).get();
-    
+
     for (Integer idProduto : idsProdutos) {
         Produto produto = produtoRepository.findById(idProduto).get();
         carrinhoService.adicionarProduto(carrinho, produto, 1);
     }
-    
+
     // Se houver erro aqui, tudo é desfeito
 }
 ```
@@ -370,7 +392,7 @@ public void realizarCompra(Usuario usuario, List<Integer> idsProdutos) {
 Optional<Produto> produto = produtoRepository.findById(1);
 
 // Garantido (lança exceção se não encontrado)
-Produto produto = produtoRepository.findByIdOrElseThrow(() -> 
+Produto produto = produtoRepository.findByIdOrElseThrow(() ->
     new ResourceNotFoundException("Produto não encontrado")
 );
 ```

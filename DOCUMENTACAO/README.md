@@ -47,6 +47,7 @@ Criado em: Abril 2026 | Versão: 1.0 | Status: ✅ Completo
 - ✅ Interagir via chat
 
 **Stack Tecnológico:**
+
 - **Backend:** Java 17 + Spring Boot 3.1.5
 - **Frontend:** React 18 + TypeScript + Tailwind CSS
 - **Banco de Dados:** MySQL
@@ -105,6 +106,7 @@ CAMPUSHOP/
 ## 🔧 Tecnologias Utilizadas
 
 ### Backend
+
 - **Spring Boot 3.1.5** - Framework web e microserviços
 - **Spring Data JPA** - Persistência de dados
 - **Spring Security** - Autenticação e autorização
@@ -114,6 +116,7 @@ CAMPUSHOP/
 - **Java 17** - Linguagem de programação
 
 ### Frontend
+
 - **React 18** - Biblioteca JavaScript para UIs
 - **TypeScript** - Tipagem estática para JavaScript
 - **Vite** - Build tool rápido
@@ -123,6 +126,7 @@ CAMPUSHOP/
 - **Axios** - Cliente HTTP
 
 ### Infraestrutura
+
 - **MySQL 8** - Banco de dados relacional
 - **Docker** - Containerização
 - **Docker Compose** - Orquestração local
@@ -172,7 +176,7 @@ CAMPUSHOP/
 
 2. Backend valida credenciais
    └─> UsuarioService.autenticar()
-   
+
 3. Se válido, gera JWT token
    └─> JwtTokenProvider.generateToken()
 
@@ -196,37 +200,37 @@ A documentação está organizada em **3 módulos principais** com um total de *
 
 Tudo sobre a API REST, lógica de negócio e integração com banco de dados.
 
-| Arquivo | Sobre | Para Quem |
-|---------|-------|----------|
-| [01_MODELS.md](./BACKEND/01_MODELS.md) | **Entidades JPA** (Usuario, Produto, Categoria, Carrinho, etc.) | Backend devs, DBAs |
-| [02_CONTROLLERS.md](./BACKEND/02_CONTROLLERS.md) | **Endpoints REST** (8 controllers, 40+ endpoints) | API consumers, frontend devs |
-| [03_SERVICES.md](./BACKEND/03_SERVICES.md) | **Lógica de negócio** (4 services) | Backend devs |
-| [04_REPOSITORIES.md](./BACKEND/04_REPOSITORIES.md) | **Acesso a dados** (Spring Data JPA, queries) | Backend devs, DBAs |
-| [05_SECURITY.md](./BACKEND/05_SECURITY.md) | **Autenticação & Autorização** (JWT, BCrypt, Spring Security) | Security engineers |
-| [06_CONFIG.md](./BACKEND/06_CONFIG.md) | **Configuração** (properties, beans, seeders) | Devops, backend devs |
+| Arquivo                                            | Sobre                                                           | Para Quem                    |
+| -------------------------------------------------- | --------------------------------------------------------------- | ---------------------------- |
+| [01_MODELS.md](./BACKEND/01_MODELS.md)             | **Entidades JPA** (Usuario, Produto, Categoria, Carrinho, etc.) | Backend devs, DBAs           |
+| [02_CONTROLLERS.md](./BACKEND/02_CONTROLLERS.md)   | **Endpoints REST** (8 controllers, 40+ endpoints)               | API consumers, frontend devs |
+| [03_SERVICES.md](./BACKEND/03_SERVICES.md)         | **Lógica de negócio** (4 services)                              | Backend devs                 |
+| [04_REPOSITORIES.md](./BACKEND/04_REPOSITORIES.md) | **Acesso a dados** (Spring Data JPA, queries)                   | Backend devs, DBAs           |
+| [05_SECURITY.md](./BACKEND/05_SECURITY.md)         | **Autenticação & Autorização** (JWT, BCrypt, Spring Security)   | Security engineers           |
+| [06_CONFIG.md](./BACKEND/06_CONFIG.md)             | **Configuração** (properties, beans, seeders)                   | Devops, backend devs         |
 
 ### 📁 Frontend (frontend/src/)
 
 Tudo sobre UI, componentes, roteamento e estado global.
 
-| Arquivo | Sobre | Para Quem |
-|---------|-------|----------|
-| [01_PAGES.md](./FRONTEND/01_PAGES.md) | **11 Páginas** (Home, Login, Produtos, Carrinho, Pedidos, etc.) | Frontend devs, UX/UI |
-| [02_COMPONENTS.md](./FRONTEND/02_COMPONENTS.md) | **Componentes Reutilizáveis** (Button, Card, Input, Modal, etc.) | Frontend devs |
-| [03_LIB_SERVICES.md](./FRONTEND/03_LIB_SERVICES.md) | **Serviços de API** (Axios, interceptores, métodos) | Frontend devs |
-| [04_STORE.md](./FRONTEND/04_STORE.md) | **Estado Global** (Zustand, auth, carrinho) | Frontend devs |
-| [05_ROUTING.md](./FRONTEND/05_ROUTING.md) | **Navegação** (React Router v6, protected routes) | Frontend devs |
+| Arquivo                                             | Sobre                                                            | Para Quem            |
+| --------------------------------------------------- | ---------------------------------------------------------------- | -------------------- |
+| [01_PAGES.md](./FRONTEND/01_PAGES.md)               | **11 Páginas** (Home, Login, Produtos, Carrinho, Pedidos, etc.)  | Frontend devs, UX/UI |
+| [02_COMPONENTS.md](./FRONTEND/02_COMPONENTS.md)     | **Componentes Reutilizáveis** (Button, Card, Input, Modal, etc.) | Frontend devs        |
+| [03_LIB_SERVICES.md](./FRONTEND/03_LIB_SERVICES.md) | **Serviços de API** (Axios, interceptores, métodos)              | Frontend devs        |
+| [04_STORE.md](./FRONTEND/04_STORE.md)               | **Estado Global** (Zustand, auth, carrinho)                      | Frontend devs        |
+| [05_ROUTING.md](./FRONTEND/05_ROUTING.md)           | **Navegação** (React Router v6, protected routes)                | Frontend devs        |
 
 ### 📁 Database (db/scripts/)
 
 Tudo sobre estrutura, relacionamentos e queries SQL.
 
-| Arquivo | Sobre | Para Quem |
-|---------|-------|----------|
-| [01_SCHEMA.md](./DATABASE/01_SCHEMA.md) | **Tabelas e Campos** (7 tabelas, índices, constraints) | DBAs, backend devs |
+| Arquivo                                               | Sobre                                                   | Para Quem                |
+| ----------------------------------------------------- | ------------------------------------------------------- | ------------------------ |
+| [01_SCHEMA.md](./DATABASE/01_SCHEMA.md)               | **Tabelas e Campos** (7 tabelas, índices, constraints)  | DBAs, backend devs       |
 | [02_RELATIONSHIPS.md](./DATABASE/02_RELATIONSHIPS.md) | **Fluxo de Dados** (diagramas, relacionamentos 1:1/1:M) | Arquitetos, backend devs |
-| [03_QUERIES.md](./DATABASE/03_QUERIES.md) | **Queries SQL Prontas** (50+ exemplos de SELECT/INSERT) | DBAs, analytics |
-| [README.md](./DATABASE/README.md) | **Índice Database** | Todos |
+| [03_QUERIES.md](./DATABASE/03_QUERIES.md)             | **Queries SQL Prontas** (50+ exemplos de SELECT/INSERT) | DBAs, analytics          |
+| [README.md](./DATABASE/README.md)                     | **Índice Database**                                     | Todos                    |
 
 ---
 
@@ -274,12 +278,12 @@ CAMPUSHOP/
 
 ## ✅ Status da Documentação
 
-| Módulo | Status | Cobertura |
-|--------|--------|-----------|
-| Backend | ✅ Completo | 100% (8 controllers, 4 services, 7 models) |
-| Frontend | ✅ Completo | 100% (11 páginas, 10+ componentes) |
-| Database | ✅ Completo | 100% (7 tabelas, 50+ queries) |
-| **Total** | **✅ Completo** | **15 arquivos, 5.000+ linhas** |
+| Módulo    | Status          | Cobertura                                  |
+| --------- | --------------- | ------------------------------------------ |
+| Backend   | ✅ Completo     | 100% (8 controllers, 4 services, 7 models) |
+| Frontend  | ✅ Completo     | 100% (11 páginas, 10+ componentes)         |
+| Database  | ✅ Completo     | 100% (7 tabelas, 50+ queries)              |
+| **Total** | **✅ Completo** | **15 arquivos, 5.000+ linhas**             |
 
 ---
 
@@ -326,24 +330,28 @@ Database (MySQL):
 ### Documentação por Papel
 
 **👨‍💻 Desenvolvedor Full-Stack**
+
 - Comece aqui: [Visão Geral](#-visão-geral)
 - Backend: [BACKEND/README.md](./BACKEND/README.md)
 - Frontend: [FRONTEND/README.md](./FRONTEND/README.md)
 - Database: [DATABASE/README.md](./DATABASE/README.md)
 
 **🔙 Backend Developer**
+
 - [BACKEND/02_CONTROLLERS.md](./BACKEND/02_CONTROLLERS.md) - Endpoints
 - [BACKEND/03_SERVICES.md](./BACKEND/03_SERVICES.md) - Lógica
 - [BACKEND/04_REPOSITORIES.md](./BACKEND/04_REPOSITORIES.md) - Dados
 - [DATABASE/03_QUERIES.md](./DATABASE/03_QUERIES.md) - SQL
 
 **🎨 Frontend Developer**
+
 - [FRONTEND/01_PAGES.md](./FRONTEND/01_PAGES.md) - Páginas
 - [FRONTEND/02_COMPONENTS.md](./FRONTEND/02_COMPONENTS.md) - Componentes
 - [FRONTEND/05_ROUTING.md](./FRONTEND/05_ROUTING.md) - Navegação
 - [FRONTEND/04_STORE.md](./FRONTEND/04_STORE.md) - Estado
 
 **🗄️ Database Administrator**
+
 - [DATABASE/01_SCHEMA.md](./DATABASE/01_SCHEMA.md) - Estrutura
 - [DATABASE/02_RELATIONSHIPS.md](./DATABASE/02_RELATIONSHIPS.md) - Fluxos
 - [DATABASE/03_QUERIES.md](./DATABASE/03_QUERIES.md) - SQL
@@ -381,12 +389,12 @@ Ao adicionar novas funcionalidades, atualize a documentação:
 
 ## 📝 Changelog
 
-| Data | Versão | Mudanças |
-|------|--------|----------|
-| 2026-04-17 | 1.0 | ✅ Documentação completa criada |
-| | | - 6 docs Backend (models, controllers, services, repos, security, config) |
-| | | - 5 docs Frontend (pages, components, services, store, routing) |
-| | | - 4 docs Database (schema, relationships, queries, README) |
+| Data       | Versão | Mudanças                                                                  |
+| ---------- | ------ | ------------------------------------------------------------------------- |
+| 2026-04-17 | 1.0    | ✅ Documentação completa criada                                           |
+|            |        | - 6 docs Backend (models, controllers, services, repos, security, config) |
+|            |        | - 5 docs Frontend (pages, components, services, store, routing)           |
+|            |        | - 4 docs Database (schema, relationships, queries, README)                |
 
 ---
 

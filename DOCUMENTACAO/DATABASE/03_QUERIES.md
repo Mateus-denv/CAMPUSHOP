@@ -42,6 +42,7 @@ GROUP BY tipoConta;
 ```
 
 **Resultado esperado:**
+
 ```
 tipoConta  | total
 -----------|-------
@@ -52,7 +53,7 @@ VENDEDOR   | 25
 ### Vendedores mais produtos
 
 ```sql
-SELECT 
+SELECT
   u.nomeCompleto as vendedor,
   COUNT(p.idProduto) as totalProdutos,
   SUM(CASE WHEN p.status = 'ATIVO' THEN 1 ELSE 0 END) as produtosAtivos
@@ -71,7 +72,7 @@ LIMIT 10;
 ### Listar produtos de uma categoria
 
 ```sql
-SELECT 
+SELECT
   p.idProduto,
   p.nomeProduto,
   p.preco,
@@ -86,7 +87,7 @@ ORDER BY p.preco ASC;
 ### Produtos com baixo estoque (< 5 unidades)
 
 ```sql
-SELECT 
+SELECT
   p.idProduto,
   p.nomeProduto,
   p.estoque,
@@ -144,7 +145,7 @@ LIMIT 20;
 ### Contar produtos por categoria
 
 ```sql
-SELECT 
+SELECT
   c.nomeCategoria,
   COUNT(p.idProduto) as total,
   SUM(CASE WHEN p.status = 'ATIVO' THEN 1 ELSE 0 END) as ativos
@@ -180,7 +181,7 @@ ORDER BY p.dataCadastro DESC;
 ### Obter carrinho do usuário com itens
 
 ```sql
-SELECT 
+SELECT
   c.idCarrinho,
   u.nomeCompleto,
   u.email,
@@ -200,7 +201,7 @@ ORDER BY ci.idItem;
 ### Total do carrinho
 
 ```sql
-SELECT 
+SELECT
   c.idCarrinho,
   SUM(p.preco * ci.quantidade) as total,
   COUNT(ci.idItem) as totalItens,
@@ -215,7 +216,7 @@ GROUP BY c.idCarrinho;
 ### Carrinhos inativos (sem atualização há muito tempo)
 
 ```sql
-SELECT 
+SELECT
   c.idCarrinho,
   u.nomeCompleto,
   c.dataAtualizacao,
@@ -233,11 +234,11 @@ ORDER BY c.dataAtualizacao DESC;
 
 ```sql
 -- Antes de adicionar produto 1 ao carrinho
-SELECT 
+SELECT
   p.idProduto,
   p.nomeProduto,
   p.estoque,
-  CASE 
+  CASE
     WHEN p.estoque > 0 THEN 'Disponível'
     ELSE 'Fora de estoque'
   END as statusEstoque
@@ -252,7 +253,7 @@ WHERE p.idProduto = 1;
 ### Listar pedidos de um usuário
 
 ```sql
-SELECT 
+SELECT
   p.idPedido,
   p.dataPedido,
   p.total,
@@ -268,7 +269,7 @@ ORDER BY p.dataPedido DESC;
 ### Pedido com detalhes dos itens
 
 ```sql
-SELECT 
+SELECT
   p.idPedido,
   p.dataPedido,
   p.total,
@@ -287,7 +288,7 @@ ORDER BY pi.idItem;
 ### Faturamento por período
 
 ```sql
-SELECT 
+SELECT
   DATE(p.dataPedido) as data,
   COUNT(p.idPedido) as pedidos,
   SUM(p.total) as faturamento,
@@ -301,7 +302,7 @@ ORDER BY data DESC;
 ### Pedidos pendentes
 
 ```sql
-SELECT 
+SELECT
   p.idPedido,
   u.nomeCompleto,
   u.email,
@@ -316,7 +317,7 @@ ORDER BY p.dataPedido ASC;
 ### Pedidos entregues este mês
 
 ```sql
-SELECT 
+SELECT
   p.idPedido,
   u.nomeCompleto,
   p.dataPedido,
@@ -332,7 +333,7 @@ ORDER BY p.dataPedido DESC;
 ### Top 10 clientes por gasto
 
 ```sql
-SELECT 
+SELECT
   u.nomeCompleto,
   u.email,
   COUNT(p.idPedido) as totalPedidos,
@@ -349,7 +350,7 @@ LIMIT 10;
 ### Produtos mais vendidos
 
 ```sql
-SELECT 
+SELECT
   pr.nomeProduto,
   c.nomeCategoria,
   SUM(pi.quantidade) as totalVendido,
@@ -370,7 +371,7 @@ LIMIT 20;
 ### Dashboard - Estatísticas Gerais
 
 ```sql
-SELECT 
+SELECT
   (SELECT COUNT(*) FROM usuario WHERE ativado = true) as totalUsuarios,
   (SELECT COUNT(*) FROM usuario WHERE tipoConta = 'VENDEDOR' AND ativado = true) as totalVendedores,
   (SELECT COUNT(*) FROM produto WHERE status = 'ATIVO') as produtosAtivos,
@@ -411,7 +412,7 @@ WHERE NOT EXISTS (
 ### Taxa de Conversão
 
 ```sql
-SELECT 
+SELECT
   (SELECT COUNT(*) FROM usuario WHERE ativado = true) as usuariosRegistrados,
   (SELECT COUNT(DISTINCT idUsuario) FROM pedido) as usuariosQueCompraram,
   ROUND(

@@ -17,6 +17,7 @@ O banco de dados do CampusShop é MySQL 8.0. Armazena todos os dados sobre usuá
 **Descrição:** Armazena dados dos usuários (clientes e vendedores).
 
 **Criação:**
+
 ```sql
 CREATE TABLE usuario (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -40,26 +41,27 @@ CREATE TABLE usuario (
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `id` | INT | PK, AUTO_INCREMENT | Identificador único |
-| `nomeCompleto` | VARCHAR(100) | NOT NULL | Nome completo |
-| `ra` | VARCHAR(50) | NOT NULL, UNIQUE | Registro acadêmico |
-| `email` | VARCHAR(100) | NOT NULL, UNIQUE | Email único |
-| `senha` | VARCHAR(255) | NOT NULL | Senha criptografada (BCrypt) |
-| `cpfCnpj` | VARCHAR(20) | - | CPF ou CNPJ |
-| `dataNascimento` | DATE | - | Data de nascimento |
-| `cidade` | VARCHAR(100) | - | Cidade |
-| `nomeCliente` | VARCHAR(100) | - | Nome para exibição |
-| `telefone` | VARCHAR(15) | - | Telefone |
-| `tipoConta` | VARCHAR(20) | - | CLIENTE, VENDEDOR |
-| `instituicaoEnsino` | VARCHAR(100) | - | Universidade |
-| `localizacaoGps` | VARCHAR(50) | - | Lat,Long |
-| `ativado` | BOOLEAN | DEFAULT true | Conta ativa |
-| `dataCadastro` | DATE | - | Data de registro |
-| `dataAtualizacao` | TIMESTAMP | - | Última atualização |
+| Campo               | Tipo         | Restrições         | Descrição                    |
+| ------------------- | ------------ | ------------------ | ---------------------------- |
+| `id`                | INT          | PK, AUTO_INCREMENT | Identificador único          |
+| `nomeCompleto`      | VARCHAR(100) | NOT NULL           | Nome completo                |
+| `ra`                | VARCHAR(50)  | NOT NULL, UNIQUE   | Registro acadêmico           |
+| `email`             | VARCHAR(100) | NOT NULL, UNIQUE   | Email único                  |
+| `senha`             | VARCHAR(255) | NOT NULL           | Senha criptografada (BCrypt) |
+| `cpfCnpj`           | VARCHAR(20)  | -                  | CPF ou CNPJ                  |
+| `dataNascimento`    | DATE         | -                  | Data de nascimento           |
+| `cidade`            | VARCHAR(100) | -                  | Cidade                       |
+| `nomeCliente`       | VARCHAR(100) | -                  | Nome para exibição           |
+| `telefone`          | VARCHAR(15)  | -                  | Telefone                     |
+| `tipoConta`         | VARCHAR(20)  | -                  | CLIENTE, VENDEDOR            |
+| `instituicaoEnsino` | VARCHAR(100) | -                  | Universidade                 |
+| `localizacaoGps`    | VARCHAR(50)  | -                  | Lat,Long                     |
+| `ativado`           | BOOLEAN      | DEFAULT true       | Conta ativa                  |
+| `dataCadastro`      | DATE         | -                  | Data de registro             |
+| `dataAtualizacao`   | TIMESTAMP    | -                  | Última atualização           |
 
 **Índices:**
+
 - `INDEX idx_email` - Para buscas por email
 - `INDEX idx_ra` - Para buscas por RA
 - `INDEX idx_ativado` - Para filtrar usuários inativos
@@ -71,6 +73,7 @@ CREATE TABLE usuario (
 **Descrição:** Categorias de produtos.
 
 **Criação:**
+
 ```sql
 CREATE TABLE categoria (
   idCategoria INT AUTO_INCREMENT PRIMARY KEY,
@@ -83,15 +86,16 @@ CREATE TABLE categoria (
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `idCategoria` | INT | PK, AUTO_INCREMENT | ID único |
-| `nomeCategoria` | VARCHAR(100) | NOT NULL, UNIQUE | Nome da categoria |
-| `descricao` | TEXT | - | Descrição |
-| `ativa` | BOOLEAN | DEFAULT true | Visível ou não |
-| `dataAtualizacao` | TIMESTAMP | - | Última atualização |
+| Campo             | Tipo         | Restrições         | Descrição          |
+| ----------------- | ------------ | ------------------ | ------------------ |
+| `idCategoria`     | INT          | PK, AUTO_INCREMENT | ID único           |
+| `nomeCategoria`   | VARCHAR(100) | NOT NULL, UNIQUE   | Nome da categoria  |
+| `descricao`       | TEXT         | -                  | Descrição          |
+| `ativa`           | BOOLEAN      | DEFAULT true       | Visível ou não     |
+| `dataAtualizacao` | TIMESTAMP    | -                  | Última atualização |
 
 **Exemplos:**
+
 - Eletrônicos
 - Livros
 - Roupas
@@ -105,6 +109,7 @@ CREATE TABLE categoria (
 **Descrição:** Produtos disponíveis para venda.
 
 **Criação:**
+
 ```sql
 CREATE TABLE produto (
   idProduto INT AUTO_INCREMENT PRIMARY KEY,
@@ -119,7 +124,7 @@ CREATE TABLE produto (
   idUsuario INT,
   dataCadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   dataAtualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
+
   FOREIGN KEY (idCategoria) REFERENCES categoria(idCategoria),
   FOREIGN KEY (idUsuario) REFERENCES usuario(id)
 );
@@ -127,22 +132,23 @@ CREATE TABLE produto (
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `idProduto` | INT | PK, AUTO_INCREMENT | ID único |
-| `nomeProduto` | VARCHAR(200) | NOT NULL | Nome |
-| `descricao` | TEXT | - | Descrição detalhada |
-| `estoque` | INT | NOT NULL, ≥ 0 | Quantidade em estoque |
-| `preco` | DOUBLE | NOT NULL, > 0 | Preço |
-| `status` | VARCHAR(20) | - | ATIVO, INATIVO, PAUSADO |
-| `dimensoes` | VARCHAR(50) | - | Ex: 10x10x10cm |
-| `peso` | DOUBLE | - | Em kg |
-| `idCategoria` | INT | FK | Categoria do produto |
-| `idUsuario` | INT | FK | Vendedor/criador |
-| `dataCadastro` | TIMESTAMP | - | Data de criação |
-| `dataAtualizacao` | TIMESTAMP | - | Última atualização |
+| Campo             | Tipo         | Restrições         | Descrição               |
+| ----------------- | ------------ | ------------------ | ----------------------- |
+| `idProduto`       | INT          | PK, AUTO_INCREMENT | ID único                |
+| `nomeProduto`     | VARCHAR(200) | NOT NULL           | Nome                    |
+| `descricao`       | TEXT         | -                  | Descrição detalhada     |
+| `estoque`         | INT          | NOT NULL, ≥ 0      | Quantidade em estoque   |
+| `preco`           | DOUBLE       | NOT NULL, > 0      | Preço                   |
+| `status`          | VARCHAR(20)  | -                  | ATIVO, INATIVO, PAUSADO |
+| `dimensoes`       | VARCHAR(50)  | -                  | Ex: 10x10x10cm          |
+| `peso`            | DOUBLE       | -                  | Em kg                   |
+| `idCategoria`     | INT          | FK                 | Categoria do produto    |
+| `idUsuario`       | INT          | FK                 | Vendedor/criador        |
+| `dataCadastro`    | TIMESTAMP    | -                  | Data de criação         |
+| `dataAtualizacao` | TIMESTAMP    | -                  | Última atualização      |
 
 **Índices:**
+
 - `INDEX idx_idCategoria` - Para buscar por categoria
 - `INDEX idx_idUsuario` - Para buscar produtos de um vendedor
 - `INDEX idx_status` - Para filtrar por status
@@ -155,25 +161,26 @@ CREATE TABLE produto (
 **Descrição:** Carrinho de compras de cada usuário.
 
 **Criação:**
+
 ```sql
 CREATE TABLE carrinho (
   idCarrinho INT AUTO_INCREMENT PRIMARY KEY,
   idUsuario INT NOT NULL UNIQUE,
   dataCriacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   dataAtualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
+
   FOREIGN KEY (idUsuario) REFERENCES usuario(id) ON DELETE CASCADE
 );
 ```
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `idCarrinho` | INT | PK, AUTO_INCREMENT | ID único |
-| `idUsuario` | INT | NOT NULL, UNIQUE, FK | Proprietário |
-| `dataCriacao` | TIMESTAMP | - | Quando criou |
-| `dataAtualizacao` | TIMESTAMP | - | Última atualização |
+| Campo             | Tipo      | Restrições           | Descrição          |
+| ----------------- | --------- | -------------------- | ------------------ |
+| `idCarrinho`      | INT       | PK, AUTO_INCREMENT   | ID único           |
+| `idUsuario`       | INT       | NOT NULL, UNIQUE, FK | Proprietário       |
+| `dataCriacao`     | TIMESTAMP | -                    | Quando criou       |
+| `dataAtualizacao` | TIMESTAMP | -                    | Última atualização |
 
 **Nota:** Um usuário tem UM carrinho (1:1)
 
@@ -184,6 +191,7 @@ CREATE TABLE carrinho (
 **Descrição:** Itens individuais dentro de um carrinho.
 
 **Criação:**
+
 ```sql
 CREATE TABLE carrinhoItem (
   idItem INT AUTO_INCREMENT PRIMARY KEY,
@@ -191,7 +199,7 @@ CREATE TABLE carrinhoItem (
   idProduto INT NOT NULL,
   quantidade INT NOT NULL DEFAULT 1,
   dataAtualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
+
   FOREIGN KEY (idCarrinho) REFERENCES carrinho(idCarrinho) ON DELETE CASCADE,
   FOREIGN KEY (idProduto) REFERENCES produto(idProduto) ON DELETE CASCADE,
   UNIQUE KEY unique_carrinho_produto (idCarrinho, idProduto)
@@ -200,15 +208,16 @@ CREATE TABLE carrinhoItem (
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `idItem` | INT | PK, AUTO_INCREMENT | ID único |
-| `idCarrinho` | INT | NOT NULL, FK | Qual carrinho |
-| `idProduto` | INT | NOT NULL, FK | Qual produto |
-| `quantidade` | INT | NOT NULL, ≥ 1 | Quantidade |
-| `dataAtualizacao` | TIMESTAMP | - | Última atualização |
+| Campo             | Tipo      | Restrições         | Descrição          |
+| ----------------- | --------- | ------------------ | ------------------ |
+| `idItem`          | INT       | PK, AUTO_INCREMENT | ID único           |
+| `idCarrinho`      | INT       | NOT NULL, FK       | Qual carrinho      |
+| `idProduto`       | INT       | NOT NULL, FK       | Qual produto       |
+| `quantidade`      | INT       | NOT NULL, ≥ 1      | Quantidade         |
+| `dataAtualizacao` | TIMESTAMP | -                  | Última atualização |
 
 **Constraints:**
+
 - `UNIQUE (idCarrinho, idProduto)` - Não pode ter o mesmo produto 2x no carrinho
 - `ON DELETE CASCADE` - Se carrinho/produto deletado, item também é
 
@@ -221,6 +230,7 @@ CREATE TABLE carrinhoItem (
 **Descrição:** Pedidos finalizados.
 
 **Criação:**
+
 ```sql
 CREATE TABLE pedido (
   idPedido INT AUTO_INCREMENT PRIMARY KEY,
@@ -230,22 +240,22 @@ CREATE TABLE pedido (
   status VARCHAR(20) DEFAULT 'PENDENTE',
   endereco VARCHAR(255),
   observacoes TEXT,
-  
+
   FOREIGN KEY (idUsuario) REFERENCES usuario(id)
 );
 ```
 
 **Atributos:**
 
-| Campo | Tipo | Restrições | Descrição |
-|-------|------|-----------|-----------|
-| `idPedido` | INT | PK, AUTO_INCREMENT | ID único |
-| `idUsuario` | INT | NOT NULL, FK | Comprador |
-| `dataPedido` | TIMESTAMP | - | Quando fez |
-| `total` | DOUBLE | NOT NULL | Valor total |
-| `status` | VARCHAR(20) | DEFAULT 'PENDENTE' | PENDENTE, ENVIADO, ENTREGUE, CANCELADO |
-| `endereco` | VARCHAR(255) | - | Endereço de entrega |
-| `observacoes` | TEXT | - | Observações do pedido |
+| Campo         | Tipo         | Restrições         | Descrição                              |
+| ------------- | ------------ | ------------------ | -------------------------------------- |
+| `idPedido`    | INT          | PK, AUTO_INCREMENT | ID único                               |
+| `idUsuario`   | INT          | NOT NULL, FK       | Comprador                              |
+| `dataPedido`  | TIMESTAMP    | -                  | Quando fez                             |
+| `total`       | DOUBLE       | NOT NULL           | Valor total                            |
+| `status`      | VARCHAR(20)  | DEFAULT 'PENDENTE' | PENDENTE, ENVIADO, ENTREGUE, CANCELADO |
+| `endereco`    | VARCHAR(255) | -                  | Endereço de entrega                    |
+| `observacoes` | TEXT         | -                  | Observações do pedido                  |
 
 ---
 
@@ -254,6 +264,7 @@ CREATE TABLE pedido (
 **Descrição:** Items dentro de um pedido.
 
 **Criação:**
+
 ```sql
 CREATE TABLE pedidoItem (
   idItem INT AUTO_INCREMENT PRIMARY KEY,
@@ -262,7 +273,7 @@ CREATE TABLE pedidoItem (
   quantidade INT NOT NULL,
   precoUnitario DOUBLE NOT NULL,
   subtotal DOUBLE NOT NULL,
-  
+
   FOREIGN KEY (idPedido) REFERENCES pedido(idPedido) ON DELETE CASCADE,
   FOREIGN KEY (idProduto) REFERENCES produto(idProduto)
 );
@@ -333,7 +344,7 @@ ORDER BY preco ASC;
 ### Obter itens do carrinho com detalhes
 
 ```sql
-SELECT 
+SELECT
   ci.idItem,
   p.idProduto,
   p.nomeProduto,
@@ -374,7 +385,7 @@ WHERE pi.idPedido = 1;
 ### Usuários mais ativos (mais compras)
 
 ```sql
-SELECT 
+SELECT
   u.nomeCompleto,
   COUNT(p.idPedido) as totalPedidos,
   SUM(p.total) as totalGasto
@@ -388,7 +399,7 @@ LIMIT 10;
 ### Produtos mais vendidos
 
 ```sql
-SELECT 
+SELECT
   p.nomeProduto,
   SUM(pi.quantidade) as totalVendido
 FROM pedidoItem pi
@@ -403,12 +414,14 @@ LIMIT 10;
 ## 🔐 Constraints e Validações
 
 ### Uniqueness
+
 - `email` em usuario
 - `ra` em usuario
 - `nomeCategoria` em categoria
 - `(idCarrinho, idProduto)` em carrinhoItem
 
 ### Foreign Keys (Integridade Referencial)
+
 - `produto.idCategoria` → `categoria.idCategoria`
 - `produto.idUsuario` → `usuario.id`
 - `carrinho.idUsuario` → `usuario.id`
@@ -419,6 +432,7 @@ LIMIT 10;
 - `pedidoItem.idProduto` → `produto.idProduto`
 
 ### Checks (Regras de Negócio)
+
 - `estoque` ≥ 0
 - `preco` > 0
 - `status` IN ('ATIVO', 'INATIVO', 'PAUSADO')
@@ -473,11 +487,13 @@ Valida integridade dos dados.
 ## 🔄 Migrations e Versionamento
 
 Com Hibernate `ddl-auto=update` em development:
+
 - Tabelas são criadas automaticamente
 - Colunas novas são adicionadas
 - **Cuidado:** Deletar colunas não é automático (exige script manual)
 
 Em production:
+
 - Usar `ddl-auto=validate`
 - Gerenciar migrations manualmente
 - Usar Flyway ou Liquibase para versionamento
