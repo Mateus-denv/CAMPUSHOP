@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuthStore } from '@/store'
 import { authAPI } from '@/lib/api-service'
+import { addAuthListener, hasAuthToken } from '@/lib/auth-listener'
 import { LoginPage } from '@/pages/LoginPage'
 import { HomePage } from '@/pages/HomePage'
 import { CarrinhoPage } from '@/pages/CarrinhoPage'
@@ -19,43 +20,59 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
+    const verificarAutenticacao = () => {
+      const token = localStorage.getItem('token')
+      const savedUser = localStorage.getItem('user')
 
-    // Se não há token, usuário está deslogado
-    if (!token) {
-      setUsuario(null)
-      setLoading(false)
-      return
-    }
-
-    // Se há token e usuário salvo, restaura do localStorage
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUsuario(userData)
+      // Se não há token, usuário está deslogado
+      if (!token) {
+        setUsuario(null)
         setLoading(false)
         return
-      } catch {
-        localStorage.removeItem('user')
       }
+
+      // Se há token e usuário salvo, restaura do localStorage
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser)
+          setUsuario(userData)
+          setLoading(false)
+          return
+        } catch {
+          localStorage.removeItem('user')
+        }
+      }
+
+      // Valida o token com o backend
+      authAPI
+        .me()
+        .then((response) => {
+          setUsuario(response.data)
+          localStorage.setItem('user', JSON.stringify(response.data))
+        })
+        .catch(() => {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setUsuario(null)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
     }
 
-    // Valida o token com o backend
-    authAPI
-      .me()
-      .then((response) => {
-        setUsuario(response.data)
-        localStorage.setItem('user', JSON.stringify(response.data))
-      })
-      .catch(() => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+    // Executa na primeira carga
+    verificarAutenticacao()
+
+    // Listener para mudanças de autenticação (logout em qualquer aba)
+    const unsubscribe = addAuthListener(() => {
+      if (!hasAuthToken()) {
         setUsuario(null)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+      } else {
+        verificarAutenticacao()
+      }
+    })
+
+    return () => unsubscribe()
   }, [setUsuario])
 
   if (loading) {

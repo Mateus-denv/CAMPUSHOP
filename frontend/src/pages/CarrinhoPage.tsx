@@ -1,27 +1,82 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
+import { produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
-import { createOrderFromCart, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+
+type ApiProduct = {
+  idProduto: number
+  nomeProduto: string
+  descricao: string
+  preco: number
+  estoque: number
+}
 
 export function CarrinhoPage() {
   const navigate = useNavigate()
   const [cart, setCart] = useState(getCart())
   const [modalChat, setModalChat] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const [produtosApi, setProdutosApi] = useState<ApiProduct[]>([])
+
+  useEffect(() => {
+    const carregarProdutos = async () => {
+      try {
+        const response = await produtoAPI.listarTodos()
+        const normalizados: ApiProduct[] = (response.data ?? []).map((produto: any) => ({
+          idProduto: Number(produto.idProduto ?? produto.id),
+          nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+          descricao: produto.descricao ?? '',
+          preco: Number(produto.preco ?? 0),
+          estoque: Number(produto.estoque ?? 0),
+        }))
+        setProdutosApi(normalizados)
+      } catch {
+        setProdutosApi([])
+      }
+    }
+
+    carregarProdutos()
+  }, [])
 
   const cartWithProducts = useMemo(
     () =>
       cart
         .map((item) => {
-          const product = products.find((p) => p.id === item.productId)
+          const cached = getCachedProduct(item.productId)
+          const apiProduct = produtosApi.find((produto) => produto.idProduto === item.productId)
+          const product = cached
+            ? {
+              id: cached.id,
+              nome: cached.nome,
+              descricao: cached.descricao,
+              categoria: 'Marketplace',
+              condicao: cached.condicao ?? 'Novo',
+              preco: cached.preco,
+              vendedor: cached.vendedor ?? 'Vendedor CampusShop',
+              local: 'Campus',
+            }
+            : apiProduct
+              ? {
+                id: apiProduct.idProduto,
+                nome: apiProduct.nomeProduto || 'Produto sem nome',
+                descricao: apiProduct.descricao,
+                categoria: 'Marketplace',
+                condicao: 'Novo',
+                preco: apiProduct.preco,
+                vendedor: 'Vendedor CampusShop',
+                local: 'Campus',
+              }
+              : products.find((p) => p.id === item.productId)
+
           if (!product) {
             return null
           }
-          return { product, quantidade: item.quantidade }
+          return { productId: item.productId, product, quantidade: item.quantidade }
         })
-        .filter((item): item is { product: (typeof products)[number]; quantidade: number } => item !== null),
-    [cart]
+        .filter((item): item is { productId: number; product: (typeof products)[number]; quantidade: number } => item !== null),
+    [cart, produtosApi]
   )
 
   const total = cartWithProducts.reduce((acc, item) => acc + item.product.preco * item.quantidade, 0)
@@ -68,8 +123,8 @@ export function CarrinhoPage() {
               </div>
             )}
 
-            {cartWithProducts.map(({ product: p, quantidade: q }) => (
-              <div key={p.id} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
+            {cartWithProducts.map(({ productId, product: p, quantidade: q }) => (
+              <div key={productId} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
                 <div className="flex h-24 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-2xl sm:w-24">📦</div>
                 <div className="flex-1">
                   <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">{p.condicao}</span>
@@ -78,10 +133,10 @@ export function CarrinhoPage() {
                   <p className="mt-2 text-2xl font-black text-blue-700">R$ {p.preco.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-center">
-                  <button onClick={() => atualizarQuantidade(p.id, Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
+                  <button onClick={() => atualizarQuantidade(productId, Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
                   <span className="w-8 text-center font-semibold text-slate-700">{q}</span>
-                  <button onClick={() => atualizarQuantidade(p.id, q + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">+</button>
-                  <button onClick={() => excluirItem(p.id)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
+                  <button onClick={() => atualizarQuantidade(productId, q + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">+</button>
+                  <button onClick={() => excluirItem(productId)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
                 </div>
               </div>
             ))}

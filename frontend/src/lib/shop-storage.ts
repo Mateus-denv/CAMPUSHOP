@@ -19,8 +19,30 @@ export type Order = {
   total: number
 }
 
+export type CartProductSnapshot = {
+  id: number
+  nome: string
+  descricao: string
+  preco: number
+  estoque: number
+  condicao?: string
+  vendedor?: string
+}
+
+export type FavoriteProductSnapshot = {
+  id: number
+  nome: string
+  descricao: string
+  preco: number
+  estoque: number
+  categoria?: string
+}
+
 const CART_KEY = 'campushop_cart'
 const ORDERS_KEY = 'campushop_orders'
+const PRODUCT_CACHE_KEY = 'campushop_product_cache'
+const FAVORITES_KEY = 'campushop_favorites'
+const FAVORITES_CACHE_KEY = 'campushop_favorites_cache'
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -57,6 +79,37 @@ export function addToCart(productId: number, quantidade: number = 1) {
   saveCart(cart)
 }
 
+export function getProductCache(): Record<number, CartProductSnapshot> {
+  return loadJson<Record<number, CartProductSnapshot>>(PRODUCT_CACHE_KEY, {})
+}
+
+function saveProductCache(cache: Record<number, CartProductSnapshot>) {
+  saveJson(PRODUCT_CACHE_KEY, cache)
+}
+
+export function cacheProduct(product: CartProductSnapshot) {
+  const cache = getProductCache()
+  cache[product.id] = product
+  saveProductCache(cache)
+}
+
+export function getCachedProduct(productId: number): CartProductSnapshot | null {
+  const cache = getProductCache()
+  return cache[productId] ?? null
+}
+
+export function addToCartWithSnapshot(product: CartProductSnapshot, quantidade: number = 1) {
+  cacheProduct(product)
+  const cart = getCart()
+  const existing = cart.find((item) => item.productId === product.id)
+  if (existing) {
+    existing.quantidade += quantidade
+  } else {
+    cart.push({ productId: product.id, quantidade })
+  }
+  saveCart(cart)
+}
+
 export function updateCartItem(productId: number, quantidade: number) {
   const cart = getCart()
     .map((item) => (item.productId === productId ? { ...item, quantidade } : item))
@@ -85,7 +138,8 @@ export function createOrderFromCart(): Order | null {
 
   const itens: OrderItem[] = cart
     .map((item) => {
-      const product = products.find((p) => p.id === item.productId)
+      const cached = getCachedProduct(item.productId)
+      const product = cached ?? products.find((p) => p.id === item.productId)
       if (!product) {
         return null
       }
@@ -118,4 +172,53 @@ export function createOrderFromCart(): Order | null {
 
 export function countCartItems() {
   return getCart().reduce((acc, item) => acc + item.quantidade, 0)
+}
+
+export function getFavorites(): number[] {
+  return loadJson<number[]>(FAVORITES_KEY, [])
+}
+
+function saveFavorites(favorites: number[]) {
+  saveJson(FAVORITES_KEY, favorites)
+}
+
+function getFavoritesCache(): Record<number, FavoriteProductSnapshot> {
+  return loadJson<Record<number, FavoriteProductSnapshot>>(FAVORITES_CACHE_KEY, {})
+}
+
+function saveFavoritesCache(cache: Record<number, FavoriteProductSnapshot>) {
+  saveJson(FAVORITES_CACHE_KEY, cache)
+}
+
+export function cacheFavoriteProduct(product: FavoriteProductSnapshot) {
+  const cache = getFavoritesCache()
+  cache[product.id] = product
+  saveFavoritesCache(cache)
+}
+
+export function isFavorite(productId: number): boolean {
+  return getFavorites().includes(productId)
+}
+
+export function toggleFavorite(product: FavoriteProductSnapshot): boolean {
+  const favorites = getFavorites()
+  const alreadyFavorite = favorites.includes(product.id)
+
+  if (alreadyFavorite) {
+    saveFavorites(favorites.filter((id) => id !== product.id))
+    return false
+  }
+
+  cacheFavoriteProduct(product)
+  saveFavorites([product.id, ...favorites])
+  return true
+}
+
+export function getFavoriteProducts(): FavoriteProductSnapshot[] {
+  const favorites = getFavorites()
+  const cache = getFavoritesCache()
+
+  return favorites
+    .map((id) => cache[id])
+    .filter((item): item is FavoriteProductSnapshot => item !== undefined)
 }

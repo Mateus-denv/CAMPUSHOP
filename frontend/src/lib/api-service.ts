@@ -75,3 +75,7 @@ export const produtoAPI = {
   obterPorUsuario: () => api.get('/api/produtos/usuario'),
   deletar: (id: number) => api.delete(`/api/produtos/${id}`),
 }
+
+export const usuarioAPI = {
+  excluir: (id: number) => api.delete(`/api/usuarios/${id}`),
+}

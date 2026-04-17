@@ -5,8 +5,8 @@ import { Button, Card, Input } from '@/components/UI'
 import { produtoAPI, categoriaAPI } from '@/lib/api-service'
 
 type Categoria = {
-    id: number
-    nome: string
+    idCategoria: number
+    nome_categoria: string
     descricao: string
 }
 
@@ -159,8 +159,8 @@ export function CadastrarProdutoPage() {
                                     >
                                         <option value="">Selecione uma categoria</option>
                                         {categorias.map((categoria) => (
-                                            <option key={categoria.id} value={categoria.id}>
-                                                {categoria.nome}
+                                            <option key={categoria.idCategoria} value={categoria.idCategoria}>
+                                                {categoria.nome_categoria}
                                             </option>
                                         ))}
                                     </select>

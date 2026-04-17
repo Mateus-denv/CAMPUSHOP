@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store'
+import { clearAuth } from '@/lib/auth-listener'
 import { LogOut, User } from 'lucide-react'
 
 type LayoutProps = {
@@ -22,9 +23,8 @@ export function Layout({ children }: LayoutProps) {
   const { usuario, setUsuario } = useAuthStore()
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
     setUsuario(null)
+    clearAuth()
     navigate('/login', { replace: true })
   }
 

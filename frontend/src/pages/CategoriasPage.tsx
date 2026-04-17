@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { categoriaAPI, produtoAPI } from '@/lib/api-service'
+import { Heart } from 'lucide-react'
+import { isFavorite, toggleFavorite } from '@/lib/shop-storage'
 
 type Categoria = {
-  id: number
-  nome: string
+  idCategoria: number
+  nome_categoria: string
   descricao?: string
 }
 
 type Produto = {
-  id: number
-  nome: string
+  idProduto: number
+  nomeProduto: string
   descricao: string
   preco: number
   estoque: number
@@ -20,12 +22,13 @@ type Produto = {
 
 export function CategoriasPage() {
   const [busca, setBusca] = useState('')
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState('Todas as categorias')
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState('todas')
   const [ordenacao, setOrdenacao] = useState('Mais recente')
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [produtosFiltrados, setProdutosFiltrados] = useState<Produto[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [favoritos, setFavoritos] = useState<number[]>([])
 
   // Carrega dados ao montar
   useEffect(() => {
@@ -44,8 +47,28 @@ export function CategoriasPage() {
         categoriaAPI.listar(),
         produtoAPI.listarTodos()
       ])
-      setCategorias(categoriasRes.data)
-      setProdutos(produtosRes.data)
+
+      const categoriasNormalizadas: Categoria[] = (categoriasRes.data ?? []).map((categoria: any) => ({
+        idCategoria: Number(categoria.idCategoria ?? categoria.id),
+        nome_categoria: categoria.nome_categoria ?? categoria.nome ?? 'Sem categoria',
+        descricao: categoria.descricao ?? ''
+      }))
+
+      const produtosNormalizados: Produto[] = (produtosRes.data ?? []).map((produto: any) => ({
+        idProduto: Number(produto.idProduto ?? produto.id),
+        nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+        descricao: produto.descricao ?? '',
+        preco: Number(produto.preco ?? 0),
+        estoque: Number(produto.estoque ?? 0),
+        categoria: {
+          idCategoria: Number(produto.categoria?.idCategoria ?? produto.categoria?.id ?? 0),
+          nome_categoria: produto.categoria?.nome_categoria ?? produto.categoria?.nome ?? 'Sem categoria',
+          descricao: produto.categoria?.descricao ?? ''
+        }
+      }))
+
+      setCategorias(categoriasNormalizadas)
+      setProdutos(produtosNormalizados)
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
     } finally {
@@ -59,12 +82,12 @@ export function CategoriasPage() {
     let filtrados = produtos.filter((produto) => {
       const correspondeBusca =
         !termo ||
-        produto.nome.toLowerCase().includes(termo) ||
+        produto.nomeProduto.toLowerCase().includes(termo) ||
         produto.descricao.toLowerCase().includes(termo)
 
       const correspondeCategoria =
-        categoriaSelecionada === 'Todas as categorias' ||
-        produto.categoria.nome === categoriaSelecionada
+        categoriaSelecionada === 'todas' ||
+        String(produto.categoria.idCategoria) === categoriaSelecionada
 
       return correspondeBusca && correspondeCategoria
     })
@@ -74,10 +97,32 @@ export function CategoriasPage() {
     } else if (ordenacao === 'Maior preço') {
       filtrados.sort((a, b) => b.preco - a.preco)
     } else {
-      filtrados.sort((a, b) => b.id - a.id)
+      filtrados.sort((a, b) => b.idProduto - a.idProduto)
     }
 
     setProdutosFiltrados(filtrados)
+  }
+
+  useEffect(() => {
+    const idsFavoritos = produtos.map((produto) => produto.idProduto).filter((id) => isFavorite(id))
+    setFavoritos(idsFavoritos)
+  }, [produtos])
+
+  const favoritarProduto = (produto: Produto) => {
+    const favoritado = toggleFavorite({
+      id: produto.idProduto,
+      nome: produto.nomeProduto || 'Produto sem nome',
+      descricao: produto.descricao || '',
+      preco: produto.preco,
+      estoque: produto.estoque,
+      categoria: produto.categoria.nome_categoria,
+    })
+
+    setFavoritos((atual) =>
+      favoritado
+        ? [produto.idProduto, ...atual.filter((id) => id !== produto.idProduto)]
+        : atual.filter((id) => id !== produto.idProduto)
+    )
   }
 
   if (carregando) {
@@ -111,9 +156,11 @@ export function CategoriasPage() {
             onChange={(event) => setCategoriaSelecionada(event.target.value)}
             className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 outline-none"
           >
-            <option>Todas as categorias</option>
+            <option value="todas">Todas as categorias</option>
             {categorias.map((categoria) => (
-              <option key={categoria.id}>{categoria.nome}</option>
+              <option key={categoria.idCategoria} value={String(categoria.idCategoria)}>
+                {categoria.nome_categoria}
+              </option>
             ))}
           </select>
           <select
@@ -129,16 +176,33 @@ export function CategoriasPage() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
           {produtosFiltrados.map((produto) => (
-            <Link key={produto.id} to={`/produto/${produto.id}`} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="flex h-40 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
                 Imagem
               </div>
               <div className="p-5">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
-                  {produto.categoria.nome}
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
+                    {produto.categoria.nome_categoria}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      favoritarProduto(produto)
+                    }}
+                    className={`rounded-xl border px-2.5 py-2 transition ${favoritos.includes(produto.idProduto)
+                        ? 'border-red-200 bg-red-50 text-red-600'
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    aria-label="Favoritar produto"
+                  >
+                    <Heart className={`h-4 w-4 ${favoritos.includes(produto.idProduto) ? 'fill-current' : ''}`} />
+                  </button>
+                </div>
                 <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-900 line-clamp-2">
-                  {produto.nome}
+                  {produto.nomeProduto || 'Produto sem nome'}
                 </h3>
                 <p className="mt-2 text-2xl font-black text-blue-700">
                   R$ {produto.preco.toFixed(2).replace('.', ',')}

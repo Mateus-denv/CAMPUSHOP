@@ -51,64 +51,60 @@ function notify(listeners: Set<() => void>) {
   listeners.forEach((listener) => listener())
 }
 
-export const useAuthStore = Object.assign(
-  function useAuthStore() {
-    const snapshot = useSyncExternalStore(
-      (listener) => {
-        authListeners.add(listener)
-        return () => authListeners.delete(listener)
-      },
-      () => authState,
-      () => authState
-    )
+// Auth Store
+function setAuthUsuario(usuario: Usuario | null) {
+  authState.usuario = usuario
+  notify(authListeners)
+}
 
-    return {
-      usuario: snapshot.usuario,
-      setUsuario: useAuthStore.setUsuario,
-    }
-  },
-  {
-    getState: () => ({
-      usuario: authState.usuario,
-      setUsuario: (usuario: Usuario | null) => {
-        authState.usuario = usuario
-        notify(authListeners)
-      },
-    }),
-    setUsuario(usuario: Usuario | null) {
-      authState.usuario = usuario
-      notify(authListeners)
+export function useAuthStore() {
+  const snapshot = useSyncExternalStore(
+    (listener) => {
+      authListeners.add(listener)
+      return () => authListeners.delete(listener)
     },
+    () => authState,
+    () => authState
+  )
+
+  return {
+    usuario: snapshot.usuario,
+    setUsuario: setAuthUsuario,
   }
-)
+}
 
-export const useCarrinhoStore = Object.assign(
-  function useCarrinhoStore() {
-    const snapshot = useSyncExternalStore(
-      (listener) => {
-        carrinhoListeners.add(listener)
-        return () => carrinhoListeners.delete(listener)
-      },
-      () => carrinhoState,
-      () => carrinhoState
-    )
+useAuthStore.getState = () => ({
+  usuario: authState.usuario,
+  setUsuario: setAuthUsuario,
+})
 
-    return {
-      carrinho: snapshot.carrinho,
-      setCarrinho: useCarrinhoStore.setCarrinho,
-    }
-  },
-  {
-    getState: () => ({
-      carrinho: carrinhoState.carrinho,
-      setCarrinho: (carrinho: Carrinho) => {
-        carrinhoState.carrinho = carrinho
-        notify(carrinhoListeners)
-      },
-    }),
-    setCarrinho(carrinho: Carrinho) {
-      carrinhoState.carrinho = carrinho
-      notify(carrinhoListeners)
+useAuthStore.setUsuario = setAuthUsuario
+
+// Carrinho Store
+function setCarrinhoState(carrinho: Carrinho) {
+  carrinhoState.carrinho = carrinho
+  notify(carrinhoListeners)
+}
+
+export function useCarrinhoStore() {
+  const snapshot = useSyncExternalStore(
+    (listener) => {
+      carrinhoListeners.add(listener)
+      return () => carrinhoListeners.delete(listener)
     },
+    () => carrinhoState,
+    () => carrinhoState
+  )
+
+  return {
+    carrinho: snapshot.carrinho,
+    setCarrinho: setCarrinhoState,
   }
-)
+}
+
+useCarrinhoStore.getState = () => ({
+  carrinho: carrinhoState.carrinho,
+  setCarrinho: setCarrinhoState,
+})
+
+useCarrinhoStore.setCarrinho = setCarrinhoState

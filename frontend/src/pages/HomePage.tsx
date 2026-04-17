@@ -1,9 +1,85 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { categories, products } from '@/lib/mock-data'
-import { ArrowRight, Search, Star, Truck, ShieldCheck } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Search, ShieldCheck, Star, Truck } from 'lucide-react'
+
+type DestaqueItem = {
+  id: string
+  tipo: 'Produto' | 'Servico'
+  titulo: string
+  descricao: string
+  categoria: string
+  precoLabel: string
+  vendedor: string
+  local: string
+  link: string
+}
 
 export function HomePage() {
+  const destaques: DestaqueItem[] = [
+    ...products.slice(0, 4).map((product) => ({
+      id: `produto-${product.id}`,
+      tipo: 'Produto' as const,
+      titulo: product.nome,
+      descricao: product.descricao,
+      categoria: product.categoria,
+      precoLabel: `R$ ${product.preco.toFixed(2).replace('.', ',')}`,
+      vendedor: product.vendedor,
+      local: product.local,
+      link: '/produtos',
+    })),
+    {
+      id: 'servico-aulas',
+      tipo: 'Servico',
+      titulo: 'Aulas particulares de Calculo I',
+      descricao: 'Suporte para listas, provas e revisao semanal com estudantes monitores.',
+      categoria: 'Servicos',
+      precoLabel: 'A partir de R$ 60,00',
+      vendedor: 'Equipe CampusShop',
+      local: 'Online e presencial',
+      link: '/chat',
+    },
+    {
+      id: 'servico-fretes',
+      tipo: 'Servico',
+      titulo: 'Frete entre campi',
+      descricao: 'Entrega e retirada combinada para produtos negociados na plataforma.',
+      categoria: 'Servicos',
+      precoLabel: 'A partir de R$ 12,00',
+      vendedor: 'Rede de parceiros',
+      local: 'Campi da regiao',
+      link: '/chat',
+    },
+    {
+      id: 'servico-design',
+      tipo: 'Servico',
+      titulo: 'Design para apresentacoes',
+      descricao: 'Criacao de slides academicos e materiais para TCC com entrega rapida.',
+      categoria: 'Servicos',
+      precoLabel: 'Pacotes a partir de R$ 35,00',
+      vendedor: 'Criadores CampusShop',
+      local: 'Remoto',
+      link: '/chat',
+    },
+  ]
+
+  const [indiceDestaque, setIndiceDestaque] = useState(0)
+
+  useEffect(() => {
+    if (!destaques.length) return
+
+    const timer = setInterval(() => {
+      setIndiceDestaque((atual) => (atual + 1) % destaques.length)
+    }, 4500)
+
+    return () => clearInterval(timer)
+  }, [destaques.length])
+
+  const destaqueAtual = destaques[indiceDestaque]
+  const irParaAnterior = () => setIndiceDestaque((atual) => (atual - 1 + destaques.length) % destaques.length)
+  const irParaProximo = () => setIndiceDestaque((atual) => (atual + 1) % destaques.length)
+
   return (
     <Layout>
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-700 via-indigo-700 to-orange-500 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
@@ -113,29 +189,87 @@ export function HomePage() {
       <section className="mt-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Produtos em destaque</h2>
-            <p className="mt-2 text-sm text-slate-500 sm:text-base">Os melhores produtos selecionados para você</p>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Destaques do CampusShop</h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">Carrossel com produtos e servicos em alta na plataforma</p>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {products.map((product) => (
-            <Link key={product.id} to={`/produto/${product.id}`} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
-              <div className="flex h-44 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
-                Imagem do produto
-              </div>
-              <div className="p-5">
-                <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em]">
-                  <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700">{product.categoria}</span>
-                  <span className="px-2 py-1 rounded-full bg-green-100 text-green-700">{product.condicao}</span>
+        {destaqueAtual && (
+          <div className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50 p-6 shadow-sm sm:p-8">
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <span className="rounded-full bg-indigo-100 px-3 py-1 text-indigo-700">{destaqueAtual.tipo}</span>
+                  <span className="rounded-full bg-orange-100 px-3 py-1 text-orange-700">{destaqueAtual.categoria}</span>
                 </div>
-                <h3 className="text-lg font-bold tracking-tight text-slate-900">{product.nome}</h3>
-                <p className="mt-2 text-sm text-slate-500">{product.vendedor} • {product.local}</p>
-                <p className="mt-3 text-2xl font-black text-blue-700">R$ {product.preco.toFixed(2)}</p>
+
+                <h3 className="mt-4 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                  {destaqueAtual.titulo}
+                </h3>
+
+                <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
+                  {destaqueAtual.descricao}
+                </p>
+
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
+                  <span>{destaqueAtual.vendedor}</span>
+                  <span>•</span>
+                  <span>{destaqueAtual.local}</span>
+                </div>
+
+                <p className="mt-5 text-3xl font-black text-blue-700">{destaqueAtual.precoLabel}</p>
+
+                <div className="mt-5 flex items-center gap-3">
+                  <Link
+                    to={destaqueAtual.link}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95"
+                  >
+                    Ver destaque <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
-            </Link>
-          ))}
-        </div>
+
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Em destaque agora</p>
+                <div className="mt-4 flex h-44 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
+                  Preview do destaque
+                </div>
+                <p className="mt-4 text-sm font-semibold text-slate-700">Atualizado automaticamente a cada 4,5 segundos</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={irParaAnterior}
+              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Destaque anterior"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={irParaProximo}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Proximo destaque"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div className="mt-6 flex justify-center gap-2">
+              {destaques.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setIndiceDestaque(index)}
+                  className={`h-2.5 rounded-full transition-all ${index === indiceDestaque ? 'w-8 bg-slate-900' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                  aria-label={`Ir para destaque ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </section>
     </Layout>
   )
