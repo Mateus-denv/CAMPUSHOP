@@ -4,8 +4,6 @@
 
 **ROTA ÚNICA PARA ANUNCIAR PRODUTOS:**
 - ✅ **POST /api/produtos** - API REST (JSON) - ÚNICA ROTA VÁLIDA
-- ❌ ~~POST /cadastrar-produto~~ - REMOVIDA (era MVC tradicional, conflitava com API)
-
 O frontend React usa apenas **POST /api/produtos**. Todas as operações de produto agora usam esta rota API.
 
 ---
