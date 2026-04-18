@@ -44,3 +44,6 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.rar
+
+# Local environment files
+frontend/.env.local

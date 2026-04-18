@@ -1,2 +1,0 @@
-﻿origin	https://github.com/Mateus-denv/CAMPUSHOP.git (fetch)
-origin	https://github.com/Mateus-denv/CAMPUSHOP.git (push)
