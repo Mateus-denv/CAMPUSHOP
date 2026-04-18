@@ -200,7 +200,7 @@ A documentação está organizada em **3 módulos principais** com um total de *
 
 Tudo sobre a API REST, lógica de negócio e integração com banco de dados.
 
-| Arquivo                                            | Sobre                                                           | Para Quem                    |
+| Arquivo                                            | Sobre                                                           | Responsáveis               |
 | -------------------------------------------------- | --------------------------------------------------------------- | ---------------------------- |
 | [01_MODELS.md](./BACKEND/01_MODELS.md)             | **Entidades JPA** (Usuario, Produto, Categoria, Carrinho, etc.) | Backend devs, DBAs           |
 | [02_CONTROLLERS.md](./BACKEND/02_CONTROLLERS.md)   | **Endpoints REST** (8 controllers, 40+ endpoints)               | API consumers, frontend devs |
@@ -213,7 +213,7 @@ Tudo sobre a API REST, lógica de negócio e integração com banco de dados.
 
 Tudo sobre UI, componentes, roteamento e estado global.
 
-| Arquivo                                             | Sobre                                                            | Para Quem            |
+| Arquivo                                             | Sobre                                                            | Responsáveis           |
 | --------------------------------------------------- | ---------------------------------------------------------------- | -------------------- |
 | [01_PAGES.md](./FRONTEND/01_PAGES.md)               | **11 Páginas** (Home, Login, Produtos, Carrinho, Pedidos, etc.)  | Frontend devs, UX/UI |
 | [02_COMPONENTS.md](./FRONTEND/02_COMPONENTS.md)     | **Componentes Reutilizáveis** (Button, Card, Input, Modal, etc.) | Frontend devs        |
@@ -222,10 +222,9 @@ Tudo sobre UI, componentes, roteamento e estado global.
 | [05_ROUTING.md](./FRONTEND/05_ROUTING.md)           | **Navegação** (React Router v6, protected routes)                | Frontend devs        |
 
 ### 📁 Database (db/scripts/)
-
 Tudo sobre estrutura, relacionamentos e queries SQL.
 
-| Arquivo                                               | Sobre                                                   | Para Quem                |
+| Arquivo                                               | Sobre                                                   | Responsáveis               |
 | ----------------------------------------------------- | ------------------------------------------------------- | ------------------------ |
 | [01_SCHEMA.md](./DATABASE/01_SCHEMA.md)               | **Tabelas e Campos** (7 tabelas, índices, constraints)  | DBAs, backend devs       |
 | [02_RELATIONSHIPS.md](./DATABASE/02_RELATIONSHIPS.md) | **Fluxo de Dados** (diagramas, relacionamentos 1:1/1:M) | Arquitetos, backend devs |
