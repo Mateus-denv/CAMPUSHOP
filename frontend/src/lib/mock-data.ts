@@ -1,4 +1,4 @@
-export type Category = {
+export type category = {
   id: number
   nome: string
   quantidade: number
@@ -6,77 +6,89 @@ export type Category = {
   color: string
 }
 
-export type MockProduct = {
+export type mockproduct = {
   id: number
   nome: string
   descricao: string
   categoria: string
   condicao: string
   preco: number
-  precoOriginal?: number
+  precooriginal?: number
   vendedor: string
   local: string
+  latitude?: number;
+  longitude?: number;
 }
 
-export const categories: Category[] = [
-  { id: 1, nome: 'Livros', quantidade: 18, icon: '📚', color: 'bg-blue-50 text-blue-700' },
-  { id: 2, nome: 'Eletrônicos', quantidade: 12, icon: '💻', color: 'bg-indigo-50 text-indigo-700' },
-  { id: 3, nome: 'Vestuário', quantidade: 9, icon: '👕', color: 'bg-pink-50 text-pink-700' },
-  { id: 4, nome: 'Serviços', quantidade: 6, icon: '🛠️', color: 'bg-emerald-50 text-emerald-700' },
-  { id: 5, nome: 'Alimentação', quantidade: 8, icon: '🍱', color: 'bg-orange-50 text-orange-700' },
+export const categories: category[] = [
+  { id: 1, nome: 'livros', quantidade: 18, icon: '📚', color: 'bg-blue-50 text-blue-700' },
+  { id: 2, nome: 'eletrônicos', quantidade: 12, icon: '💻', color: 'bg-indigo-50 text-indigo-700' },
+  { id: 3, nome: 'vestuário', quantidade: 9, icon: '👕', color: 'bg-pink-50 text-pink-700' },
+  { id: 4, nome: 'serviços', quantidade: 6, icon: '🛠️', color: 'bg-emerald-50 text-emerald-700' },
+  { id: 5, nome: 'alimentação', quantidade: 8, icon: '🍱', color: 'bg-orange-50 text-orange-700' },
 ]
 
-export const products: MockProduct[] = [
+export const products: mockproduct[] = [
   {
     id: 1,
-    nome: 'Livro de lógica de programação',
-    descricao: 'Livro em ótimo estado, usado no primeiro semestre da graduação.',
-    categoria: 'Livros',
-    condicao: 'Usado',
+    nome: 'livro de lógica de programação',
+    descricao: 'livro em ótimo estado, usado no primeiro semestre da graduação.',
+    categoria: 'livros',
+    condicao: 'usado',
     preco: 150,
-    precoOriginal: 220,
-    vendedor: 'João Silva',
-    local: 'UFBA',
+    precooriginal: 220,
+    vendedor: 'joão silva',
+    local: 'ufba',
+    latitude: -12.9714,
+    longitude: -38.4580,
   },
   {
     id: 2,
-    nome: 'Empada doce',
-    descricao: 'Kit com 12 empadas doces artesanais para encomenda no campus.',
-    categoria: 'Alimentação',
-    condicao: 'Novo',
+    nome: 'empada doce',
+    descricao: 'kit com 12 empadas doces artesanais para encomenda no campus.',
+    categoria: 'alimentação',
+    condicao: 'novo',
     preco: 10,
-    vendedor: 'Maria Lima',
-    local: 'UFBA',
+    vendedor: 'maria lima',
+    local: 'ufba',
+    latitude: -12.9714,
+    longitude: -38.4580,
   },
   {
     id: 3,
-    nome: 'Notebook Dell Inspiron',
-    descricao: 'Notebook para estudos e trabalho com SSD e 8GB de RAM.',
-    categoria: 'Eletrônicos',
-    condicao: 'Seminovo',
+    nome: 'notebook dell inspiron',
+    descricao: 'notebook para estudos e trabalho com ssd e 8gb de ram.',
+    categoria: 'eletrônicos',
+    condicao: 'seminovo',
     preco: 2800,
-    precoOriginal: 3400,
-    vendedor: 'Caio Ramos',
-    local: 'Camaçari',
+    precooriginal: 3400,
+    vendedor: 'caio ramos',
+    local: 'camacari',
+    latitude: -12.7392,
+    longitude: -38.3242,
   },
   {
     id: 4,
-    nome: 'Camiseta atlética UFBA',
-    descricao: 'Camiseta oficial para eventos e atividades acadêmicas.',
-    categoria: 'Vestuário',
-    condicao: 'Novo',
+    nome: 'camiseta atlética ufba',
+    descricao: 'camiseta oficial para eventos e atividades acadêmicas.',
+    categoria: 'vestuário',
+    condicao: 'novo',
     preco: 45,
-    vendedor: 'Ana Souza',
-    local: 'Salvador',
+    vendedor: 'ana souza',
+    local: 'salvador',
+    latitude: -12.9714,
+    longitude: -38.4580,
   },
   {
     id: 5,
-    nome: 'Aulas de reforço em Cálculo I',
-    descricao: 'Acompanhamento individual para lista, provas e monitoria.',
-    categoria: 'Serviços',
-    condicao: 'Novo',
+    nome: 'aulas de reforço em cálculo i',
+    descricao: 'acompanhamento individual para lista, provas e monitoria.',
+    categoria: 'serviços',
+    condicao: 'novo',
     preco: 80,
-    vendedor: 'Pedro Alves',
-    local: 'Simões Filho',
+    vendedor: 'pedro alves',
+    local: 'simões filho',
+    latitude: -12.9630,
+    longitude: -38.4264,
   },
-] 
+]
