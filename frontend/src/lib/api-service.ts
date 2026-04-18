@@ -66,16 +66,22 @@ export const authAPI = {
   },
   me: () => api.get('/api/auth/me'),
 }
-
+// Centraliza chamadas relacionadas a produtos, como listagem, criação e exclusão.
 export const produtoAPI = {
-  listarTodos: () => api.get('/api/produtos'),
-  listar: () => api.get('/api/produtos'),
-  salvar: (produto: any) => api.post('/api/produtos', produto),
-  listarMeus: () => api.get('/api/produtos/usuario'),
-  obterPorUsuario: () => api.get('/api/produtos/usuario'),
-  deletar: (id: number) => api.delete(`/api/produtos/${id}`),
+  listarTodos: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
+  listar: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
+  salvar: (produto: any) => api.post('/api/produtos', produto), // Centraliza chamada da criação de produto no backend.
+  listarMeus: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
+  obterPorUsuario: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
+  deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
 }
-
+// Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.
 export const usuarioAPI = {
-  excluir: (id: number) => api.delete(`/api/usuarios/${id}`),
+  atualizarPerfil: (nomeCompleto: string, email: string) =>
+    // Centraliza chamada da edição de perfil autenticado no backend.
+    api.put('/api/usuarios/me/perfil', {
+      nomeCompleto,
+      email,
+    }),
+  excluir: (id: number) => api.delete(`/api/usuarios/${id}`), // Centraliza chamada da exclusão de usuário autenticado no backend.
 }
