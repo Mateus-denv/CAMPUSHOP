@@ -1,15 +1,16 @@
 package br.com.campushop.campushop_backend.service;
 
-import br.com.campushop.campushop_backend.model.Usuario;
-import br.com.campushop.campushop_backend.repository.UsuarioRepository;
-import br.com.campushop.campushop_backend.validation.UsuarioValidator;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import br.com.campushop.campushop_backend.model.Usuario;
+import br.com.campushop.campushop_backend.repository.UsuarioRepository;
+import br.com.campushop.campushop_backend.validation.UsuarioValidator;
 
 @Service
 public class UsuarioService {
@@ -89,6 +90,34 @@ public class UsuarioService {
 
     public boolean raJaCadastrado(String ra) {
         return usuarioRepository.existsByRa(ra);
+    }
+
+    public Usuario atualizarPerfil(String emailAutenticado, String nomeCompleto, String email) {
+        // Busca o usuário a partir do email do token para garantir que só atualize o
+        // próprio perfil.
+        Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        String nomeNormalizado = nomeCompleto != null ? nomeCompleto.trim() : "";
+        String emailNormalizado = email != null ? email.trim().toLowerCase() : "";
+
+        // Reutiliza validações de domínio já existentes para evitar regras duplicadas.
+        usuarioValidator.validarNomeCompleto(nomeNormalizado);
+        usuarioValidator.validarEmail(emailNormalizado);
+
+        // Bloqueia troca para um email que já pertence a outro usuário.
+        if (!usuario.getEmail().equalsIgnoreCase(emailNormalizado)
+                && usuarioRepository.existsByEmail(emailNormalizado)) {
+            throw new RuntimeException("Email já cadastrado");
+        }
+
+        // Mantém nome de perfil e nomeCliente sincronizados para evitar divergência em
+        // consultas futuras.
+        usuario.setNomeCompleto(nomeNormalizado);
+        usuario.setNomeCliente(nomeNormalizado);
+        usuario.setEmail(emailNormalizado);
+
+        return usuarioRepository.save(usuario);
     }
 
     public void excluirUsuario(Integer id) {
