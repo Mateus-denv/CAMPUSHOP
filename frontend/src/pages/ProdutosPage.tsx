@@ -12,6 +12,7 @@ type Produto = {
   preco: number
   estoque: number
   vendedor_id?: number
+  vendedorNome?: string
 }
 
 export function ProdutosPage() {
@@ -36,6 +37,7 @@ export function ProdutosPage() {
     try {
       setCarregando(true)
       const response = await produtoAPI.listarTodos()
+      // Captura o nome do vendedor para exibir somente o anunciante real.
       const produtosNormalizados: Produto[] = (response.data ?? []).map((produto: any) => ({
         idProduto: Number(produto.idProduto ?? produto.id),
         nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
@@ -43,6 +45,11 @@ export function ProdutosPage() {
         preco: Number(produto.preco ?? 0),
         estoque: Number(produto.estoque ?? 0),
         vendedor_id: produto.vendedor_id,
+        vendedorNome:
+          produto.nomeVendedor ??
+          produto.usuario?.nomeCompleto ??
+          produto.usuario?.nomeCliente ??
+          '',
       }))
       setProdutos(produtosNormalizados)
     } catch (err: any) {
@@ -67,7 +74,8 @@ export function ProdutosPage() {
         preco: produto.preco,
         estoque: produto.estoque,
         condicao: 'Novo',
-        vendedor: 'Vendedor CampusShop',
+        // Salva apenas o nome real do vendedor para não persistir texto genérico.
+        vendedor: produto.vendedorNome?.trim() || '',
       },
       1
     )
@@ -145,8 +153,8 @@ export function ProdutosPage() {
                   type="button"
                   onClick={() => favoritarProduto(produto.idProduto)}
                   className={`rounded-xl border px-2.5 py-2 transition ${favoritos.includes(produto.idProduto)
-                      ? 'border-red-200 bg-red-50 text-red-600'
-                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                     }`}
                   aria-label="Favoritar produto"
                 >

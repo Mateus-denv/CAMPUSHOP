@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
-import { createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
 
 type ApiProduct = {
   idProduto: number
@@ -11,6 +11,7 @@ type ApiProduct = {
   descricao: string
   preco: number
   estoque: number
+  vendedor?: string
 }
 
 export function CarrinhoPage() {
@@ -20,16 +21,32 @@ export function CarrinhoPage() {
   const [mensagem, setMensagem] = useState('')
   const [produtosApi, setProdutosApi] = useState<ApiProduct[]>([])
 
+  // Evita inventar nome de vendedor; a tela só mostra o nome real ou um texto neutro.
+  const resolverNomeVendedor = (nome?: string) => nome?.trim() || 'Sem vendedor informado'
+
+  // Detecta valores legados para deixar a API sobrescrever o nome quando existir.
+  const vendedorEhLegado = (nome?: string) => {
+    const normalizado = resolverNomeVendedor(nome)
+    return normalizado === 'Sem vendedor informado' || normalizado === 'Vendedor CampusShop'
+  }
+
   useEffect(() => {
     const carregarProdutos = async () => {
       try {
         const response = await produtoAPI.listarTodos()
+        // Normaliza possíveis formatos de vendedor vindos do backend.
         const normalizados: ApiProduct[] = (response.data ?? []).map((produto: any) => ({
           idProduto: Number(produto.idProduto ?? produto.id),
           nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
           descricao: produto.descricao ?? '',
           preco: Number(produto.preco ?? 0),
           estoque: Number(produto.estoque ?? 0),
+          vendedor:
+            produto.nomeVendedor ??
+            produto.vendedor ??
+            produto.usuario?.nomeCompleto ??
+            produto.usuario?.nomeCliente ??
+            undefined,
         }))
         setProdutosApi(normalizados)
       } catch {
@@ -40,6 +57,28 @@ export function CarrinhoPage() {
     carregarProdutos()
   }, [])
 
+  useEffect(() => {
+    // Atualiza o cache local quando o nome real do vendedor chegar pela API.
+    cart.forEach((item) => {
+      const cached = getCachedProduct(item.productId)
+      const apiProduct = produtosApi.find((produto) => produto.idProduto === item.productId)
+
+      if (!cached || !apiProduct) {
+        return
+      }
+
+      const nomeVendedorApi = apiProduct.vendedor?.trim()
+      const vendedorAtual = cached.vendedor?.trim()
+
+      if (nomeVendedorApi && vendedorEhLegado(vendedorAtual)) {
+        cacheProduct({
+          ...cached,
+          vendedor: nomeVendedorApi,
+        })
+      }
+    })
+  }, [cart, produtosApi])
+
   const cartWithProducts = useMemo(
     () =>
       cart
@@ -49,12 +88,13 @@ export function CarrinhoPage() {
           const product = cached
             ? {
               id: cached.id,
-              nome: cached.nome,
-              descricao: cached.descricao,
+              nome: apiProduct?.nomeProduto || cached.nome,
+              descricao: apiProduct?.descricao || cached.descricao,
               categoria: 'Marketplace',
               condicao: cached.condicao ?? 'Novo',
-              preco: cached.preco,
-              vendedor: cached.vendedor ?? 'Vendedor CampusShop',
+              preco: apiProduct?.preco ?? cached.preco,
+              // Prioriza o vendedor real da API e, se não existir, usa o texto neutro.
+              vendedor: resolverNomeVendedor(vendedorEhLegado(cached.vendedor) ? apiProduct?.vendedor : cached.vendedor),
               local: 'Campus',
             }
             : apiProduct
@@ -65,7 +105,8 @@ export function CarrinhoPage() {
                 categoria: 'Marketplace',
                 condicao: 'Novo',
                 preco: apiProduct.preco,
-                vendedor: 'Vendedor CampusShop',
+                // Mostra o nome real do vendedor quando a API o disponibiliza.
+                vendedor: resolverNomeVendedor(apiProduct.vendedor),
                 local: 'Campus',
               }
               : products.find((p) => p.id === item.productId)

@@ -57,10 +57,12 @@ public class ProdutoService {
     }
 
     public List<Produto> listarTodos() {
-        return produtoRepository.findAll();
+        // Busca os produtos com o usuário carregado para expor o nome do anunciante sem LazyInitialization.
+        return produtoRepository.findAllComUsuario();
     }
 
     public List<Produto> listarPorUsuario(String email) {
+        // Mantém o usuário do produto carregado também nesta listagem filtrada.
         return produtoRepository.findByUsuarioEmail(email);
     }
 
