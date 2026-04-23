@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/produtos")
@@ -28,24 +29,55 @@ public class ProdutoController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // DTO pequeno para devolver exatamente os campos usados pela tela de produtos/carrinho.
+    public record ProdutoResponse(
+            Integer idProduto,
+            String nomeProduto,
+            String descricao,
+            Integer estoque,
+            Double preco,
+            Integer vendedor_id,
+            String nomeVendedor) {
+
+        public static ProdutoResponse fromEntity(Produto produto) {
+            // Resolve o nome do anunciante direto do usuário associado ao produto.
+            Usuario usuario = produto.getUsuario();
+            return new ProdutoResponse(
+                    produto.getIdProduto(),
+                    produto.getNomeProduto(),
+                    produto.getDescricao(),
+                    produto.getEstoque(),
+                    produto.getPreco(),
+                    usuario != null ? usuario.getId() : null,
+                    usuario != null ? usuario.getNomeCompleto() : null);
+        }
+    }
+
     // 1. Ler todos (Read)
     @GetMapping
-    public List<Produto> listarTodos() {
-        return produtoService.listarTodos();
+    public List<ProdutoResponse> listarTodos() {
+        // Retorna um payload estável para o frontend não depender da serialização da entidade.
+        return produtoService.listarTodos().stream()
+                .map(ProdutoResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     // 1.1. Ler produtos do usuário logado
     @GetMapping("/usuario")
-    public List<Produto> listarMeus(Authentication authentication) {
+    public List<ProdutoResponse> listarMeus(Authentication authentication) {
         String email = authentication.getName();
-        return produtoService.listarPorUsuario(email);
+        // Mantém a mesma estrutura de resposta da listagem pública.
+        return produtoService.listarPorUsuario(email).stream()
+                .map(ProdutoResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     // 2. Ler por ID (Read)
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<ProdutoResponse> buscarPorId(@PathVariable Integer id) {
         return produtoService.buscarPorId(id)
-                .map(ResponseEntity::ok)
+                // Expõe o mesmo formato da listagem para simplificar o consumo no frontend.
+                .map(produto -> ResponseEntity.ok(ProdutoResponse.fromEntity(produto)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
