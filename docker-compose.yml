@@ -34,6 +34,10 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - mysql_config:/etc/mysql/conf.d
+      # Inicializa schema/seed automaticamente apenas na primeira criação do volume.
+      - ./db/scripts/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      # Mantém dados mínimos (usuários/produtos) consistentes em máquina nova.
+      - ./db/scripts/002_seed.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
 
     # Rede interna
     networks:
