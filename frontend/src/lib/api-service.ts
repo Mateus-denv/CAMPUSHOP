@@ -75,6 +75,13 @@ export const produtoAPI = {
   obterPorUsuario: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
   deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
 }
+// Centraliza chamadas relacionadas a pedidos: criação a partir do carrinho e listagem.
+export const pedidoAPI = {
+  // Cria um pedido com base no carrinho atual do usuário autenticado e limpa o carrinho.
+  criar: () => api.post('/api/pedidos'),
+  // Lista todos os pedidos do usuário autenticado, do mais recente ao mais antigo.
+  listar: () => api.get('/api/pedidos'),
+}
 // Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.
 export const usuarioAPI = {
   atualizarPerfil: (nomeCompleto: string, email: string) =>

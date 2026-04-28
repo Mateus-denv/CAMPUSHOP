@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { produtoAPI } from '@/lib/api-service'
+import { pedidoAPI, produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
-import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { cacheProduct, clearCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
 
 type ApiProduct = {
   idProduto: number
@@ -132,15 +132,24 @@ export function CarrinhoPage() {
     setCart(getCart())
   }
 
-  const finalizarPedido = () => {
-    const pedido = createOrderFromCart()
-    if (!pedido) {
+  const finalizarPedido = async () => {
+    if (!cartWithProducts.length) {
       setMensagem('Adicione produtos no carrinho antes de finalizar.')
       return
     }
-    setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
-    setCart(getCart())
-    setTimeout(() => navigate('/pedidos'), 700)
+
+    try {
+      // Cria o pedido no backend (que também limpa o carrinho do servidor)
+      const response = await pedidoAPI.criar()
+      const pedidoCriado = response.data
+      // Limpa o localStorage para refletir o carrinho vazio
+      clearCart()
+      setCart([])
+      setMensagem(`Pedido #${pedidoCriado.id} criado com sucesso!`)
+      setTimeout(() => navigate('/pedidos'), 700)
+    } catch {
+      setMensagem('Erro ao criar pedido. Tente novamente.')
+    }
   }
 
   return (

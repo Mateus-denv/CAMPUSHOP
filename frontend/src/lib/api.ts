@@ -1,7 +1,9 @@
 import axios, { AxiosInstance } from 'axios'
 
+// Em produção (frontend servido pelo Spring Boot na mesma origem),
+// usa URL relativa. Em dev, o proxy do Vite encaminha /api/* para localhost:8080.
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: '',
 })
 
 api.interceptors.request.use((config) => {

@@ -2,6 +2,7 @@ package br.com.campushop.campushop_backend.service;
 
 import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Produto;
+import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.CarrinhoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,23 +22,21 @@ public class CarrinhoService {
     }
     
     // Adicionar item ao carrinho
-    public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
-        // Verificar se o produto já está no carrinho
-        List<Carrinho> itens = listarPorUsuario(usuarioId);
+    // Recebe o objeto Usuario completo para evitar bug de usuário nulo no item.
+    public Carrinho adicionarAoCarrinho(Usuario usuario, Produto produto, Integer quantidade) {
+        // Verificar se o produto já está no carrinho do usuário
+        List<Carrinho> itens = listarPorUsuario(usuario.getId());
         
         for (Carrinho item : itens) {
             if (item.getProduto().getIdProduto().equals(produto.getIdProduto())) {
-                // Produto já existe, atualizar quantidade
+                // Produto já existe: apenas incrementa a quantidade
                 item.setQuantidade(item.getQuantidade() + quantidade);
                 return carrinhoRepository.save(item);
             }
         }
         
-        // Produto não existe, criar novo item
-        Carrinho novoItem = new Carrinho();
-        novoItem.setQuantidade(quantidade);
-        novoItem.setProduto(produto);
-        
+        // Produto novo no carrinho: construtor já associa usuario, produto e data de adição
+        Carrinho novoItem = new Carrinho(usuario, produto, quantidade);
         return carrinhoRepository.save(novoItem);
     }
     

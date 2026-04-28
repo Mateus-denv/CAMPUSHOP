@@ -64,7 +64,7 @@ public class CarrinhoController {
         }
         
         Carrinho item = carrinhoService.adicionarAoCarrinho(
-            usuarioOpt.get().getId(),
+            usuarioOpt.get(),
             produtoOpt.get(),
             quantidade
         );
@@ -109,7 +109,7 @@ public class CarrinhoController {
         return ResponseEntity.ok(item);
     }
 
-    // 5. Limpar carrinho inteiro
+    // 5. Limpar carrinho inteiro (rota raiz)
     @DeleteMapping
     public ResponseEntity<Void> limparCarrinho(Authentication authentication) {
         String email = authentication.getName();
@@ -121,6 +121,12 @@ public class CarrinhoController {
         
         carrinhoService.limparCarrinho(usuarioOpt.get().getId());
         return ResponseEntity.noContent().build();
+    }
+
+    // 5b. Limpar carrinho pela rota /limpar (compatibilidade com frontend)
+    @DeleteMapping("/limpar")
+    public ResponseEntity<Void> limparCarrinhoAlias(Authentication authentication) {
+        return limparCarrinho(authentication);
     }
 
     // 6. Obter total do carrinho

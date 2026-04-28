@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   ra VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   cidade VARCHAR(100),
-  nome_cliente VARCHAR(100) NOT NULL,
+  nomeCliente VARCHAR(100) NOT NULL,
   senha VARCHAR(255) NOT NULL,
   telefone VARCHAR(15),
   tipo_conta VARCHAR(20),
@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   instituicao_ensino VARCHAR(100),
   localizacao_gps VARCHAR(50),
   ativado TINYINT(1) NOT NULL DEFAULT 1,
+  data_nascimento DATE,
   data_cadastro DATE NOT NULL
 );
 
@@ -34,5 +35,36 @@ CREATE TABLE IF NOT EXISTS produto (
   dimensoes VARCHAR(255),
   peso DOUBLE,
   id_categoria INT,
-  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+  id_usuario INT,
+  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+  CONSTRAINT fk_produto_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+);
+
+CREATE TABLE IF NOT EXISTS carrinho (
+  id_carrinho INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  id_produto INT NOT NULL,
+  quantidade INT NOT NULL,
+  data_adicaio DATETIME,
+  CONSTRAINT fk_carrinho_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+  CONSTRAINT fk_carrinho_produto FOREIGN KEY (id_produto) REFERENCES produto(id_produto)
+);
+
+CREATE TABLE IF NOT EXISTS pedido (
+  id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'aguardando',
+  total DOUBLE NOT NULL,
+  criado_em DATETIME NOT NULL,
+  CONSTRAINT fk_pedido_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+);
+
+CREATE TABLE IF NOT EXISTS item_pedido (
+  id_item INT AUTO_INCREMENT PRIMARY KEY,
+  id_pedido INT NOT NULL,
+  id_produto INT NOT NULL,
+  quantidade INT NOT NULL,
+  preco_unitario DOUBLE NOT NULL,
+  CONSTRAINT fk_item_pedido FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
+  CONSTRAINT fk_item_produto FOREIGN KEY (id_produto) REFERENCES produto(id_produto)
 );
