@@ -1,12 +1,15 @@
 import { useSyncExternalStore } from 'react'
 
 export type Usuario = {
+  id?: number
   nome?: string
   nomeCompleto?: string
   email?: string
   ra?: string
   token?: string
   perfil?: string
+  // Flag que indica se o usuário ativou o modo vendedor
+  vendedorAtivo?: boolean
 }
 
 export type Produto = {

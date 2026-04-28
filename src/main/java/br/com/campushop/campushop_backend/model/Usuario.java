@@ -36,6 +36,11 @@ public class Usuario {
     @Column(name = "tipo_conta", length = 20)
     private String tipoConta;
 
+    // Indica se o usuário ativou o modo vendedor (false por padrão).
+    // Separado de tipoConta para manter compatibilidade com dados existentes.
+    @Column(name = "vendedor_ativo", nullable = false)
+    private Boolean vendedorAtivo = false;
+
     @Column(name = "cpf_cnpj", length = 20)
     private String cpfCnpj;
 
@@ -174,6 +179,14 @@ public class Usuario {
 
     public void setAtivado(Boolean ativado) {
         this.ativado = ativado;
+    }
+
+    public Boolean getVendedorAtivo() {
+        return vendedorAtivo != null && vendedorAtivo;
+    }
+
+    public void setVendedorAtivo(Boolean vendedorAtivo) {
+        this.vendedorAtivo = vendedorAtivo;
     }
 
     public LocalDate getDataCadastro() {

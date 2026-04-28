@@ -120,6 +120,13 @@ public class ProdutoController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
             }
 
+            // Apenas usuários com modo vendedor ativo podem anunciar produtos.
+            if (!usuarioOpt.get().getVendedorAtivo()) {
+                Map<String, String> erro = new HashMap<>();
+                erro.put("erro", "Você precisa ativar o modo vendedor para anunciar produtos");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
+            }
+
             produto.setUsuario(usuarioOpt.get());
             Produto produtoSalvo = produtoService.salvar(produto);
             return ResponseEntity.status(HttpStatus.CREATED).body(produtoSalvo);

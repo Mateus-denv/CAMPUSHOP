@@ -1,8 +1,190 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { categories, products } from '@/lib/mock-data'
-import { ArrowRight, ChevronLeft, ChevronRight, Search, ShieldCheck, Star, Truck } from 'lucide-react'
+import { categories } from '@/lib/mock-data'
+import { produtoAPI } from '@/lib/api-service'
+import { addToCartWithSnapshot } from '@/lib/shop-storage'
+import { ShoppingCart, Tag, MapPin } from 'lucide-react'
+
+type ApiProduct = {
+  idProduto: number
+  nomeProduto: string
+  descricao: string
+  preco: number
+  estoque: number
+  nomeVendedor?: string
+}
+
+export function HomePage() {
+  const navigate = useNavigate()
+  const [produtos, setProdutos] = useState<ApiProduct[]>([])
+  const [adicionado, setAdicionado] = useState<number | null>(null)
+
+  useEffect(() => {
+    produtoAPI.listarTodos().then((res) => {
+      setProdutos((res.data ?? []).slice(0, 12))
+    }).catch(() => setProdutos([]))
+  }, [])
+
+  const handleAddCarrinho = (produto: ApiProduct) => {
+    addToCartWithSnapshot({
+      id: produto.idProduto,
+      nome: produto.nomeProduto,
+      descricao: produto.descricao,
+      preco: produto.preco,
+      estoque: produto.estoque,
+      vendedor: produto.nomeVendedor,
+    })
+    setAdicionado(produto.idProduto)
+    setTimeout(() => setAdicionado(null), 1500)
+  }
+
+  return (
+    <Layout>
+      {/* Banner principal */}
+      <section className="overflow-hidden rounded-xl bg-gradient-to-r from-blue-700 to-blue-500 text-white">
+        <div className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between md:p-12">
+          <div className="max-w-lg">
+            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-100">
+              Marketplace Estudantil
+            </span>
+            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
+              Compre e venda dentro do seu campus
+            </h1>
+            <p className="mt-3 text-blue-100">
+              Livros, eletrônicos, roupas e serviços entre estudantes da sua instituição.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                to="/produtos"
+                className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+              >
+                Ver produtos
+              </Link>
+              <Link
+                to="/categorias"
+                className="rounded-lg border border-white/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/20"
+              >
+                Explorar categorias
+              </Link>
+            </div>
+          </div>
+          <div className="hidden shrink-0 gap-3 md:flex md:flex-col">
+            {[
+              { valor: '2.400+', label: 'Produtos anunciados' },
+              { valor: '18', label: 'Categorias' },
+              { valor: '14', label: 'Instituições' },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-lg border border-white/20 bg-white/10 px-6 py-3 text-center">
+                <p className="text-2xl font-bold">{stat.valor}</p>
+                <p className="text-sm text-blue-200">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categorias */}
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900">Categorias</h2>
+          <Link to="/categorias" className="text-sm font-medium text-blue-600 hover:underline">
+            Ver todas
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-5">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/produtos?categoria=${cat.nome}`}
+              className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 text-center transition hover:border-blue-300 hover:shadow-md"
+            >
+              <span className="text-2xl">{cat.icon}</span>
+              <span className="text-xs font-semibold text-slate-700">{cat.nome}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Produtos em destaque */}
+      <section className="mt-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900">Produtos em destaque</h2>
+          <Link to="/produtos" className="text-sm font-medium text-blue-600 hover:underline">
+            Ver todos
+          </Link>
+        </div>
+
+        {produtos.length === 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
+                <div className="h-40 rounded-lg bg-gray-200" />
+                <div className="mt-3 h-4 rounded bg-gray-200" />
+                <div className="mt-2 h-4 w-2/3 rounded bg-gray-200" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {produtos.map((produto) => (
+              <div
+                key={produto.idProduto}
+                className="group overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:border-blue-300 hover:shadow-md"
+              >
+                <Link to={`/produto/${produto.idProduto}`} className="block">
+                  <div className="flex h-40 items-center justify-center bg-gray-100 text-gray-400 text-sm font-medium transition group-hover:bg-gray-50">
+                    <Tag className="mr-1 h-4 w-4" />
+                    Produto
+                  </div>
+                  <div className="p-3">
+                    <p className="line-clamp-2 text-sm font-semibold text-slate-800">{produto.nomeProduto}</p>
+                    <p className="mt-1 text-lg font-bold text-blue-700">
+                      R$ {produto.preco.toFixed(2).replace('.', ',')}
+                    </p>
+                    {produto.nomeVendedor && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                        <MapPin className="h-3 w-3" /> {produto.nomeVendedor}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+                <div className="border-t border-gray-100 px-3 pb-3">
+                  <button
+                    onClick={() => handleAddCarrinho(produto)}
+                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-blue-600 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    {adicionado === produto.idProduto ? 'Adicionado!' : 'Adicionar ao carrinho'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* CTA vendedor */}
+      <section className="mt-10 rounded-xl border border-orange-200 bg-orange-50 p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-orange-900">Tem algo para vender?</h3>
+            <p className="mt-1 text-sm text-orange-700">
+              Ative o modo vendedor no seu perfil e anuncie gratuitamente para estudantes do seu campus.
+            </p>
+          </div>
+          <Link
+            to="/conta"
+            className="shrink-0 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+          >
+            Começar a vender
+          </Link>
+        </div>
+      </section>
+    </Layout>
+  )
+}
+
 
 type DestaqueItem = {
   id: string

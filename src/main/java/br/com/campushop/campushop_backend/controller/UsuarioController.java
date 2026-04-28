@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +38,38 @@ public class UsuarioController {
     public UsuarioController(CustomUserDetailsService customUserDetailsService, JwtTokenProvider jwtTokenProvider) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    // Retorna os dados do usuário autenticado, incluindo status de vendedor.
+    @GetMapping("/me")
+    public ResponseEntity<?> obterPerfil(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Não autenticado"));
+        }
+        return usuarioService.buscarPorEmail(authentication.getName())
+                .map(u -> ResponseEntity.ok((Object) toUserMap(u)))
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Não autenticado")));
+    }
+
+    // Ativa o modo vendedor para o usuário autenticado.
+    // Qualquer usuário pode solicitar; validação extra pode ser adicionada aqui no futuro.
+    @PostMapping("/me/ativar-vendedor")
+    public ResponseEntity<?> ativarVendedor(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Não autenticado"));
+        }
+
+        try {
+            Usuario usuario = usuarioService.buscarPorEmail(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            usuarioService.ativarVendedor(usuario.getId());
+            // Recarrega o usuário para retornar os dados atualizados com vendedorAtivo=true.
+            Usuario atualizado = usuarioService.buscarPorEmail(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            return ResponseEntity.ok(toUserMap(atualizado));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     // Endpoint para atualização de perfil do usuário autenticado, garantindo que
@@ -77,8 +110,7 @@ public class UsuarioController {
     }
 
     private Map<String, Object> toUserMap(Usuario usuario) {
-        // Mantém o mesmo contrato de payload usado no login para simplificar o
-        // frontend.
+        // Mantém o mesmo contrato de payload usado no login para simplificar o frontend.
         Map<String, Object> user = new HashMap<>();
         user.put("id", usuario.getId());
         user.put("nomeCompleto", usuario.getNomeCompleto());
@@ -86,6 +118,8 @@ public class UsuarioController {
         user.put("email", usuario.getEmail());
         user.put("ra", usuario.getRa());
         user.put("role", usuario.getTipoConta());
+        // Expõe o status de vendedor para o frontend controlar acesso ao modo venda.
+        user.put("vendedorAtivo", usuario.getVendedorAtivo());
         return user;
     }
 }

@@ -120,6 +120,15 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    public void ativarVendedor(Integer id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        // Ativa o modo vendedor; pode ser estendido para exigir verificação futuramente.
+        usuario.setVendedorAtivo(true);
+        usuarioRepository.save(usuario);
+        logger.info("Modo vendedor ativado para usuário ID: {}", id);
+    }
+
     public void excluirUsuario(Integer id) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
         if (usuarioOpt.isPresent()) {

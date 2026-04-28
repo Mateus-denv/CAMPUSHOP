@@ -1,26 +1,20 @@
-import { ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { ReactNode, useState } from 'react'
+import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/store'
 import { clearAuth } from '@/lib/auth-listener'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
+import { countCartItems } from '@/lib/shop-storage'
 
 type LayoutProps = {
   children: ReactNode
 }
 
-const navItems = [
-  { to: '/home', label: 'Home' },
-  { to: '/categorias', label: 'Categorias' },
-  { to: '/produtos', label: 'Produtos' },
-  { to: '/carrinho', label: 'Carrinho' },
-  { to: '/pedidos', label: 'Pedidos' },
-  { to: '/chat', label: 'Chat' },
-  { to: '/conta', label: 'Conta' },
-]
-
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate()
   const { usuario, setUsuario } = useAuthStore()
+  const [menuAberto, setMenuAberto] = useState(false)
+  const [busca, setBusca] = useState('')
+  const qtdCarrinho = countCartItems()
 
   const handleLogout = () => {
     setUsuario(null)
@@ -28,81 +22,172 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login', { replace: true })
   }
 
+  const handleBusca = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (busca.trim()) {
+      navigate(`/produtos?q=${encodeURIComponent(busca.trim())}`)
+      setBusca('')
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0,_#eff6ff_24%,_#f8fafc_58%,_#ffffff_100%)] text-slate-900">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/home" className="flex items-center gap-3 font-black tracking-tight text-slate-900">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-xl text-white shadow-lg shadow-blue-600/20">📦</span>
-            <span className="text-lg sm:text-xl">CampusShop</span>
+    <div className="min-h-screen bg-gray-50 text-slate-900">
+      {/* Top bar */}
+      <div className="bg-blue-700 py-1.5 text-center text-xs font-medium text-blue-100">
+        Marketplace exclusivo para estudantes universitários 🎓
+      </div>
+
+      {/* Header principal */}
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          {/* Logo */}
+          <Link to="/home" className="flex shrink-0 items-center gap-2 font-black text-slate-900">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white">CS</span>
+            <span className="hidden text-lg sm:block">CampuShop</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
-            {navItems.map((item) => (
+          {/* Busca central */}
+          <form onSubmit={handleBusca} className="flex flex-1 items-center overflow-hidden rounded-full border border-gray-300 bg-gray-50 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Busque produtos, livros, eletrônicos..."
+              className="flex-1 bg-transparent px-4 py-2.5 text-sm outline-none"
+            />
+            <button type="submit" className="flex h-full items-center gap-1 rounded-r-full bg-blue-600 px-4 py-2.5 text-white transition hover:bg-blue-700">
+              <Search className="h-4 w-4" />
+            </button>
+          </form>
+
+          {/* Ações */}
+          <div className="flex shrink-0 items-center gap-2">
+            {usuario ? (
+              <>
+                <Link to="/carrinho" className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-slate-600 transition hover:bg-gray-50">
+                  <ShoppingCart className="h-4 w-4" />
+                  {qtdCarrinho > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+                      {qtdCarrinho > 9 ? '9+' : qtdCarrinho}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/conta" className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-gray-50">
+                  <User className="h-4 w-4" />
+                  <span className="hidden max-w-[100px] truncate sm:block">
+                    {(usuario.nomeCompleto ?? usuario.nome ?? '').split(' ')[0]}
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  title="Sair"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-gray-50">
+                  Entrar
+                </Link>
+                <Link to="/cadastro" className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
+                  Cadastrar
+                </Link>
+              </>
+            )}
+            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 md:hidden" onClick={() => setMenuAberto(!menuAberto)}>
+              {menuAberto ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Navegação secundária */}
+        <div className="hidden border-t border-gray-100 bg-white md:block">
+          <nav className="mx-auto flex max-w-7xl items-center gap-0 px-4 sm:px-6 lg:px-8">
+            {[
+              { to: '/home', label: 'Início' },
+              { to: '/categorias', label: 'Categorias' },
+              { to: '/produtos', label: 'Produtos' },
+              ...(usuario ? [
+                { to: '/pedidos', label: 'Meus pedidos' },
+                { to: '/chat', label: 'Mensagens' },
+              ] : []),
+              ...(usuario?.vendedorAtivo ? [
+                { to: '/cadastrar-produto', label: '+ Anunciar' },
+              ] : []),
+            ].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  [
-                    'rounded-full px-4 py-2 text-sm font-semibold transition',
-                    isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-slate-900',
-                  ].join(' ')
+                  `border-b-2 px-4 py-3 text-sm font-medium transition ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-slate-600 hover:border-gray-300 hover:text-slate-900'
+                  }`
                 }
               >
                 {item.label}
               </NavLink>
             ))}
           </nav>
-
-          <div className="flex items-center gap-3">
-            {usuario ? (
-              <>
-                <div className="hidden items-center gap-3 rounded-full bg-slate-100 px-4 py-2 sm:flex">
-                  <User className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-700">{usuario.nome}</span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-red-50 hover:border-red-200 hover:text-red-700"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sair</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="hidden rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:inline-flex">
-                  Entrar
-                </Link>
-                <Link to="/cadastro" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
-                  Criar conta
-                </Link>
-              </>
-            )}
-          </div>
         </div>
+
+        {/* Menu mobile */}
+        {menuAberto && (
+          <div className="border-t border-gray-200 bg-white px-4 py-3 md:hidden">
+            <nav className="flex flex-col gap-1">
+              {[
+                { to: '/home', label: 'Início' },
+                { to: '/categorias', label: 'Categorias' },
+                { to: '/produtos', label: 'Produtos' },
+                ...(usuario ? [
+                  { to: '/carrinho', label: 'Carrinho' },
+                  { to: '/pedidos', label: 'Meus pedidos' },
+                  { to: '/chat', label: 'Mensagens' },
+                  { to: '/conta', label: 'Minha conta' },
+                ] : []),
+                ...(usuario?.vendedorAtivo ? [
+                  { to: '/cadastrar-produto', label: '+ Anunciar produto' },
+                ] : []),
+              ].map((item) => (
+                <NavLink
+                  key={`m-${item.to}`}
+                  to={item.to}
+                  onClick={() => setMenuAberto(false)}
+                  className={({ isActive }) =>
+                    `rounded-lg px-4 py-2.5 text-sm font-medium ${isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-gray-50'}`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        )}
       </header>
 
-      <div className="border-b border-slate-200/80 bg-white/90 px-4 py-2 backdrop-blur md:hidden">
-        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={`mobile-${item.to}`}
-              to={item.to}
-              className={({ isActive }) =>
-                [
-                  'whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition',
-                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600',
-                ].join(' ')
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+
+      {/* Footer */}
+      <footer className="mt-12 border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2 font-black text-slate-800">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white">CS</span>
+              CampuShop
+            </div>
+            <p className="text-sm text-slate-500">© 2026 CampuShop — Marketplace Estudantil</p>
+            <div className="flex gap-4 text-sm text-slate-500">
+              <span>Sobre</span>
+              <span>Contato</span>
+              <span>Termos</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
+

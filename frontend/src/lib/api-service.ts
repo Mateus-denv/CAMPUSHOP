@@ -90,5 +90,9 @@ export const usuarioAPI = {
       nomeCompleto,
       email,
     }),
+  // Ativa o modo vendedor para o usuário autenticado.
+  ativarVendedor: () => api.post('/api/usuarios/me/ativar-vendedor'),
+  // Retorna os dados atualizados do usuário autenticado.
+  obterPerfil: () => api.get('/api/usuarios/me'),
   excluir: (id: number) => api.delete(`/api/usuarios/${id}`), // Centraliza chamada da exclusão de usuário autenticado no backend.
 }

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   instituicao_ensino VARCHAR(100),
   localizacao_gps VARCHAR(50),
   ativado TINYINT(1) NOT NULL DEFAULT 1,
+  vendedor_ativo TINYINT(1) NOT NULL DEFAULT 0,
   data_nascimento DATE,
   data_cadastro DATE NOT NULL
 );

@@ -140,6 +140,8 @@ public class AuthController {
         user.put("email", usuario.getEmail());
         user.put("ra", usuario.getRa());
         user.put("role", usuario.getTipoConta());
+        // Inclui vendedorAtivo para que o frontend saiba imediatamente após login se o usuário pode vender.
+        user.put("vendedorAtivo", usuario.getVendedorAtivo());
         return user;
     }
 }
