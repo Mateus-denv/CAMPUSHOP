@@ -10,7 +10,8 @@ type Produto = {
   descricao: string
   preco: number
   estoque: number
-  vendedor_id: number
+  vendedor_id?: number
+  vendedorNome?: string
 }
 
 export function ProdutosPage() {
@@ -27,16 +28,22 @@ export function ProdutosPage() {
   const carregarProdutos = async () => {
     try {
       setCarregando(true)
-      setProdutos([
-        ...products.map((item) => ({
-          id: item.id,
-          nome: item.nome,
-          descricao: item.descricao,
-          preco: item.preco,
-          estoque: 10,
-          vendedor_id: item.id,
-        })),
-      ])
+      const response = await produtoAPI.listarTodos()
+      // Captura o nome do vendedor para exibir somente o anunciante real.
+      const produtosNormalizados: Produto[] = (response.data ?? []).map((produto: any) => ({
+        idProduto: Number(produto.idProduto ?? produto.id),
+        nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+        descricao: produto.descricao ?? '',
+        preco: Number(produto.preco ?? 0),
+        estoque: Number(produto.estoque ?? 0),
+        vendedor_id: produto.vendedor_id,
+        vendedorNome:
+          produto.nomeVendedor ??
+          produto.usuario?.nomeCompleto ??
+          produto.usuario?.nomeCliente ??
+          '',
+      }))
+      setProdutos(produtosNormalizados)
     } catch (err: any) {
       setErro('Erro ao carregar produtos')
     } finally {
@@ -45,7 +52,25 @@ export function ProdutosPage() {
   }
 
   const adicionarAoCarrinho = (produtoId: number) => {
-    addToCart(produtoId, 1)
+    const produto = produtos.find((item) => item.idProduto === produtoId)
+    if (!produto) {
+      return
+    }
+
+    addToCartWithSnapshot(
+      {
+        id: produto.idProduto,
+        nome: produto.nomeProduto || 'Produto sem nome',
+        descricao: produto.descricao || '',
+        preco: produto.preco,
+        estoque: produto.estoque,
+        condicao: 'Novo',
+        // Salva apenas o nome real do vendedor para não persistir texto genérico.
+        vendedor: produto.vendedorNome?.trim() || '',
+      },
+      1
+    )
+
     setItensNoCarrinho(countCartItems())
   }
 
@@ -77,8 +102,21 @@ export function ProdutosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {produtos.map((produto) => (
-            <div key={produto.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-xl font-bold mb-2 text-slate-900">{produto.nome}</h3>
+            <div key={produto.idProduto} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                <button
+                  type="button"
+                  onClick={() => favoritarProduto(produto.idProduto)}
+                  className={`rounded-xl border px-2.5 py-2 transition ${favoritos.includes(produto.idProduto)
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  aria-label="Favoritar produto"
+                >
+                  <Heart className={`h-4 w-4 ${favoritos.includes(produto.idProduto) ? 'fill-current' : ''}`} />
+                </button>
+              </div>
               <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
 
               <div className="flex justify-between items-center mb-4">

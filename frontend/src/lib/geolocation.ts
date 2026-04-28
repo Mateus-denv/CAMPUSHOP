@@ -9,12 +9,12 @@ export const obterEndereco = async (
   }
 
   try {
-   const res = await fetch(
-  `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat}:${lng}&key=${apiKey}`
-);
-    const data = await res.json();
+  const res = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+  );
+  const data = await res.json();
 
-    if (data.status === "ok" && data.results[0]) {
+  if (data.status === "OK" && data.results[0]) {
       return data.results[0].formatted_address;
     }
     return null;

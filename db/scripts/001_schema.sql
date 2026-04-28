@@ -34,5 +34,7 @@ CREATE TABLE IF NOT EXISTS produto (
   dimensoes VARCHAR(255),
   peso DOUBLE,
   id_categoria INT,
-  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+  id_usuario INT,
+  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+  CONSTRAINT fk_produto_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id)
 );

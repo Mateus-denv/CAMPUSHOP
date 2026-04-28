@@ -1,27 +1,111 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { products } from '@/lib/mock-data'
-import { createOrderFromCart, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { produtoAPI } from '@/lib/api-service'
+import { createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+
+type UnifiedProduct = {
+  id: number
+  nome: string
+  descricao: string
+  categoria: string
+  condicao: string
+  preco: number
+  vendedor: string
+  local: string
+}
+
+type ApiProduct = {
+  idProduto: number
+  nomeProduto: string
+  descricao: string
+  preco: number
+  estoque: number
+  nomeVendedor?: string
+}
 
 export function CarrinhoPage() {
   const navigate = useNavigate()
   const [cart, setCart] = useState(getCart())
   const [modalChat, setModalChat] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const [produtosApi, setProdutosApi] = useState<ApiProduct[]>([])
+
+  useEffect(() => {
+    const carregarProdutos = async () => {
+      try {
+        const response = await produtoAPI.listar()
+        const normalizados: ApiProduct[] = (response.data ?? []).map((produto: any) => ({
+          idProduto: Number(produto.idProduto ?? produto.id),
+          nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+          descricao: produto.descricao ?? '',
+          preco: Number(produto.preco ?? 0),
+          estoque: Number(produto.estoque ?? 0),
+          nomeVendedor: produto.nomeVendedor ?? produto.vendedor ?? 'Vendedor CampusShop',
+        }))
+        setProdutosApi(normalizados)
+      } catch {
+        setProdutosApi([])
+      }
+    }
+
+    carregarProdutos()
+  }, [])
 
   const cartWithProducts = useMemo(
     () =>
       cart
         .map((item) => {
-          const product = products.find((p) => p.id === item.productId)
+          const cached = getCachedProduct(item.productId)
+          const apiProduct = produtosApi.find((produto) => produto.idProduto === item.productId)
+          let product: UnifiedProduct | null = null
+
+          if (cached) {
+            product = {
+              id: cached.id,
+              nome: cached.nome,
+              descricao: cached.descricao,
+              categoria: 'Marketplace',
+              condicao: cached.condicao ?? 'Novo',
+              preco: cached.preco,
+              vendedor: cached.vendedor ?? 'Vendedor CampusShop',
+              local: 'Campus',
+            }
+          } else if (apiProduct) {
+            product = {
+              id: apiProduct.idProduto,
+              nome: apiProduct.nomeProduto || 'Produto sem nome',
+              descricao: apiProduct.descricao,
+              categoria: 'Marketplace',
+              condicao: 'Novo',
+              preco: apiProduct.preco,
+              vendedor: apiProduct.nomeVendedor ?? 'Vendedor CampusShop',
+              local: 'Campus',
+            }
+          } else {
+            const mockProduct = products.find((p) => p.id === item.productId)
+            if (mockProduct) {
+              product = {
+                id: mockProduct.id,
+                nome: mockProduct.nome,
+                descricao: '',
+                categoria: mockProduct.categoria,
+                condicao: mockProduct.condicao,
+                preco: mockProduct.preco,
+                vendedor: mockProduct.vendedor,
+                local: mockProduct.local,
+              }
+            }
+          }
+
           if (!product) {
             return null
           }
           return { product, quantidade: item.quantidade }
         })
-        .filter((item): item is { product: (typeof products)[number]; quantidade: number } => item !== null),
-    [cart]
+        .filter((item): item is { product: UnifiedProduct; quantidade: number } => item !== null),
+    [cart, produtosApi]
   )
 
   const total = cartWithProducts.reduce((acc, item) => acc + item.product.preco * item.quantidade, 0)
@@ -46,6 +130,17 @@ export function CarrinhoPage() {
     setCart(getCart())
     setTimeout(() => navigate('/pedidos'), 700)
   }
+
+  const vendedoresUnicos = useMemo(() => {
+    const map = new Map<string, { vendedor: string; produtos: UnifiedProduct[] }>()
+    cartWithProducts.forEach(({ product }) => {
+      if (!map.has(product.vendedor)) {
+        map.set(product.vendedor, { vendedor: product.vendedor, produtos: [] })
+      }
+      map.get(product.vendedor)!.produtos.push(product)
+    })
+    return Array.from(map.values())
+  }, [cartWithProducts])
 
   return (
     <Layout>
@@ -100,16 +195,28 @@ export function CarrinhoPage() {
             <div className="rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
               <h3 className="text-2xl font-black tracking-tight text-slate-900">Resumo do pedido</h3>
               <div className="mt-4 space-y-2 text-sm text-slate-600">
-                <div className="flex justify-between"><span>Subtotal ({cartWithProducts.length} itens)</span><strong>R$ {total.toFixed(2)}</strong></div>
-                <div className="flex justify-between"><span>Entrega</span><span>A negociar</span></div>
+                <div className="flex justify-between">
+                  <span>Subtotal ({cartWithProducts.length} itens)</span>
+                  <strong>R$ {total.toFixed(2)}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Entrega</span>
+                  <span>A negociar</span>
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                 <strong className="text-lg text-slate-900">Total</strong>
                 <strong className="text-xl text-blue-700">R$ {total.toFixed(2)}</strong>
               </div>
-              <button onClick={finalizarPedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Finalizar pedido</button>
-              <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Conversar com vendedor</button>
-              <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Salvar para depois</button>
+              <button onClick={finalizarPedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">
+                Finalizar pedido
+              </button>
+              <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">
+                Conversar com vendedor
+              </button>
+              <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">
+                Salvar para depois
+              </button>
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 p-4 text-center">
@@ -132,14 +239,20 @@ export function CarrinhoPage() {
               <button onClick={() => setModalChat(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-slate-500 transition hover:bg-slate-50">✕</button>
             </div>
             <div className="mt-5 space-y-3">
-              <button onClick={() => navigate('/chat')} className="w-full rounded-[1.5rem] border border-slate-200 p-4 text-left transition hover:bg-slate-50">
-                <p className="font-bold text-slate-900">João Silva <span className="ml-2 rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-700">UFBA</span></p>
-                <p className="text-sm text-slate-500">Livro de lógica de programação - R$ 150,00</p>
-              </button>
-              <button onClick={() => navigate('/chat')} className="w-full rounded-[1.5rem] border border-slate-200 p-4 text-left transition hover:bg-slate-50">
-                <p className="font-bold text-slate-900">Maria Lima <span className="ml-2 rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-700">UFBA</span></p>
-                <p className="text-sm text-slate-500">Empada Doce - R$ 10,00</p>
-              </button>
+              {vendedoresUnicos.map(({ vendedor, produtos }) => (
+                <button key={vendedor} onClick={() => navigate('/chat')} className="w-full rounded-[1.5rem] border border-slate-200 p-4 text-left transition hover:bg-slate-50">
+                  <p className="font-bold text-slate-900">
+                    {vendedor}{' '}
+                    <span className="ml-2 rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-700">UFBA</span>
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {produtos.map((p) => p.nome).join(', ')} - R$ {produtos.reduce((acc, p) => acc + p.preco, 0).toFixed(2)}
+                  </p>
+                </button>
+              ))}
+              {vendedoresUnicos.length === 0 && (
+                <p className="text-center text-slate-500">Nenhum vendedor disponível.</p>
+              )}
             </div>
           </div>
         </div>

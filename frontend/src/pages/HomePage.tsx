@@ -107,31 +107,32 @@ export default function HomePage() {
   };
 
   // funcao para converter coordenadas em endereco (geocoding)
-const obterEndereco = async (
-  lat: number,
-  lng: number
-): Promise<string> => {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    console.warn("API key não configurada");
-    return "localização indisponível";
-  }
-
-  try {
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
-    );
-    const data = await res.json();
-
-    if (data.status === "OK" && data.results[0]) {
-      return data.results[0].formatted_address || "endereço não especificado";
+  const obterEndereco = async (
+    lat: number,
+    lng: number
+  ): Promise<string> => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn("API key não configurada");
+      return "localização indisponível";
     }
-    return "endereço não encontrado";
-  } catch (error) {
-    console.error("erro no geocoding:", error);
-    return "erro ao buscar endereço";
-  }
-};  
+
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      );
+      const data = await res.json();
+
+      if (data.status === "OK" && data.results[0]) {
+        return data.results[0].formatted_address || "endereço não especificado";
+      }
+      return "endereço não encontrado";
+    } catch (error) {
+      console.error("erro no geocoding:", error);
+      return "erro ao buscar endereço";
+    }
+  };
+  
   // funcao chamada ao clicar em um produto para mostrar endereco detalhado
   const handleClickProduto = async (product: typeof products[0]) => {
     if (product.latitude && product.longitude) {
@@ -163,11 +164,11 @@ const obterEndereco = async (
         <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="p-8 sm:p-10 lg:p-12">
             <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-blue-50">
-              Marketplace estudantil
+              marketplace estudantil
             </span>
             
             <h1 className="mt-6 max-w-2xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Compre, venda e converse com estudantes em um só lugar!
+              compre, venda e converse com estudantes em um so lugar
             </h1>
 
             {/* botao para obter localizacao do usuario */}
@@ -175,7 +176,7 @@ const obterEndereco = async (
               onClick={pegarLocalizacao}
               className="mt-4 flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30"
             >
-              📍 Usar minha localização
+              📍 usar minha localizacao
               {lat !== null && lng !== null && (
                 <span className="text-xs text-blue-100">(atualizado)</span>
               )}
@@ -201,26 +202,26 @@ const obterEndereco = async (
             )}
 
             <p className="mt-5 max-w-xl text-base text-blue-50/90 sm:text-lg">
-              Explore produtos do campus, negocie direto no chat e acompanhe tudo no mesmo fluxo.
+              explore produtos do campus, negocie direto no chat e acompanhe tudo no mesmo fluxo.
             </p>
 
             {/* barra de busca original */}
             <div className="mt-8 flex max-w-2xl flex-col gap-3 rounded-3xl border border-white/15 bg-white/10 p-3 backdrop-blur sm:flex-row">
               <div className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-sm">
                 <Search className="h-5 w-5 text-slate-400" />
-                <span className="text-sm text-slate-500">Busque livros, eletrônicos, roupas ou serviços</span>
+                <span className="text-sm text-slate-500">busque livros, eletronicos, roupas ou servicos</span>
               </div>
               <Link to="/categorias" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-transform hover:scale-[1.01]">
-                Explorar agora <ArrowRight className="h-4 w-4" />
+                explorar agora <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
 
             {/* cards de beneficios */}
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {[
-                { icon: Star, title: 'avaliacoes reais', text: 'Vendedores com histórico e confiança.' },
-                { icon: Truck, title: 'entrega combinada', text: 'Negocie retirada no campus com facilidade.' },
-                { icon: ShieldCheck, title: 'ambiente seguro', text: 'Converse e negocie com mais tranquilidade.' },
+                { icon: Star, title: 'avaliacoes reais', text: 'vendedores com historico e confianca.' },
+                { icon: Truck, title: 'entrega combinada', text: 'negocie retirada no campus com facilidade.' },
+                { icon: ShieldCheck, title: 'ambiente seguro', text: 'converse e negocie com mais tranquilidade.' },
               ].map((item) => (
                 <div key={item.title} className="rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <item.icon className="h-5 w-5 text-orange-200" />
@@ -239,18 +240,18 @@ const obterEndereco = async (
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-50/80">destaque do dia</p>
                 <div className="mt-4 rounded-[1.5rem] bg-white p-4 text-slate-900 shadow-2xl shadow-black/10">
                   <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    <span>produto Mais visitado</span>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Disponível</span>
+                    <span>produto mais visitado</span>
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">disponivel</span>
                   </div>
                   <div className="mt-4 rounded-[1.25rem] bg-gradient-to-br from-slate-100 to-slate-200 p-6 text-center text-slate-500">
-                    Imagem principal do marketplace
+                    imagem principal do marketplace
                   </div>
                   <div className="mt-4 flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-lg font-bold">Livro de lógica de programação</p>
-                      <p className="text-sm text-slate-500">Caio Ramos • UFBA • Camaçari</p>
+                      <p className="text-lg font-bold">livro de logica de programacao</p>
+                      <p className="text-sm text-slate-500">caio ramos • ufba • camacari</p>
                     </div>
-                    <p className="text-2xl font-black text-blue-700">R$ 150</p>
+                    <p className="text-2xl font-black text-blue-700">r$ 150</p>
                   </div>
                 </div>
               </div>
@@ -258,15 +259,15 @@ const obterEndereco = async (
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm">
                   <p className="text-2xl font-black">12+</p>
-                  <p className="text-blue-50/80">Categorias</p>
+                  <p className="text-blue-50/80">categorias</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm">
                   <p className="text-2xl font-black">48h</p>
-                  <p className="text-blue-50/80">Resposta média</p>
+                  <p className="text-blue-50/80">resposta media</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm">
                   <p className="text-2xl font-black">100%</p>
-                  <p className="text-blue-50/80">Campus local</p>
+                  <p className="text-blue-50/80">campus local</p>
                 </div>
               </div>
             </div>
@@ -278,11 +279,11 @@ const obterEndereco = async (
       <section className="mt-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Explore por categoria</h2>
-            <p className="mt-2 text-sm text-slate-500 sm:text-base">Encontre exatamente o que voce precisa</p>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">explore por categoria</h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">encontre exatamente o que voce precisa</p>
           </div>
           <Link to="/categorias" className="hidden text-sm font-semibold text-blue-700 hover:text-blue-800 sm:inline-flex">
-            Ver todas
+            ver todas
           </Link>
         </div>
 
@@ -293,7 +294,7 @@ const obterEndereco = async (
                 {category.icon}
               </div>
               <p className="mt-4 font-bold text-slate-900">{category.nome}</p>
-              <p className="mt-1 text-xs text-slate-500">{category.quantidade} Produtos</p>
+              <p className="mt-1 text-xs text-slate-500">{category.quantidade} produtos</p>
             </Link>
           ))}
         </div>
@@ -303,8 +304,8 @@ const obterEndereco = async (
       <section className="mt-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Produtos em destaque</h2>
-            <p className="mt-2 text-sm text-slate-500 sm:text-base">Os melhores produtos selecionados para você</p>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">produtos em destaque</h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">os melhores produtos selecionados para voce</p>
           </div>
         </div>
 
@@ -328,7 +329,7 @@ const obterEndereco = async (
                 onClick={() => handleClickProduto(product)}
               >
                 <div className="flex h-44 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
-                  Imagem do produto
+                  imagem do produto
                 </div>
                 <div className="p-5">
                   <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em]">
@@ -340,7 +341,7 @@ const obterEndereco = async (
                   <p className="mt-2 text-sm text-slate-500">
                     {product.vendedor} • {endereco}
                     {distancia !== null && (
-                      <span className="block text-blue-600 font-medium mt-1">• {distancia.toFixed(1)} KM</span>
+                      <span className="block text-blue-600 font-medium mt-1">• {distancia.toFixed(1)} km</span>
                     )}
                   </p>
                   <p className="mt-3 text-2xl font-black text-blue-700">r$ {product.preco.toFixed(2)}</p>

@@ -2,7 +2,8 @@ package br.com.campushop.campushop_backend.controller;
 
 import br.com.campushop.campushop_backend.dto.AuthResponse;
 import br.com.campushop.campushop_backend.dto.LoginRequest;
-import br.com.campushop.campushop_backend.dto.RegisterRequest;import br.com.campushop.campushop_backend.model.Usuario;
+import br.com.campushop.campushop_backend.dto.RegisterRequest;
+import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.security.JwtTokenProvider;
 import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
@@ -33,7 +34,7 @@ public class AuthController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-@PostMapping("/register")
+    @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
 
         String email = request.getEmail().trim().toLowerCase();

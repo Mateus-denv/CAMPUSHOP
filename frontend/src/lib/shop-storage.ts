@@ -5,6 +5,15 @@ export type CartItem = {
   quantidade: number
 }
 
+export type CachedProduct = {
+  id: number
+  nome: string
+  descricao: string
+  preco: number
+  condicao?: string
+  vendedor?: string
+}
+
 export type OrderItem = {
   productId: number
   quantidade: number
@@ -21,6 +30,7 @@ export type Order = {
 
 const CART_KEY = 'campushop_cart'
 const ORDERS_KEY = 'campushop_orders'
+const PRODUCT_CACHE_KEY = 'campushop_product_cache'
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -73,6 +83,17 @@ export function clearCart() {
   saveCart([])
 }
 
+export function getCachedProduct(productId: number): CachedProduct | null {
+  const cache = loadJson<Record<number, CachedProduct>>(PRODUCT_CACHE_KEY, {})
+  return cache[productId] ?? null
+}
+
+export function cacheProduct(product: CachedProduct) {
+  const cache = loadJson<Record<number, CachedProduct>>(PRODUCT_CACHE_KEY, {})
+  cache[product.id] = product
+  saveJson(PRODUCT_CACHE_KEY, cache)
+}
+
 export function getOrders(): Order[] {
   return loadJson<Order[]>(ORDERS_KEY, [])
 }
@@ -85,7 +106,8 @@ export function createOrderFromCart(): Order | null {
 
   const itens: OrderItem[] = cart
     .map((item) => {
-      const product = products.find((p) => p.id === item.productId)
+      const cached = getCachedProduct(item.productId)
+      const product = cached ?? products.find((p) => p.id === item.productId)
       if (!product) {
         return null
       }
