@@ -104,94 +104,102 @@ Os scripts ficam em `db/scripts` e seguem ordem numérica:
 
 ## 📌 Pré-requisitos
 
-- Docker Desktop instalado
+### Para rodar com Docker (recomendado)
+
+- Docker Desktop instalado e em execução
 - `docker compose` disponível no terminal
-- Porta `3306` livre (MySQL)
-- Porta `8080` livre (aplicação)
-- Porta `8081` livre (phpMyAdmin)
+- Portas livres: `3306` (MySQL), `8080` (aplicação), `8081` (phpMyAdmin)
 
-## 🚀 Guia de implantação do zero
+### Para rodar sem Docker (opcional)
 
-### 🔹 Passo 1: Preparar ambiente
+- Java 17
+- Maven 3.9+
+- Node.js 18+ e npm
+- MySQL 8 em execução
 
-No diretório raiz do projeto:
+## 🚀 Guia prático de execução (Docker)
 
-```powershell
-cd C:\Users\aluno.senai\Documents\CAMPUSHOP
-docker compose up -d mysql
-```
-
-### 🔹 Passo 2: Criar e estruturar o banco
+### 1. Ir para a raiz do projeto
 
 ```powershell
-docker cp .\db\scripts\001_schema.sql campushop-mysql:/tmp/001_schema.sql
-docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/001_schema.sql"
+cd <CAMINHO_DO_PROJETO>/CAMPUSHOP
 ```
 
-### 🔹 Passo 3: Executar scripts versionados
-
-```powershell
-docker cp .\db\scripts\002_seed.sql campushop-mysql:/tmp/002_seed.sql
-docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/002_seed.sql"
-
-docker cp .\db\scripts\003_validate.sql campushop-mysql:/tmp/003_validate.sql
-docker compose exec mysql sh -c "mysql -uroot -p123456 < /tmp/003_validate.sql"
-```
-
-### 🔹 Passo 4: Subir aplicação
+### 2. Subir serviços
 
 ```powershell
 docker compose up -d --build
 docker compose ps
 ```
 
-Acesse: `http://localhost:8080`
+### 3. Aplicar scripts SQL versionados
 
-phpMyAdmin: `http://localhost:8081`
+```powershell
+docker cp .\db\scripts\001_schema.sql campushop-mysql:/tmp/001_schema.sql
+docker compose exec mysql sh -c "mysql -uroot -p$MYSQL_ROOT_PASSWORD < /tmp/001_schema.sql"
 
-Credenciais do phpMyAdmin:
+docker cp .\db\scripts\002_seed.sql campushop-mysql:/tmp/002_seed.sql
+docker compose exec mysql sh -c "mysql -uroot -p$MYSQL_ROOT_PASSWORD < /tmp/002_seed.sql"
+
+docker cp .\db\scripts\003_validate.sql campushop-mysql:/tmp/003_validate.sql
+docker compose exec mysql sh -c "mysql -uroot -p$MYSQL_ROOT_PASSWORD < /tmp/003_validate.sql"
+```
+
+### 4. Acessar serviços
+
+- Aplicação: `http://localhost:8080`
+- phpMyAdmin: `http://localhost:8081`
+
+No phpMyAdmin, use:
 
 - Servidor: `mysql`
 - Usuário: `root`
-- Senha: `123456`
+- Senha: valor de `MYSQL_ROOT_PASSWORD` definido no `docker-compose.yml`
 
-## ✅ Validação pós-implantação
+> ⚠️ Segurança: as credenciais atuais são de ambiente local/desenvolvimento. Para qualquer ambiente compartilhado ou produção, altere usuário/senha e não versione segredos reais.
 
-- Execute `db/scripts/003_validate.sql`
-- Confirme que as tabelas retornam contagem sem erro
-- Acesse a aplicação em `http://localhost:8080`
-- Acesse o phpMyAdmin em `http://localhost:8081`
-- Valide login/cadastro e listagem de produtos
+## ✅ Validação rápida
 
-Consulta rápida de conferência:
+1. Confirmar estado dos containers:
 
-```sql
-USE campushop;
-SHOW TABLES;
-SELECT COUNT(*) FROM usuario;
-SELECT COUNT(*) FROM produto;
+```powershell
+docker compose ps
 ```
+
+2. Executar conferência básica no banco:
+
+```powershell
+docker compose exec mysql sh -c "mysql -uroot -p$MYSQL_ROOT_PASSWORD -e \"USE campushop; SHOW TABLES; SELECT COUNT(*) AS usuarios FROM usuario; SELECT COUNT(*) AS produtos FROM produto;\""
+```
+
+3. Validar funcionalmente:
+
+- abrir `http://localhost:8080`
+- validar cadastro/login e listagem de produtos
+- abrir `http://localhost:8081` (phpMyAdmin)
 
 ## ♻️ Rollback / Limpeza
 
-Se precisar desfazer estrutura e dados do banco:
+Para remover estrutura e dados do banco:
 
-1. Execute `db/scripts/999_rollback.sql`
-2. (Opcional) remover volumes Docker para reset total:
+1. Executar `db/scripts/999_rollback.sql` no MySQL
+2. Opcional: remover volumes para reset total
 
 ```powershell
 docker compose down -v
 ```
 
-## 📦 Execução local sem Docker (opcional)
+## 📦 Guia de execução sem Docker (opcional)
 
-### Backend
+### 1. Backend
 
 ```powershell
 mvn spring-boot:run
 ```
 
-### Frontend (desenvolvimento com hot reload)
+Backend/API: `http://localhost:8080`
+
+### 2. Frontend (hot reload)
 
 ```powershell
 cd frontend
@@ -199,8 +207,9 @@ npm install
 npm run dev
 ```
 
-Frontend: `http://localhost:5173`  
-Backend/API: `http://localhost:8080`
+Frontend (dev): `http://localhost:5173`
+
+> Observação: no modo sem Docker, você precisa garantir que o banco MySQL local esteja configurado para as mesmas credenciais/propriedades esperadas pela aplicação.
 
 ## 📂 Estrutura essencial
 
