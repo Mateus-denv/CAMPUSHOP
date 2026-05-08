@@ -3,6 +3,8 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store'
 import { clearAuth } from '@/lib/auth-listener'
 import { LogOut, User } from 'lucide-react'
+import { countCartItems } from '@/lib/shop-storage'
+import { Logo } from './Logo'
 
 type LayoutProps = {
   children: ReactNode
@@ -21,6 +23,7 @@ const navItems = [
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate()
   const { usuario, setUsuario } = useAuthStore()
+  const carrinhoCount = countCartItems()
 
   const handleLogout = () => {
     setUsuario(null)
@@ -33,8 +36,7 @@ export function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/home" className="flex items-center gap-3 font-black tracking-tight text-slate-900">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-xl text-white shadow-lg shadow-blue-600/20">📦</span>
-            <span className="text-lg sm:text-xl">CampusShop</span>
+            <Logo />
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
@@ -49,7 +51,12 @@ export function Layout({ children }: LayoutProps) {
                   ].join(' ')
                 }
               >
-                {item.label}
+                <span className="inline-flex items-center gap-2">
+                  {item.label}
+                  {item.to === '/carrinho' && carrinhoCount > 0 ? (
+                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-semibold text-white">{carrinhoCount}</span>
+                  ) : null}
+                </span>
               </NavLink>
             ))}
           </nav>
