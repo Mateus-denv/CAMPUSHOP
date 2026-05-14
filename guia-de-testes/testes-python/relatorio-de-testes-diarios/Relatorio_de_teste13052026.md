@@ -20,11 +20,11 @@
 
 ### 1. ROTAS PÚBLICAS (SEM AUTENTICAÇÃO)
 
-| Rota                  | Status   | Notas                             |
-| --------------------- | -------- | --------------------------------- |
-| `GET /categorias`     | ✓ 200 OK | 10 categorias carregadas          |
-| `GET /produtos`       | ✓ 200 OK | 7 produtos encontrados            |
-| `GET /home`           | ✓ 200 OK | Home pública acessível            |
+| Rota              | Status   | Notas                    |
+| ----------------- | -------- | ------------------------ |
+| `GET /categorias` | ✓ 200 OK | 10 categorias carregadas |
+| `GET /produtos`   | ✓ 200 OK | 7 produtos encontrados   |
+| `GET /home`       | ✓ 200 OK | Home pública acessível   |
 
 **Taxa de Sucesso:** 100% (3/3)
 
@@ -32,26 +32,27 @@
 
 ### 2. AUTENTICAÇÃO
 
-| Operação              | Status   | Detalhes                             |
-| --------------------- | -------- | ------------------------------------ |
-| `POST /auth/register` | ✓ 201    | Cadastro realizado com massa válida  |
-| `POST /auth/login`    | ✓ 200    | Login com token JWT                  |
-| `GET /auth/me`        | ✓ 200    | Retorna dados do usuário autenticado |
+| Operação              | Status | Detalhes                             |
+| --------------------- | ------ | ------------------------------------ |
+| `POST /auth/register` | ✓ 201  | Cadastro realizado com massa válida  |
+| `POST /auth/login`    | ✓ 200  | Login com token JWT                  |
+| `GET /auth/me`        | ✓ 200  | Retorna dados do usuário autenticado |
 
 **Taxa de Sucesso:** 100% (3/3)
 
 **Observações:**
+
 - Massa de teste gerada com RA de 9 dígitos e CPF válido; tratamento para e-mail único.
 
 ---
 
 ### 3. FUNCIONALIDADES DE PRODUTOS
 
-| Funcionalidade               | Status   | Detalhes                         |
-| ---------------------------- | -------- | -------------------------------- |
-| `GET /api/produtos`          | ✓ 200 OK | Listagem de produtos (7 items)   |
-| `GET /api/produtos/usuario`  | ✓ 200 OK | Lista de produtos do usuário     |
-| `POST /api/produtos` (criar) | ✓ 201    | Criação de produto autenticada   |
+| Funcionalidade               | Status   | Detalhes                       |
+| ---------------------------- | -------- | ------------------------------ |
+| `GET /api/produtos`          | ✓ 200 OK | Listagem de produtos (7 items) |
+| `GET /api/produtos/usuario`  | ✓ 200 OK | Lista de produtos do usuário   |
+| `POST /api/produtos` (criar) | ✓ 201    | Criação de produto autenticada |
 
 **Taxa de Sucesso:** 100% (3/3)
 
@@ -59,15 +60,16 @@
 
 ### 4. FUNCIONALIDADES DE CARRINHO
 
-| Operação                           | Status   | Detalhes                                          |
-| ---------------------------------- | -------- | ------------------------------------------------- |
-| `GET /api/carrinho`                | ✓ 200    | Recupera carrinho do usuário                      |
-| `POST /api/carrinho/adicionar`     | ✓ 200    | Produto adicionado corretamente                   |
-| `DELETE /api/carrinho` (limpar)    | ✓ 204    | Carrinho limpo com sucesso                        |
+| Operação                        | Status | Detalhes                        |
+| ------------------------------- | ------ | ------------------------------- |
+| `GET /api/carrinho`             | ✓ 200  | Recupera carrinho do usuário    |
+| `POST /api/carrinho/adicionar`  | ✓ 200  | Produto adicionado corretamente |
+| `DELETE /api/carrinho` (limpar) | ✓ 204  | Carrinho limpo com sucesso      |
 
 **Taxa de Sucesso:** 100% (3/3)
 
 **Notas Técnicas:**
+
 - Corrigido vínculo de `Usuario` ao criar item de `Carrinho` (evita `id_usuario` nulo).
 - Método de limpeza passou a executar dentro de transação (`@Transactional`).
 
@@ -75,9 +77,9 @@
 
 ### 5. FUNCIONALIDADES DE CATEGORIAS
 
-| Operação                  | Status   | Detalhes                         |
-| ------------------------- | -------- | -------------------------------- |
-| `GET /api/categorias`     | ✓ 200 OK | 10 categorias retornadas         |
+| Operação              | Status   | Detalhes                 |
+| --------------------- | -------- | ------------------------ |
+| `GET /api/categorias` | ✓ 200 OK | 10 categorias retornadas |
 
 **Taxa de Sucesso:** 100% (1/1)
 
