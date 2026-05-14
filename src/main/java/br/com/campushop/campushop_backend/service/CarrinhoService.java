@@ -77,9 +77,18 @@ public class CarrinhoService {
     // Calcular total do carrinho
     public Double calcularTotal(Integer usuarioId) {
         List<Carrinho> itens = listarPorUsuario(usuarioId);
-        
+
         return itens.stream()
             .mapToDouble(item -> item.getProduto().getPreco() * item.getQuantidade())
             .sum();
+    }
+
+    // Valida se há estoque suficiente para o item
+    public boolean validarEstoque(Produto produto, Integer quantidadeSolicitada) {
+        return produto != null
+            && produto.getEstoque() != null
+            && quantidadeSolicitada != null
+            && quantidadeSolicitada > 0
+            && produto.getEstoque() >= quantidadeSolicitada;
     }
 }

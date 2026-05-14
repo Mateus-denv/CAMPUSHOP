@@ -16,7 +16,7 @@
 ## Reset total (recriar banco e reaplicar seed)
 - Use quando quiser simular "primeira instalação" em outra máquina.
 - docker compose down -v
-- docker compose up -d --build
+-   
 
 ## Ver status
 - docker compose ps
