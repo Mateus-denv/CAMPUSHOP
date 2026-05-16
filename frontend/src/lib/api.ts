@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 
+// Usa a variável de ambiente VITE_API_URL em produção; mantém fallback para desenvolvimento local
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
 const api: AxiosInstance = axios.create({
