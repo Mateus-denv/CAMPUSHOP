@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.campushop.campushop_backend.exception.BusinessException;
 import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Produto;
 import br.com.campushop.campushop_backend.model.Usuario;
@@ -23,21 +24,32 @@ public class CarrinhoService {
     private UsuarioRepository usuarioRepository; // usado para buscar entidade Usuario por id
 
     // Listar itens do carrinho por usuário
-    public List<Carrinho> listarPorUsuario(Integer usuarioId) {
+    public List<Carrinho> listarPorUsuario(int usuarioId) {
         return carrinhoRepository.findByUsuarioId(usuarioId);
     }
 
     // Adicionar item ao carrinho
-    public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
+    public Carrinho adicionarAoCarrinho(int usuarioId, Produto produto, Integer quantidade) {
         // Verificar se o produto já está no carrinho
         List<Carrinho> itens = listarPorUsuario(usuarioId);
 
         for (Carrinho item : itens) {
             if (item.getProduto().getIdProduto().equals(produto.getIdProduto())) {
-                // Produto já existe, atualizar quantidade
-                item.setQuantidade(item.getQuantidade() + quantidade);
+                // Produto já existe, validar estoque antes de somar a quantidade.
+                int quantidadeAtualizada = item.getQuantidade() + quantidade;
+                if (!validarEstoque(produto, quantidadeAtualizada)) {
+                    throw new BusinessException("Quantidade solicitada excede o estoque disponível.");
+                }
+                item.setQuantidade(quantidadeAtualizada);
                 return carrinhoRepository.save(item);
             }
+        }
+
+        if (quantidade == null || quantidade <= 0) {
+            throw new BusinessException("Quantidade deve ser maior que zero.");
+        }
+        if (!validarEstoque(produto, quantidade)) {
+            throw new BusinessException("Quantidade solicitada excede o estoque disponível.");
         }
 
         // Produto não existe, criar novo item
@@ -56,7 +68,7 @@ public class CarrinhoService {
     }
 
     // Remover item do carrinho
-    public void removerDoCarrinho(Integer carrinhoId, Integer usuarioId) {
+    public void removerDoCarrinho(int carrinhoId, int usuarioId) {
         Optional<Carrinho> item = carrinhoRepository.findById(carrinhoId);
 
         if (item.isPresent() && item.get().getUsuario().getId().equals(usuarioId)) {
@@ -67,32 +79,39 @@ public class CarrinhoService {
     }
 
     // Atualizar quantidade
-    public Carrinho atualizarQuantidade(Integer carrinhoId, Integer novaQuantidade, Integer usuarioId) {
+    public Carrinho atualizarQuantidade(int carrinhoId, Integer novaQuantidade, int usuarioId) {
         Optional<Carrinho> item = carrinhoRepository.findById(carrinhoId);
 
         if (item.isPresent() && item.get().getUsuario().getId().equals(usuarioId)) {
+            Carrinho carrinho = item.get();
+            if (novaQuantidade == null) {
+                throw new BusinessException("Quantidade é obrigatória.");
+            }
             if (novaQuantidade <= 0) {
                 carrinhoRepository.deleteById(carrinhoId);
                 return null;
             }
+            if (!validarEstoque(carrinho.getProduto(), novaQuantidade)) {
+                throw new BusinessException("Quantidade solicitada excede o estoque disponível.");
+            }
 
-            item.get().setQuantidade(novaQuantidade);
-            return carrinhoRepository.save(item.get());
+            carrinho.setQuantidade(novaQuantidade);
+            return carrinhoRepository.save(carrinho);
         } else {
-            throw new RuntimeException("Item não encontrado ou não pertence ao usuário");
+            throw new BusinessException("Item não encontrado ou não pertence ao usuário");
         }
     }
 
     // Limpar carrinho inteiro
     @Transactional
-    public void limparCarrinho(Integer usuarioId) {
+    public void limparCarrinho(int usuarioId) {
         // Garantir que o delete seja executado dentro de uma transação para
         // evitar TransactionRequiredException quando o EntityManager for usado.
         carrinhoRepository.deleteByUsuarioId(usuarioId);
     }
 
     // Calcular total do carrinho
-    public Double calcularTotal(Integer usuarioId) {
+    public Double calcularTotal(int usuarioId) {
         List<Carrinho> itens = listarPorUsuario(usuarioId);
 
         return itens.stream()
@@ -100,9 +119,9 @@ public class CarrinhoService {
                 .sum();
     }
 
-    // Valida se há estoque suficiente para o item  
+    // Valida se há estoque suficiente para o item
     public boolean validarEstoque(Produto produto, Integer quantidade) {
         return produto.getEstoque() >= quantidade;
     }
-    
+
 }

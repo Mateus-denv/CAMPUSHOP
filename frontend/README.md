@@ -33,7 +33,7 @@ O proxy automático encaminha requisições de `/api` para `http://localhost:808
 
 ## Produção local integrada (localhost único)
 
-Para servir frontend + backend no mesmo endereço (`http://localhost:8080`), gere o build do React diretamente em `src/main/resources/static`:
+Para servir frontend + backend no mesmo endereço (` `), gere o build do React diretamente em `src/main/resources/static`:
 
 ```bash
 cd frontend
