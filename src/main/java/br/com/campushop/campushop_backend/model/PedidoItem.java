@@ -1,9 +1,7 @@
 package br.com.campushop.campushop_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,38 +10,37 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "pedidoItem")
+@Table(name = "pedido_item")
 public class PedidoItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idItem")
-    private Integer idItem;
+    @Column(name = "id_pedido_item")
+    private Integer id;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idPedido", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_pedido", nullable = false)
     private Pedido pedido;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "idProduto", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_produto", nullable = false)
     private Produto produto;
 
     @Column(nullable = false)
     private Integer quantidade;
 
-    @Column(nullable = false)
+    @Column(name = "preco_unitario", nullable = false)
     private Double precoUnitario;
 
-    @Column(nullable = false)
-    private Double subtotal;
-
-    public Integer getIdItem() {
-        return idItem;
+    public PedidoItem() {
     }
 
-    public void setIdItem(Integer idItem) {
-        this.idItem = idItem;
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Pedido getPedido() {
@@ -78,11 +75,7 @@ public class PedidoItem {
         this.precoUnitario = precoUnitario;
     }
 
-    public Double getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(Double subtotal) {
-        this.subtotal = subtotal;
+    public Double getSubTotal() {
+        return precoUnitario * quantidade;
     }
 }

@@ -1,7 +1,6 @@
 package br.com.campushop.campushop_backend.dto;
 
 public class PedidoItemRequest {
-
     private Integer produtoId;
     private Integer quantidade;
 

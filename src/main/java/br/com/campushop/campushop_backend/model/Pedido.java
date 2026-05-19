@@ -1,17 +1,6 @@
 package br.com.campushop.campushop_backend.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,43 +11,44 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idPedido")
-    private Integer idPedido;
+    @Column(name = "id_pedido")
+    private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "idUsuario", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    @Column(name = "dataPedido", nullable = false)
-    private LocalDateTime dataPedido;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PedidoStatus status;
 
     @Column(nullable = false)
     private Double total;
 
-    @Column(length = 20)
-    private String status;
-
     @Column(length = 255)
     private String endereco;
 
-    @Column(columnDefinition = "TEXT")
-    private String observacoes;
+    @Column(length = 50)
+    private String telefone;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Column(name = "criado_em")
+    private LocalDateTime criadoEm;
+
+    @Column(name = "atualizado_em")
+    private LocalDateTime atualizadoEm;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PedidoItem> itens = new ArrayList<>();
 
     public Pedido() {
-        // Define os valores padrão para manter o pedido pronto para persistência.
-        this.dataPedido = LocalDateTime.now();
-        this.status = "PENDENTE";
     }
 
-    public Integer getIdPedido() {
-        return idPedido;
+    public Integer getId() {
+        return id;
     }
 
-    public void setIdPedido(Integer idPedido) {
-        this.idPedido = idPedido;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Usuario getUsuario() {
@@ -69,12 +59,12 @@ public class Pedido {
         this.usuario = usuario;
     }
 
-    public LocalDateTime getDataPedido() {
-        return dataPedido;
+    public PedidoStatus getStatus() {
+        return status;
     }
 
-    public void setDataPedido(LocalDateTime dataPedido) {
-        this.dataPedido = dataPedido;
+    public void setStatus(PedidoStatus status) {
+        this.status = status;
     }
 
     public Double getTotal() {
@@ -85,14 +75,6 @@ public class Pedido {
         this.total = total;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getEndereco() {
         return endereco;
     }
@@ -101,12 +83,28 @@ public class Pedido {
         this.endereco = endereco;
     }
 
-    public String getObservacoes() {
-        return observacoes;
+    public String getTelefone() {
+        return telefone;
     }
 
-    public void setObservacoes(String observacoes) {
-        this.observacoes = observacoes;
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
+    public LocalDateTime getAtualizadoEm() {
+        return atualizadoEm;
+    }
+
+    public void setAtualizadoEm(LocalDateTime atualizadoEm) {
+        this.atualizadoEm = atualizadoEm;
     }
 
     public List<PedidoItem> getItens() {
@@ -114,17 +112,21 @@ public class Pedido {
     }
 
     public void setItens(List<PedidoItem> itens) {
-        // Recria os vínculos dos itens para preservar o cascade e o vínculo com o pedido.
         this.itens.clear();
         if (itens != null) {
-            for (PedidoItem item : itens) {
-                adicionarItem(item);
-            }
+            this.itens.addAll(itens);
+            this.itens.forEach(item -> item.setPedido(this));
         }
     }
 
     public void adicionarItem(PedidoItem item) {
         item.setPedido(this);
         this.itens.add(item);
+    }
+
+    public void atualizarTotal() {
+        this.total = itens.stream()
+                .mapToDouble(PedidoItem::getSubTotal)
+                .sum();
     }
 }

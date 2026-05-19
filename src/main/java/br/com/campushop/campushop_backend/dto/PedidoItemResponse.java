@@ -1,35 +1,10 @@
 package br.com.campushop.campushop_backend.dto;
 
-import br.com.campushop.campushop_backend.model.PedidoItem;
-
 public class PedidoItemResponse {
-
-    private Integer idItem;
     private Integer produtoId;
     private String nomeProduto;
     private Integer quantidade;
     private Double precoUnitario;
-    private Double subtotal;
-
-    public static PedidoItemResponse fromEntity(PedidoItem item) {
-        // Expõe apenas os dados necessários para a tela de pedidos.
-        PedidoItemResponse response = new PedidoItemResponse();
-        response.setIdItem(item.getIdItem());
-        response.setProdutoId(item.getProduto() != null ? item.getProduto().getIdProduto() : null);
-        response.setNomeProduto(item.getProduto() != null ? item.getProduto().getNomeProduto() : null);
-        response.setQuantidade(item.getQuantidade());
-        response.setPrecoUnitario(item.getPrecoUnitario());
-        response.setSubtotal(item.getSubtotal());
-        return response;
-    }
-
-    public Integer getIdItem() {
-        return idItem;
-    }
-
-    public void setIdItem(Integer idItem) {
-        this.idItem = idItem;
-    }
 
     public Integer getProdutoId() {
         return produtoId;
@@ -61,13 +36,5 @@ public class PedidoItemResponse {
 
     public void setPrecoUnitario(Double precoUnitario) {
         this.precoUnitario = precoUnitario;
-    }
-
-    public Double getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(Double subtotal) {
-        this.subtotal = subtotal;
     }
 }

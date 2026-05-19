@@ -1,58 +1,23 @@
 package br.com.campushop.campushop_backend.dto;
 
-import br.com.campushop.campushop_backend.model.Pedido;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PedidoResponse {
-
-    private Integer idPedido;
-    private LocalDateTime dataPedido;
-    private Double total;
+    private Integer id;
     private String status;
+    private Double total;
+    private LocalDateTime criadoEm;
     private String endereco;
-    private String observacoes;
+    private String telefone;
     private List<PedidoItemResponse> itens;
 
-    public static PedidoResponse fromEntity(Pedido pedido) {
-        // Mantém o contrato da API simples e evita expor a entidade JPA diretamente.
-        PedidoResponse response = new PedidoResponse();
-        response.setIdPedido(pedido.getIdPedido());
-        response.setDataPedido(pedido.getDataPedido());
-        response.setTotal(pedido.getTotal());
-        response.setStatus(pedido.getStatus());
-        response.setEndereco(pedido.getEndereco());
-        response.setObservacoes(pedido.getObservacoes());
-        response.setItens(pedido.getItens().stream()
-                .map(PedidoItemResponse::fromEntity)
-                .collect(Collectors.toList()));
-        return response;
+    public Integer getId() {
+        return id;
     }
 
-    public Integer getIdPedido() {
-        return idPedido;
-    }
-
-    public void setIdPedido(Integer idPedido) {
-        this.idPedido = idPedido;
-    }
-
-    public LocalDateTime getDataPedido() {
-        return dataPedido;
-    }
-
-    public void setDataPedido(LocalDateTime dataPedido) {
-        this.dataPedido = dataPedido;
-    }
-
-    public Double getTotal() {
-        return total;
-    }
-
-    public void setTotal(Double total) {
-        this.total = total;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getStatus() {
@@ -63,6 +28,22 @@ public class PedidoResponse {
         this.status = status;
     }
 
+    public Double getTotal() {
+        return total;
+    }
+
+    public void setTotal(Double total) {
+        this.total = total;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
     public String getEndereco() {
         return endereco;
     }
@@ -71,12 +52,12 @@ public class PedidoResponse {
         this.endereco = endereco;
     }
 
-    public String getObservacoes() {
-        return observacoes;
+    public String getTelefone() {
+        return telefone;
     }
 
-    public void setObservacoes(String observacoes) {
-        this.observacoes = observacoes;
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
     }
 
     public List<PedidoItemResponse> getItens() {
