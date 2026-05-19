@@ -1,6 +1,34 @@
 import api from './api'
 import { Carrinho } from '@/store'
 
+export type PedidoItemAPI = {
+  idItem?: number
+  produtoId: number
+  nomeProduto?: string
+  quantidade: number
+  precoUnitario: number
+  subtotal?: number
+}
+
+export type PedidoAPI = {
+  idPedido: number
+  dataPedido: string
+  total: number
+  status: string
+  endereco?: string | null
+  observacoes?: string | null
+  itens: PedidoItemAPI[]
+}
+
+export type PedidoRequestAPI = {
+  itens: Array<{
+    produtoId: number
+    quantidade: number
+  }>
+  endereco?: string
+  observacoes?: string
+}
+
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
 }
@@ -23,6 +51,14 @@ export const carrinhoAPI = {
       telefone,
     }),
   limpar: () => api.delete('/api/carrinho/limpar'),
+}
+
+export const pedidoAPI = {
+  listar: () => api.get<PedidoAPI[]>('/api/pedidos'),
+  obter: (id: number) => api.get<PedidoAPI>(`/api/pedidos/${id}`),
+  criar: (payload: PedidoRequestAPI) => api.post<PedidoAPI>('/api/pedidos', payload),
+  atualizar: (id: number, payload: PedidoRequestAPI) => api.put<PedidoAPI>(`/api/pedidos/${id}`, payload),
+  cancelar: (id: number) => api.delete<PedidoAPI>(`/api/pedidos/${id}`),
 }
 
 export const authAPI = {

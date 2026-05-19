@@ -33,11 +33,11 @@ public class CarrinhoController {
     public ResponseEntity<List<Carrinho>> listarCarrinho(Authentication authentication) {
         String email = authentication.getName();
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
+
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         List<Carrinho> itens = carrinhoService.listarPorUsuario(usuarioOpt.get().getId());
         return ResponseEntity.ok(itens);
     }
@@ -47,29 +47,31 @@ public class CarrinhoController {
     public ResponseEntity<Carrinho> adicionarAoCarrinho(
             @RequestBody Map<String, Integer> request,
             Authentication authentication) {
-        
-        String email = authentication.getName();
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        Integer produtoId = request.get("produtoId");
-        Integer quantidade = request.getOrDefault("quantidade", 1);
-        
-        Optional<Produto> produtoOpt = produtoService.buscarPorId(produtoId);
-        if (produtoOpt.isEmpty()) {
+        try {
+            String email = authentication.getName();
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
+
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Integer produtoId = request.get("produtoId");
+            Integer quantidade = request.getOrDefault("quantidade", 1);
+
+            Optional<Produto> produtoOpt = produtoService.buscarPorId(produtoId);
+            if (produtoOpt.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Carrinho item = carrinhoService.adicionarAoCarrinho(
+                    usuarioOpt.get().getId(),
+                    produtoOpt.get(),
+                    quantidade);
+
+            return ResponseEntity.ok(item);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
-        
-        Carrinho item = carrinhoService.adicionarAoCarrinho(
-            usuarioOpt.get().getId(),
-            produtoOpt.get(),
-            quantidade
-        );
-        
-        return ResponseEntity.ok(item);
     }
 
     // 3. Remover item do carrinho
@@ -77,14 +79,14 @@ public class CarrinhoController {
     public ResponseEntity<Void> removerDoCarrinho(
             @PathVariable Integer id,
             Authentication authentication) {
-        
+
         String email = authentication.getName();
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
+
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         carrinhoService.removerDoCarrinho(id, usuarioOpt.get().getId());
         return ResponseEntity.noContent().build();
     }
@@ -95,18 +97,21 @@ public class CarrinhoController {
             @PathVariable Integer id,
             @RequestBody Map<String, Integer> request,
             Authentication authentication) {
-        
-        String email = authentication.getName();
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        try {
+            String email = authentication.getName();
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
+
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Integer quantidade = request.get("quantidade");
+            Carrinho item = carrinhoService.atualizarQuantidade(id, quantidade, usuarioOpt.get().getId());
+
+            return ResponseEntity.ok(item);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
-        
-        Integer quantidade = request.get("quantidade");
-        Carrinho item = carrinhoService.atualizarQuantidade(id, quantidade, usuarioOpt.get().getId());
-        
-        return ResponseEntity.ok(item);
     }
 
     // 5. Limpar carrinho inteiro
@@ -114,11 +119,11 @@ public class CarrinhoController {
     public ResponseEntity<Void> limparCarrinho(Authentication authentication) {
         String email = authentication.getName();
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
+
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         carrinhoService.limparCarrinho(usuarioOpt.get().getId());
         return ResponseEntity.noContent().build();
     }
@@ -128,15 +133,15 @@ public class CarrinhoController {
     public ResponseEntity<Map<String, Double>> obterTotal(Authentication authentication) {
         String email = authentication.getName();
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
-        
+
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         Double total = carrinhoService.calcularTotal(usuarioOpt.get().getId());
         Map<String, Double> response = new java.util.HashMap<>();
         response.put("total", total);
-        
+
         return ResponseEntity.ok(response);
     }
 }
