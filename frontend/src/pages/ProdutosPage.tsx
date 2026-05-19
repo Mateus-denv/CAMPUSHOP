@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { produtoAPI } from '@/lib/api-service'
 import { addToCartWithSnapshot, countCartItems, isFavorite, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 type Produto = {
   idProduto: number
@@ -146,12 +146,16 @@ export function ProdutosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {produtos.map((produto) => (
-            <div key={produto.idProduto} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
                 <button
                   type="button"
-                  onClick={() => favoritarProduto(produto.idProduto)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    favoritarProduto(produto.idProduto)
+                  }}
                   className={`rounded-xl border px-2.5 py-2 transition ${favoritos.includes(produto.idProduto)
                     ? 'border-red-200 bg-red-50 text-red-600'
                     : 'border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -173,13 +177,17 @@ export function ProdutosPage() {
               </div>
 
               <button
-                onClick={() => adicionarAoCarrinho(produto.idProduto)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  adicionarAoCarrinho(produto.idProduto)
+                }}
                 disabled={produto.estoque === 0}
                 className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {produto.estoque === 0 ? 'Fora de estoque' : 'Adicionar ao carrinho'}
               </button>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

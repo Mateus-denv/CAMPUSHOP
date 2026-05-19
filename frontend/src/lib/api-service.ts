@@ -1,5 +1,5 @@
-import api from './api'
 import { Carrinho } from '@/store'
+import api from './api'
 
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
@@ -70,6 +70,7 @@ export const authAPI = {
 export const produtoAPI = {
   listarTodos: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
   listar: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
+  obterPorId: (id: number) => api.get(`/api/produtos/${id}`), // Busca o produto exato da rota de detalhe para evitar dados mockados.
   salvar: (produto: any) => api.post('/api/produtos', produto), // Centraliza chamada da criação de produto no backend.
   listarMeus: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
   obterPorUsuario: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
