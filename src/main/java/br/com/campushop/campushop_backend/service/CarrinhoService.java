@@ -1,7 +1,6 @@
 package br.com.campushop.campushop_backend.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ public class CarrinhoService {
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(int usuarioId, Produto produto, Integer quantidade) {
         // Verificar se o produto já está no carrinho
-        List<Carrinho> itens = listarPorUsuario(usuarioId);
+        List<Carrinho> itens = listarPorUsuario(idUsuario);
 
         for (Carrinho item : itens) {
             if (item.getProduto().getIdProduto().equals(produto.getIdProduto())) {
@@ -60,7 +59,7 @@ public class CarrinhoService {
         // Buscar a entidade Usuario e associá-la ao item do carrinho antes de salvar.
         // Sem essa associação, o campo id_usuario na tabela ficava nulo, causando
         // SQLIntegrityConstraintViolationException (coluna não-nula).
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado ao adicionar ao carrinho"));
         novoItem.setUsuario(usuario);
 
@@ -71,8 +70,8 @@ public class CarrinhoService {
     public void removerDoCarrinho(int carrinhoId, int usuarioId) {
         Optional<Carrinho> item = carrinhoRepository.findById(carrinhoId);
 
-        if (item.isPresent() && item.get().getUsuario().getId().equals(usuarioId)) {
-            carrinhoRepository.deleteById(carrinhoId);
+        if (item.getUsuario().getId().equals(idUsuario)) {
+            carrinhoRepository.deleteById(idCarrinho);
         } else {
             throw new RuntimeException("Item não encontrado ou não pertence ao usuário");
         }
@@ -88,7 +87,7 @@ public class CarrinhoService {
                 throw new BusinessException("Quantidade é obrigatória.");
             }
             if (novaQuantidade <= 0) {
-                carrinhoRepository.deleteById(carrinhoId);
+                carrinhoRepository.deleteById(idCarrinho);
                 return null;
             }
             if (!validarEstoque(carrinho.getProduto(), novaQuantidade)) {
@@ -121,7 +120,15 @@ public class CarrinhoService {
 
     // Valida se há estoque suficiente para o item
     public boolean validarEstoque(Produto produto, Integer quantidade) {
-        return produto.getEstoque() >= quantidade;
+        return produto != null && quantidade != null && quantidade > 0 && produto.getEstoque() >= quantidade;
+    }
+
+    private void validarQuantidadeSolicitada(Produto produto, Integer quantidade) {
+        // Centraliza a regra para impedir que o carrinho aceite quantidade acima do
+        // estoque.
+        if (!validarEstoque(produto, quantidade)) {
+            throw new RuntimeException("Quantidade solicitada excede o estoque disponível");
+        }
     }
 
 }

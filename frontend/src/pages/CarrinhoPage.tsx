@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { produtoAPI } from '@/lib/api-service'
+import { pedidoAPI, produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
-import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { cacheProduct, getCachedProduct, getCart, removeFromCart, updateCartItem, clearCart } from '@/lib/shop-storage'
 
 type ApiProduct = {
   idProduto: number
@@ -132,15 +132,35 @@ export function CarrinhoPage() {
     setCart(getCart())
   }
 
-  const finalizarPedido = () => {
-    const pedido = createOrderFromCart()
-    if (!pedido) {
+  const finalizarPedido = async () => {
+    if (!cartWithProducts.length) {
       setMensagem('Adicione produtos no carrinho antes de finalizar.')
       return
     }
-    setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
-    setCart(getCart())
-    setTimeout(() => navigate('/pedidos'), 700)
+
+    try {
+      setMensagem('')
+
+      // O backend passa a registrar o pedido real com validação de estoque e status.
+      const response = await pedidoAPI.criar({
+        itens: cartWithProducts.map((item) => ({
+          produtoId: item.productId,
+          quantidade: item.quantidade,
+        })),
+      })
+
+      const pedidoCriado = response.data
+      clearCart()
+      setCart(getCart())
+      setMensagem(`Pedido ${pedidoCriado.idPedido} criado com sucesso!`)
+      setTimeout(() => navigate('/pedidos'), 700)
+    } catch (error: any) {
+      const mensagemErro =
+        error?.response?.data?.erro ||
+        error?.response?.data?.message ||
+        'Não foi possível finalizar o pedido.'
+      setMensagem(mensagemErro)
+    }
   }
 
   return (

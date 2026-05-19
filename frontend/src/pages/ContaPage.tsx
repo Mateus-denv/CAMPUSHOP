@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
-import { produtoAPI, usuarioAPI } from "@/lib/api-service";
-import { getFavoriteProducts, getOrders } from "@/lib/shop-storage";
+import { pedidoAPI, produtoAPI, usuarioAPI, type PedidoAPI } from "@/lib/api-service";
+import { getFavoriteProducts } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -40,6 +40,7 @@ export function ContaPage() {
   const [aba, setAba] = useState("Visão Geral");
   const [produtos, setProdutos] = useState<UsuarioProduto[]>([]);
   const [favoritos, setFavoritos] = useState<FavoritoProduto[]>([]);
+  const [pedidos, setPedidos] = useState<PedidoAPI[]>([]);
   const { usuario, setUsuario } = useAuthStore();
   const [nomePerfil, setNomePerfil] = useState("");
   const [emailPerfil, setEmailPerfil] = useState("");
@@ -49,7 +50,15 @@ export function ContaPage() {
   const [mensagemConfig, setMensagemConfig] = useState("");
   const [erroConfig, setErroConfig] = useState("");
   const [excluindoConta, setExcluindoConta] = useState(false);
-  const pedidos = getOrders();
+
+  const carregarPedidos = async () => {
+    try {
+      const response = await pedidoAPI.listar();
+      setPedidos(response.data ?? []);
+    } catch (error) {
+      console.error("Erro ao carregar pedidos:", error);
+    }
+  };
 
   useEffect(() => {
     if (aba === "Meus Produtos") {
@@ -58,6 +67,10 @@ export function ContaPage() {
 
     if (aba === "Favoritos") {
       setFavoritos(getFavoriteProducts());
+    }
+
+    if (aba === "Compras" || aba === "Visão Geral") {
+      carregarPedidos();
     }
   }, [aba]);
 
@@ -149,8 +162,8 @@ export function ContaPage() {
     } catch (error: any) {
       setErroConfig(
         error?.response?.data?.message ||
-          error?.message ||
-          "Erro ao excluir conta",
+        error?.message ||
+        "Erro ao excluir conta",
       );
     } finally {
       setExcluindoConta(false);
@@ -315,14 +328,14 @@ export function ContaPage() {
                   <div className="mt-4 space-y-3">
                     {pedidos.map((pedido) => (
                       <div
-                        key={pedido.id}
+                        key={pedido.idPedido}
                         className="rounded-2xl border border-slate-200 p-4"
                       >
                         <p className="font-semibold text-slate-900">
-                          Pedido {pedido.id}
+                          Pedido #{pedido.idPedido}
                         </p>
                         <p className="text-sm text-slate-500">
-                          {pedido.itens.length} itens
+                          {pedido.status} • {pedido.itens.length} itens
                         </p>
                         <p className="mt-1 font-bold text-blue-700">
                           R$ {pedido.total.toFixed(2)}
