@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
-import { produtoAPI, usuarioAPI } from "@/lib/api-service";
-import { getFavoriteProducts, getOrders } from "@/lib/shop-storage";
+import { pedidosAPI, produtoAPI, usuarioAPI, type PedidoAPI } from "@/lib/api-service";
+import { getFavoriteProducts } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -30,16 +30,40 @@ const tabs = [
   "Visão Geral",
   "Meus Produtos",
   "Compras",
+  "Pedidos recebidos",
   "Favoritos",
   "Editar Perfil",
   "Configurações",
 ];
+
+function statusBadgeClasses(status: PedidoAPI['status']) {
+  if (status === 'em analise') {
+    return 'bg-orange-100 text-orange-700 border-orange-200';
+  }
+
+  if (status === 'aceito') {
+    return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  }
+
+  if (status === 'rejeitado') {
+    return 'bg-red-100 text-red-700 border-red-200';
+  }
+
+  if (status === 'entregue') {
+    return 'bg-blue-100 text-blue-700 border-blue-200';
+  }
+
+  return 'bg-orange-100 text-orange-700 border-orange-200';
+}
 
 export function ContaPage() {
   const navigate = useNavigate();
   const [aba, setAba] = useState("Visão Geral");
   const [produtos, setProdutos] = useState<UsuarioProduto[]>([]);
   const [favoritos, setFavoritos] = useState<FavoritoProduto[]>([]);
+  const [pedidosCompras, setPedidosCompras] = useState<PedidoAPI[]>([]);
+  const [pedidosRecebidos, setPedidosRecebidos] = useState<PedidoAPI[]>([]);
+  const [pedidoEmProcesso, setPedidoEmProcesso] = useState<number | null>(null);
   const { usuario, setUsuario } = useAuthStore();
   const [nomePerfil, setNomePerfil] = useState("");
   const [emailPerfil, setEmailPerfil] = useState("");
@@ -49,7 +73,6 @@ export function ContaPage() {
   const [mensagemConfig, setMensagemConfig] = useState("");
   const [erroConfig, setErroConfig] = useState("");
   const [excluindoConta, setExcluindoConta] = useState(false);
-  const pedidos = getOrders();
 
   useEffect(() => {
     if (aba === "Meus Produtos") {
@@ -60,6 +83,24 @@ export function ContaPage() {
       setFavoritos(getFavoriteProducts());
     }
   }, [aba]);
+
+  useEffect(() => {
+    const carregarPedidos = async () => {
+      try {
+        const [comprasResponse, recebidosResponse] = await Promise.all([
+          pedidosAPI.meus(),
+          pedidosAPI.recebidos(),
+        ]);
+
+        setPedidosCompras(comprasResponse.data ?? []);
+        setPedidosRecebidos(recebidosResponse.data ?? []);
+      } catch (error) {
+        console.error("Erro ao carregar pedidos:", error);
+      }
+    };
+
+    carregarPedidos();
+  }, [usuario]);
 
   useEffect(() => {
     setNomePerfil(usuario?.nomeCompleto || usuario?.nome || "");
@@ -73,6 +114,37 @@ export function ContaPage() {
       setProdutos(response.data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
+    }
+  };
+
+  const atualizarStatusPedido = async (pedidoId: number, novoStatus: PedidoAPI['status']) => {
+    setPedidoEmProcesso(pedidoId);
+
+    try {
+      await pedidosAPI.atualizarStatus(pedidoId, novoStatus);
+
+      const [comprasResponse, recebidosResponse] = await Promise.all([
+        pedidosAPI.meus(),
+        pedidosAPI.recebidos(),
+      ]);
+
+      setPedidosCompras(comprasResponse.data ?? []);
+      setPedidosRecebidos(recebidosResponse.data ?? []);
+
+      setMensagemConfig(
+        novoStatus === 'aceito'
+          ? 'Pedido aceito com sucesso.'
+          : 'Pedido rejeitado com sucesso.'
+      );
+      window.dispatchEvent(new Event('campushop-orders-changed'));
+
+      if (aba !== 'Pedidos recebidos') {
+        setAba('Pedidos recebidos');
+      }
+    } catch {
+      setErroConfig('Não foi possível atualizar o status do pedido.');
+    } finally {
+      setPedidoEmProcesso(null);
     }
   };
   // Salva as alterações de perfil no backend e atualiza a sessão local para manter os dados consistentes.
@@ -160,6 +232,7 @@ export function ContaPage() {
   const nome = usuario?.nomeCompleto || usuario?.nome || "Minha conta";
   const email = usuario?.email || "Email não informado";
   const ra = usuario?.ra ? `R.A ${usuario.ra}` : "R.A não informado";
+  const pedidosPendentes = pedidosRecebidos.filter((pedido) => pedido.status === 'em analise').length;
 
   return (
     <Layout>
@@ -204,7 +277,14 @@ export function ContaPage() {
                   onClick={() => setAba(item)}
                   className={`rounded-2xl px-4 py-2.5 transition ${aba === item ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
                 >
-                  {item}
+                  <span className="inline-flex items-center gap-2">
+                    {item}
+                    {item === 'Pedidos recebidos' && pedidosPendentes > 0 ? (
+                      <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-700">
+                        {pedidosPendentes}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               ))}
             </div>
@@ -269,13 +349,13 @@ export function ContaPage() {
                 <p className="mt-1 text-slate-500">
                   Acompanhe os pedidos que você realizou.
                 </p>
-                {pedidos.length === 0 ? (
+                {pedidosCompras.length === 0 ? (
                   <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-slate-500">
                     Você ainda não possui pedidos registrados.
                   </div>
                 ) : (
                   <div className="mt-4 space-y-3">
-                    {pedidos.map((pedido) => (
+                    {pedidosCompras.map((pedido) => (
                       <div
                         key={pedido.id}
                         className="rounded-2xl border border-slate-200 p-4"
@@ -284,12 +364,107 @@ export function ContaPage() {
                           Pedido {pedido.id}
                         </p>
                         <p className="text-sm text-slate-500">
-                          {pedido.itens.length} itens
+                          {pedido.itens.length} itens • {pedido.chaveAcesso}
                         </p>
                         <p className="mt-1 font-bold text-blue-700">
                           R$ {pedido.total.toFixed(2)}
                         </p>
+                        <p className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadgeClasses(pedido.status)}`}>
+                          {pedido.status}
+                        </p>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : aba === "Pedidos recebidos" ? (
+              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
+                <h3 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                  Pedidos recebidos
+                </h3>
+                <p className="mt-1 text-slate-500">
+                  Analise os pedidos abertos para liberar a negociação com o comprador.
+                </p>
+
+                {pedidosRecebidos.length === 0 ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-slate-500">
+                    Nenhum pedido recebido no momento.
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {pedidosRecebidos.map((pedido) => (
+                      <article key={pedido.id} className="rounded-2xl border border-slate-200 p-4 shadow-sm">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm text-slate-500">Pedido {pedido.id}</p>
+                            <h4 className="text-lg font-bold text-slate-900">{pedido.comprador.nome}</h4>
+                            <p className="text-sm text-slate-500">{new Date(pedido.criadoEm).toLocaleString('pt-BR')}</p>
+                          </div>
+                          <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${statusBadgeClasses(pedido.status)}`}>
+                            {pedido.status}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
+                          <div>
+                            <p className="font-semibold text-slate-900">Código</p>
+                            <p>{pedido.chaveAcesso}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Total</p>
+                            <p>R$ {pedido.total.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Itens</p>
+                            <p>{pedido.itens.length}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          {pedido.itens.map((item) => (
+                            <div key={`${pedido.id}-${item.productId}`} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
+                              <span className="font-medium text-slate-700">{item.productName}</span>
+                              <span className="text-slate-600">{item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {pedido.status === 'em analise' ? (
+                          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                            <button
+                              type="button"
+                              disabled={pedidoEmProcesso === pedido.id}
+                              onClick={() => atualizarStatusPedido(pedido.id, 'aceito')}
+                              className="rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {pedidoEmProcesso === pedido.id ? 'Atualizando...' : 'Aceitar pedido'}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={pedidoEmProcesso === pedido.id}
+                              onClick={() => atualizarStatusPedido(pedido.id, 'rejeitado')}
+                              className="rounded-2xl border border-red-200 px-4 py-3 font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Rejeitar pedido
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => navigate('/chat')}
+                              className="rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                              Abrir chat
+                            </button>
+                          </div>
+                        ) : pedido.status === 'rejeitado' && pedido.motivoRejeicao ? (
+                          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                            Pedido rejeitado automaticamente: {pedido.motivoRejeicao}.
+                          </div>
+                        ) : (
+                          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            Pedido já foi tratado. Quando a negociação ficar pronta, o chat poderá ser usado para concluir os detalhes.
+                          </div>
+                        )}
+                      </article>
                     ))}
                   </div>
                 )}

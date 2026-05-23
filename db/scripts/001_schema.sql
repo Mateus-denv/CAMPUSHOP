@@ -61,11 +61,24 @@ CREATE TABLE IF NOT EXISTS pedido (
   chave_entrega VARCHAR(8) NOT NULL UNIQUE,
   valor_pedido DECIMAL(10,2) NOT NULL,
   status_pedido ENUM('aceito', 'rejeitado', 'em analise') NOT NULL DEFAULT 'em analise',
+  motivo_rejeicao VARCHAR(255),
   data_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_pedido_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
   -- Vincula o vendedor dono do produto negociado para rastreabilidade do pedido.
   CONSTRAINT fk_pedido_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuario(id),
   CONSTRAINT chk_pedido_chave_formato CHECK (chave_entrega REGEXP '^[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}$')
+);
+
+-- Itens do pedido para registrar cada produto negociado dentro da mesma compra.
+CREATE TABLE IF NOT EXISTS pedido_item (
+  id_pedido_item INT AUTO_INCREMENT PRIMARY KEY,
+  id_pedido INT NOT NULL,
+  id_produto INT NOT NULL,
+  quantidade INT NOT NULL,
+  preco_unitario DECIMAL(10,2) NOT NULL,
+  CONSTRAINT fk_pedido_item_pedido FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE CASCADE,
+  CONSTRAINT fk_pedido_item_produto FOREIGN KEY (id_produto) REFERENCES produto(id_produto),
+  CONSTRAINT chk_pedido_item_quantidade CHECK (quantidade > 0)
 );
 
 -- Trigger para gerar chave aleatoria nao sequencial no formato L-N-L-N-L-NNN e evitar colisao.

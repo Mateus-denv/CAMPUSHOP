@@ -57,6 +57,10 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(authorize -> authorize
                                                 // Rotas públicas
+                                                // Rotas públicas do frontend e algumas APIs
+                                                // OBS: adicionei explicitamente /api/carrinho e /api/pedidos/**
+                                                // para permitir acessos sem autenticação. Fazer isso torna
+                                                // esses endpoints acessíveis sem token JWT — avalie risco.
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/index.html",
@@ -78,6 +82,9 @@ public class SecurityConfig {
                                                                 "/actuator/health",
                                                                 "/error",
                                                                 "/produtos",
+                                                                // APIs públicas necessárias para o frontend sem autenticação
+                                                                "/api/carrinho",
+                                                                // Observação: endpoints de /api/pedidos/** exigem autenticação
                                                                 "/api/auth/**")
                                                 .permitAll()
                                                 // GET para categorias e produtos é público

@@ -3,6 +3,8 @@ package br.com.campushop.campushop_backend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pedido")
@@ -36,9 +38,15 @@ public class Pedido {
     @Column(name = "status_pedido", nullable = false, length = 20)
     private String statusPedido;
 
+    @Column(name = "motivo_rejeicao", length = 255)
+    private String motivoRejeicao;
+
     // Armazena a data/hora em que o pedido foi criado.
     @Column(name = "data_pedido", nullable = false)
     private LocalDateTime dataPedido;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PedidoItem> itens = new ArrayList<>();
 
     public Integer getIdPedido() {
         return idPedido;
@@ -88,11 +96,32 @@ public class Pedido {
         this.statusPedido = statusPedido;
     }
 
+    public String getMotivoRejeicao() {
+        return motivoRejeicao;
+    }
+
+    public void setMotivoRejeicao(String motivoRejeicao) {
+        this.motivoRejeicao = motivoRejeicao;
+    }
+
     public LocalDateTime getDataPedido() {
         return dataPedido;
     }
 
     public void setDataPedido(LocalDateTime dataPedido) {
         this.dataPedido = dataPedido;
+    }
+
+    public List<PedidoItem> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<PedidoItem> itens) {
+        this.itens = itens;
+    }
+
+    public void adicionarItem(PedidoItem item) {
+        this.itens.add(item);
+        item.setPedido(this);
     }
 }

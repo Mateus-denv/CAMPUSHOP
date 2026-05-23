@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { carrinhoAPI, type CarrinhoBackendItem } from '@/lib/api-service'
-import { cacheProduct, createOrderFromCart, saveCart } from '@/lib/shop-storage'
+import { carrinhoAPI, pedidosAPI, type CarrinhoBackendItem } from '@/lib/api-service'
+import { cacheProduct, saveCart } from '@/lib/shop-storage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -39,6 +39,7 @@ export function CarrinhoPage() {
             preco: item.produto.preco,
             estoque: item.produto.estoque,
             condicao: 'Novo',
+            vendedorId: item.produto.vendedor_id,
             vendedor: resolverNomeVendedor(item.produto.nomeVendedor),
           })
         })
@@ -127,8 +128,10 @@ export function CarrinhoPage() {
 
   const confirmarpedido = async () => {
     try {
-      const pedido = createOrderFromCart()
-      if (!pedido) {
+      const response = await pedidosAPI.confirmar()
+      const pedidosCriados = response.data
+
+      if (!pedidosCriados || !pedidosCriados.length) {
         setMensagem('Adicione produtos no carrinho antes de confirmar o pedido.')
         return
       }
@@ -137,7 +140,13 @@ export function CarrinhoPage() {
       await carrinhoAPI.limpar()
       setCart([])
       saveCart([])
-      setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
+      // Mostra quais pedidos foram abertos para facilitar a conferência do usuário.
+      setMensagem(
+        pedidosCriados.length === 1
+          ? `Pedido ${pedidosCriados[0].id} criado com sucesso!`
+          : `${pedidosCriados.length} pedidos foram criados com sucesso!`
+      )
+      window.dispatchEvent(new Event('campushop-orders-changed'))
       setTimeout(() => navigate('/pedidos'), 700)
     } catch {
       setMensagem('Não foi possível confirmar o pedido agora.')

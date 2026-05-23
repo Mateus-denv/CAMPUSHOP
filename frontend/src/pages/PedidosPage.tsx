@@ -1,10 +1,58 @@
-import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { getOrders } from '@/lib/shop-storage'
-import { products } from '@/lib/mock-data'
+import { pedidosAPI, type PedidoAPI } from '@/lib/api-service'
+import { useAuthStore } from '@/store'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+
+function statusClasses(status: PedidoAPI['status']) {
+  if (status === 'em analise') {
+    return 'bg-orange-100 text-orange-700'
+  }
+
+  if (status === 'aceito') {
+    return 'bg-emerald-100 text-emerald-700'
+  }
+
+  if (status === 'rejeitado') {
+    return 'bg-red-100 text-red-700'
+  }
+
+  if (status === 'entregue') {
+    return 'bg-blue-100 text-blue-700'
+  }
+
+  return 'bg-orange-100 text-orange-700'
+}
 
 export function PedidosPage() {
-  const pedidos = getOrders()
+  const [pedidos, setPedidos] = useState<PedidoAPI[]>([])
+  const [carregando, setCarregando] = useState(true)
+  const { usuario } = useAuthStore()
+
+  useEffect(() => {
+    const carregarPedidos = async () => {
+      try {
+        setCarregando(true)
+        // O backend retorna somente os pedidos do comprador autenticado.
+        const response = await pedidosAPI.meus()
+        setPedidos(response.data ?? [])
+      } finally {
+        setCarregando(false)
+      }
+    }
+
+    carregarPedidos()
+  }, [usuario])
+
+  if (carregando) {
+    return (
+      <Layout>
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">Carregando seus pedidos...</p>
+        </section>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -37,17 +85,31 @@ export function PedidosPage() {
                   <h2 className="text-xl font-black text-slate-900">{pedido.id}</h2>
                   <p className="text-sm text-slate-500">{new Date(pedido.criadoEm).toLocaleString('pt-BR')}</p>
                 </div>
-                <span className="inline-flex w-fit rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-orange-700">
+                <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${statusClasses(pedido.status)}`}>
                   {pedido.status}
                 </span>
               </div>
 
+              <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
+                <div>
+                  <p className="font-semibold text-slate-900">Código de acesso</p>
+                  <p>{pedido.chaveAcesso}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">Vendedor</p>
+                  <p>{pedido.vendedor.nome}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">Compra</p>
+                  <p>{pedido.itens.length} item(ns)</p>
+                </div>
+              </div>
+
               <div className="mt-4 space-y-2">
                 {pedido.itens.map((item) => {
-                  const product = products.find((p) => p.id === item.productId)
                   return (
                     <div key={`${pedido.id}-${item.productId}`} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
-                      <span className="font-medium text-slate-700">{product?.nome ?? 'Produto'}</span>
+                      <span className="font-medium text-slate-700">{item.productName}</span>
                       <span className="text-slate-600">
                         {item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}
                       </span>
@@ -55,6 +117,20 @@ export function PedidosPage() {
                   )
                 })}
               </div>
+
+              {pedido.status === 'em analise' ? (
+                <p className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700">
+                  Pedido em análise. Aguarde o vendedor aceitar para seguir com a negociação.
+                </p>
+              ) : pedido.status === 'aceito' ? (
+                <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                  Pedido aceito pelo vendedor. Em breve você poderá avançar para o chat.
+                </p>
+              ) : pedido.status === 'rejeitado' && pedido.motivoRejeicao ? (
+                <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  Pedido rejeitado automaticamente: {pedido.motivoRejeicao}.
+                </p>
+              ) : null}
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                 <span className="text-sm font-semibold text-slate-600">Total</span>

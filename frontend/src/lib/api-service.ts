@@ -16,6 +16,34 @@ export type CarrinhoBackendItem = {
   produto: CarrinhoBackendProduto
 }
 
+export type PedidoItemAPI = {
+  productId: number
+  productName: string
+  quantidade: number
+  precoUnitario: number
+  vendedorId?: number
+  vendedorNome: string
+}
+
+export type PedidoPessoaAPI = {
+  id?: number
+  nome: string
+  email?: string
+  perfil?: string
+}
+
+export type PedidoAPI = {
+  id: number
+  chaveAcesso: string
+  status: 'em analise' | 'aceito' | 'rejeitado' | 'entregue'
+  motivoRejeicao?: string | null
+  criadoEm: string
+  comprador: PedidoPessoaAPI
+  vendedor: PedidoPessoaAPI
+  itens: PedidoItemAPI[]
+  total: number
+}
+
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
 }
@@ -33,6 +61,17 @@ export const carrinhoAPI = {
     }),
   remover: (itemId: number) => api.delete(`/api/carrinho/${itemId}`),
   limpar: () => api.delete('/api/carrinho'),
+}
+
+export const pedidosAPI = {
+  confirmar: () => api.post<PedidoAPI[]>('/api/pedidos/confirmar'),
+  meus: () => api.get<PedidoAPI[]>('/api/pedidos/meus'),
+  recebidos: () => api.get<PedidoAPI[]>('/api/pedidos/recebidos'),
+  pendentesContagem: () => api.get<{ total: number }>('/api/pedidos/recebidos/pendentes/contagem'),
+  atualizarStatus: (id: number, status: PedidoAPI['status']) =>
+    api.put<PedidoAPI>(`/api/pedidos/${id}/status`, {
+      status,
+    }),
 }
 
 export const authAPI = {
