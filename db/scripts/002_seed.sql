@@ -62,9 +62,11 @@ VALUES
   )
 ON DUPLICATE KEY UPDATE email = VALUES(email);
 
-INSERT INTO produto (nome_produto, descricao, estoque, preco, status, id_categoria)
-SELECT 'Livro de Lógica de Programação', 'Livro para disciplinas iniciais', 3, 150.00, 'ATIVO', c.id_categoria
+-- Usa o usuario vendedor seedado para garantir dono do produto no cadastro inicial.
+INSERT INTO produto (nome_produto, descricao, estoque, preco, status, id_usuario, id_categoria)
+SELECT 'Livro de Lógica de Programação', 'Livro para disciplinas iniciais', 3, 150.00, 'ATIVO', u.id, c.id_categoria
 FROM categoria c
+JOIN usuario u ON u.email = 'joao@campushop.com'
 WHERE c.nome_categoria = 'Livros'
 AND NOT EXISTS (
   SELECT 1

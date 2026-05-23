@@ -33,6 +33,56 @@ CREATE TABLE IF NOT EXISTS produto (
   status VARCHAR(20),
   dimensoes VARCHAR(255),
   peso DOUBLE,
+  -- Guarda o dono (vendedor) do produto para permitir derivar id_vendedor no pedido.
+  id_usuario INT NOT NULL,
   id_categoria INT,
+  CONSTRAINT fk_produto_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
   CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
+
+-- Tabela de pedidos com chave de entrega unica e status controlado do fluxo de aprovacao.
+CREATE TABLE IF NOT EXISTS pedido (
+  id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  id_vendedor INT NOT NULL,
+  chave_entrega VARCHAR(8) NOT NULL UNIQUE,
+  valor_pedido DECIMAL(10,2) NOT NULL,
+  status_pedido ENUM('aceito', 'rejeitado', 'em analise') NOT NULL DEFAULT 'em analise',
+  data_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_pedido_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+  -- Vincula o vendedor dono do produto negociado para rastreabilidade do pedido.
+  CONSTRAINT fk_pedido_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuario(id),
+  CONSTRAINT chk_pedido_chave_formato CHECK (chave_entrega REGEXP '^[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}$')
+);
+
+-- Trigger para gerar chave aleatoria nao sequencial no formato L-N-L-N-L-NNN e evitar colisao.
+DELIMITER //
+-- Remove trigger anterior para permitir reexecucao do schema sem erro.
+DROP TRIGGER IF EXISTS trg_pedido_gerar_chave_entrega//
+CREATE TRIGGER trg_pedido_gerar_chave_entrega
+BEFORE INSERT ON pedido
+FOR EACH ROW
+BEGIN
+  DECLARE v_chave VARCHAR(8);
+  DECLARE v_existe INT DEFAULT 1;
+
+  -- Se a aplicacao nao enviar chave, o banco gera automaticamente uma chave valida.
+  IF NEW.chave_entrega IS NULL OR NEW.chave_entrega = '' THEN
+    WHILE v_existe > 0 DO
+      SET v_chave = CONCAT(
+        CHAR(65 + FLOOR(RAND() * 26)),
+        FLOOR(RAND() * 10),
+        CHAR(65 + FLOOR(RAND() * 26)),
+        FLOOR(RAND() * 10),
+        CHAR(65 + FLOOR(RAND() * 26)),
+        LPAD(FLOOR(RAND() * 1000), 3, '0')
+      );
+      SELECT COUNT(*) INTO v_existe FROM pedido WHERE chave_entrega = v_chave;
+    END WHILE;
+    SET NEW.chave_entrega = v_chave;
+  ELSE
+    -- Se a aplicacao enviar chave manualmente, normaliza para maiusculo antes da validacao.
+    SET NEW.chave_entrega = UPPER(NEW.chave_entrega);
+  END IF;
+END//
+DELIMITER ;
