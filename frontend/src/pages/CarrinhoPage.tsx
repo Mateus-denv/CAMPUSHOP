@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
 import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 type ApiProduct = {
   idProduto: number
@@ -132,10 +132,10 @@ export function CarrinhoPage() {
     setCart(getCart())
   }
 
-  const finalizarPedido = () => {
+  const confirmarpedido = () => {
     const pedido = createOrderFromCart()
     if (!pedido) {
-      setMensagem('Adicione produtos no carrinho antes de finalizar.')
+      setMensagem('Adicione produtos no carrinho antes de confirmar o pedido.')
       return
     }
     setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
@@ -203,7 +203,7 @@ export function CarrinhoPage() {
                 <strong className="text-lg text-slate-900">Total</strong>
                 <strong className="text-xl text-blue-700">R$ {total.toFixed(2)}</strong>
               </div>
-              <button onClick={finalizarPedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Finalizar pedido</button>
+              <button onClick={confirmarpedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Confirmar pedido</button>
               <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Conversar com vendedor</button>
               <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Salvar para depois</button>
             </div>
