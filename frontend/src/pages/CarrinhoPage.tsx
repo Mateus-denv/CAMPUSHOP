@@ -1,9 +1,9 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { produtoAPI } from '@/lib/api-service'
 import { products } from '@/lib/mock-data'
 import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 
 type ApiProduct = {
   idProduto: number
