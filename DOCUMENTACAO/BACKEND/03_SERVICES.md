@@ -483,6 +483,217 @@ public UserDetails loadUserByUsername(String email) throws UsernameNotFoundExcep
 
 ---
 
+## � PedidoService
+
+**Arquivo:** `PedidoService.java`
+
+**Descrição:** Gerencia operações com pedidos de compra.
+
+### Dependências Injetadas
+
+```java
+@Service
+public class PedidoService {
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private PedidoItemRepository pedidoItemRepository;
+
+    @Autowired
+    private CarrinhoService carrinhoService;
+
+    @Autowired
+    private ProdutoService produtoService;
+}
+```
+
+### Métodos Principais
+
+#### 1. **confirmarPedidosDoCarrinho(Usuario comprador, Carrinho carrinho)**
+
+Confirma os itens do carrinho como pedidos finalizados.
+
+```java
+public List<Pedido> confirmarPedidosDoCarrinho(Usuario comprador, Carrinho carrinho) {
+    // Validações
+    if (carrinho.getItens().isEmpty()) {
+        throw new IllegalArgumentException("Carrinho vazio");
+    }
+
+    List<Pedido> pedidosCriados = new ArrayList<>();
+
+    // Agrupa itens por vendedor
+    Map<Usuario, List<CarrinhoItem>> itensPorVendedor = carrinho.getItens().stream()
+        .collect(Collectors.groupingBy(item -> item.getProduto().getUsuario()));
+
+    // Cria um pedido para cada vendedor
+    for (Map.Entry<Usuario, List<CarrinhoItem>> entry : itensPorVendedor.entrySet()) {
+        Usuario vendedor = entry.getKey();
+        List<CarrinhoItem> itens = entry.getValue();
+
+        // Cria pedido
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(comprador);
+        pedido.setVendedor(vendedor);
+        pedido.setStatusPedido("em analise");
+        pedido.setDataPedido(LocalDateTime.now());
+
+        // Calcula valor total
+        Double valorTotal = itens.stream()
+            .mapToDouble(item -> item.getProduto().getPreco() * item.getQuantidade())
+            .sum();
+        pedido.setValorPedido(valorTotal);
+
+        // Salva pedido
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        // Cria itens do pedido
+        for (CarrinhoItem carrinhoItem : itens) {
+            PedidoItem pedidoItem = new PedidoItem();
+            pedidoItem.setPedido(pedidoSalvo);
+            pedidoItem.setProduto(carrinhoItem.getProduto());
+            pedidoItem.setQuantidade(carrinhoItem.getQuantidade());
+            pedidoItem.setPrecoUnitario(carrinhoItem.getProduto().getPreco());
+
+            pedidoItemRepository.save(pedidoItem);
+        }
+
+        pedidosCriados.add(pedidoSalvo);
+    }
+
+    // Limpa carrinho
+    carrinhoService.limpar(carrinho);
+
+    return pedidosCriados;
+}
+```
+
+---
+
+#### 2. **listarPedidosDoComprador(Usuario comprador, String status)**
+
+Lista pedidos do usuário como comprador.
+
+```java
+public List<Pedido> listarPedidosDoComprador(Usuario comprador, String status) {
+    if (status != null && !status.isEmpty()) {
+        return pedidoRepository.findByUsuarioAndStatusPedido(comprador, status);
+    }
+    return pedidoRepository.findByUsuario(comprador);
+}
+```
+
+---
+
+#### 3. **listarPedidosDoVendedor(Usuario vendedor, String status)**
+
+Lista pedidos que o usuário recebeu como vendedor.
+
+```java
+public List<Pedido> listarPedidosDoVendedor(Usuario vendedor, String status) {
+    if (status != null && !status.isEmpty()) {
+        return pedidoRepository.findByVendedorAndStatusPedido(vendedor, status);
+    }
+    return pedidoRepository.findByVendedor(vendedor);
+}
+```
+
+---
+
+#### 4. **atualizarStatusPedido(Integer idPedido, String novoStatus, Usuario vendedor)**
+
+Atualiza o status de um pedido (vendedor aceitando/rejeitando).
+
+```java
+public Pedido atualizarStatusPedido(Integer idPedido, String novoStatus, Usuario vendedor) {
+    Optional<Pedido> pedidoOpt = pedidoRepository.findById(idPedido);
+
+    if (pedidoOpt.isEmpty()) {
+        throw new IllegalArgumentException("Pedido não encontrado");
+    }
+
+    Pedido pedido = pedidoOpt.get();
+
+    // Verifica se vendedor é o dono do pedido
+    if (!pedido.getVendedor().getId().equals(vendedor.getId())) {
+        throw new IllegalAccessException("Você não é o vendedor deste pedido");
+    }
+
+    // Valida novo status
+    List<String> statusValidos = Arrays.asList("em analise", "aceito", "rejeitado", "invalido");
+    if (!statusValidos.contains(novoStatus)) {
+        throw new IllegalArgumentException("Status inválido: " + novoStatus);
+    }
+
+    // Atualiza status
+    pedido.setStatusPedido(novoStatus);
+    pedido.setDataAtualizacao(LocalDateTime.now());
+
+    // Se aceito, gera chave de entrega
+    if ("aceito".equals(novoStatus)) {
+        String chave = gerarChaveEntrega();
+        pedido.setChaveEntrega(chave);
+    }
+
+    return pedidoRepository.save(pedido);
+}
+```
+
+---
+
+#### 5. **buscarPorId(Integer id)**
+
+Busca um pedido pelo ID.
+
+```java
+public Optional<Pedido> buscarPorId(Integer id) {
+    return pedidoRepository.findById(id);
+}
+```
+
+---
+
+#### 6. **gerarChaveEntrega()**
+
+Gera uma chave aleatória no formato: `[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}`
+
+Exemplo: `A1B2C345`
+
+```java
+private String gerarChaveEntrega() {
+    String pattern = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    String numeros = "0123456789";
+    Random random = new Random();
+
+    StringBuilder chave = new StringBuilder();
+
+    // Primeiro caractere: letra
+    chave.append(pattern.charAt(random.nextInt(pattern.length())));
+
+    // Segundo caractere: número
+    chave.append(numeros.charAt(random.nextInt(numeros.length())));
+
+    // Terceiro caractere: letra
+    chave.append(pattern.charAt(random.nextInt(pattern.length())));
+
+    // Quarto caractere: número
+    chave.append(numeros.charAt(random.nextInt(numeros.length())));
+
+    // Quinto caractere: letra
+    chave.append(pattern.charAt(random.nextInt(pattern.length())));
+
+    // Últimos 3 caracteres: números
+    for (int i = 0; i < 3; i++) {
+        chave.append(numeros.charAt(random.nextInt(numeros.length())));
+    }
+
+    return chave.toString();
+}
+```
+
+---
+
 ## 📊 Relação entre Services
 
 ```
@@ -500,6 +711,12 @@ CarrinhoController
     ↓
     ├─> CarrinhoService (adicionar, remover, calcular)
     └─> ProdutoService (buscar estoque)
+
+PedidoController
+    ↓
+    ├─> PedidoService (confirmar, atualizar status)
+    ├─> CarrinhoService (limpar carrinho)
+    └─> ProdutoService (validar estoque)
 ```
 
 ---
