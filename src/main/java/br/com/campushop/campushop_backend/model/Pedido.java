@@ -33,9 +33,15 @@ public class Pedido {
     @Column(name = "data_aprovacao")
     private LocalDateTime dataAprovacao;
 
+    @Column(name = "prazo_entrega_limite")
+    private LocalDateTime prazoEntregaLimite;
+
     // Registra quando a entrega foi concluída com sucesso.
     @Column(name = "data_entrega")
     private LocalDateTime dataEntrega;
+
+    @Column(name = "data_invalidacao")
+    private LocalDateTime dataInvalidacao;
 
     // Usa BigDecimal para preservar precisao de valores monetarios (DECIMAL no MySQL).
     @Column(name = "valor_pedido", nullable = false, precision = 10, scale = 2)
@@ -96,12 +102,28 @@ public class Pedido {
         this.dataAprovacao = dataAprovacao;
     }
 
+    public LocalDateTime getPrazoEntregaLimite() {
+        return prazoEntregaLimite;
+    }
+
+    public void setPrazoEntregaLimite(LocalDateTime prazoEntregaLimite) {
+        this.prazoEntregaLimite = prazoEntregaLimite;
+    }
+
     public LocalDateTime getDataEntrega() {
         return dataEntrega;
     }
 
     public void setDataEntrega(LocalDateTime dataEntrega) {
         this.dataEntrega = dataEntrega;
+    }
+
+    public LocalDateTime getDataInvalidacao() {
+        return dataInvalidacao;
+    }
+
+    public void setDataInvalidacao(LocalDateTime dataInvalidacao) {
+        this.dataInvalidacao = dataInvalidacao;
     }
 
     public BigDecimal getValorPedido() {

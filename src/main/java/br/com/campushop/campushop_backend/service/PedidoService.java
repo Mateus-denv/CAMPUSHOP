@@ -28,7 +28,10 @@ public class PedidoService {
     private static final String STATUS_ACEITO = "aceito";
     private static final String STATUS_REJEITADO = "rejeitado";
     private static final String STATUS_ENTREGUE = "entregue";
+    private static final String STATUS_INVALIDO = "invalido";
     private static final String MOTIVO_FORA_ESTOQUE = "Fora de estoque";
+    private static final String MOTIVO_PRAZO_EXPIRADO = "Prazo de entrega expirado";
+    private static final int PRAZO_ENTREGA_DIAS = 15;
 
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
@@ -65,7 +68,9 @@ public class PedidoService {
             // A chave só é criada depois que o vendedor aprova o pedido.
             pedido.setChaveEntrega(null);
             pedido.setDataAprovacao(null);
+            pedido.setPrazoEntregaLimite(null);
             pedido.setDataEntrega(null);
+            pedido.setDataInvalidacao(null);
             pedido.setStatusPedido(STATUS_EM_ANALISE);
             pedido.setDataPedido(LocalDateTime.now());
             pedido.setValorPedido(grupo.total());
@@ -85,23 +90,32 @@ public class PedidoService {
         return pedidosCriados.stream().map(PedidoResponse::fromEntity).toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PedidoResponse> listarPedidosDoComprador(String emailUsuario) {
-        return pedidoRepository.findByCompradorEmail(emailUsuario).stream()
+        List<Pedido> pedidos = pedidoRepository.findByCompradorEmail(emailUsuario);
+        atualizarPedidosVencidos(pedidos);
+
+        return pedidos.stream()
                 .map(PedidoResponse::fromEntity)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PedidoResponse> listarPedidosDoVendedor(String emailUsuario) {
-        return pedidoRepository.findByVendedorEmail(emailUsuario).stream()
+        List<Pedido> pedidos = pedidoRepository.findByVendedorEmail(emailUsuario);
+        atualizarPedidosVencidos(pedidos);
+
+        return pedidos.stream()
                 .map(PedidoResponse::fromEntity)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public long contarPedidosPendentesDoVendedor(String emailUsuario) {
-        return pedidoRepository.findByVendedorEmail(emailUsuario).stream()
+        List<Pedido> pedidos = pedidoRepository.findByVendedorEmail(emailUsuario);
+        atualizarPedidosVencidos(pedidos);
+
+        return pedidos.stream()
                 .filter(pedido -> STATUS_EM_ANALISE.equalsIgnoreCase(pedido.getStatusPedido()))
                 .count();
     }
@@ -127,7 +141,9 @@ public class PedidoService {
             pedido.setMotivoRejeicao(null);
             pedido.setChaveEntrega(null);
             pedido.setDataAprovacao(null);
+            pedido.setPrazoEntregaLimite(null);
             pedido.setDataEntrega(null);
+            pedido.setDataInvalidacao(null);
             pedidoRepository.save(pedido);
         } else if (STATUS_ENTREGUE.equals(novoStatus)) {
             entregarPedido(pedido, request.codigoAcesso());
@@ -145,8 +161,11 @@ public class PedidoService {
         pedido.setMotivoRejeicao(null);
         // A geração acontece no momento da aprovação para que o comprador receba um código válido.
         pedido.setChaveEntrega(gerarChaveEntrega());
-        pedido.setDataAprovacao(LocalDateTime.now());
+        LocalDateTime agora = LocalDateTime.now();
+        pedido.setDataAprovacao(agora);
+        pedido.setPrazoEntregaLimite(agora.plusDays(PRAZO_ENTREGA_DIAS));
         pedido.setDataEntrega(null);
+        pedido.setDataInvalidacao(null);
 
         for (PedidoItem item : pedido.getItens()) {
             Produto produto = item.getProduto();
@@ -177,6 +196,11 @@ public class PedidoService {
             throw new RuntimeException("O pedido precisa ser aprovado antes da entrega");
         }
 
+        invalidarSeVencido(pedido, LocalDateTime.now());
+        if (STATUS_INVALIDO.equalsIgnoreCase(pedido.getStatusPedido())) {
+            throw new RuntimeException("O prazo de entrega expirou e a compra foi invalidada");
+        }
+
         String codigoNormalizado = normalizarCodigoEntrega(codigoInformado);
         if (!pedido.getChaveEntrega().equalsIgnoreCase(codigoNormalizado)) {
             throw new RuntimeException("Código de acesso inválido");
@@ -186,6 +210,30 @@ public class PedidoService {
         pedido.setStatusPedido(STATUS_ENTREGUE);
         pedido.setMotivoRejeicao(null);
         pedido.setDataEntrega(LocalDateTime.now());
+        pedidoRepository.save(pedido);
+    }
+
+    private void atualizarPedidosVencidos(List<Pedido> pedidos) {
+        LocalDateTime agora = LocalDateTime.now();
+
+        for (Pedido pedido : pedidos) {
+            invalidarSeVencido(pedido, agora);
+        }
+    }
+
+    private void invalidarSeVencido(Pedido pedido, LocalDateTime agora) {
+        if (!STATUS_ACEITO.equalsIgnoreCase(pedido.getStatusPedido())) {
+            return;
+        }
+
+        LocalDateTime prazoEntregaLimite = pedido.getPrazoEntregaLimite();
+        if (prazoEntregaLimite == null || !agora.isAfter(prazoEntregaLimite)) {
+            return;
+        }
+
+        pedido.setStatusPedido(STATUS_INVALIDO);
+        pedido.setMotivoRejeicao(MOTIVO_PRAZO_EXPIRADO);
+        pedido.setDataInvalidacao(agora);
         pedidoRepository.save(pedido);
     }
 
@@ -263,6 +311,7 @@ public class PedidoService {
             case STATUS_REJEITADO -> STATUS_REJEITADO;
             case STATUS_ENTREGUE -> STATUS_ENTREGUE;
             case STATUS_EM_ANALISE -> STATUS_EM_ANALISE;
+            case STATUS_INVALIDO -> STATUS_INVALIDO;
             default -> throw new RuntimeException("Status de pedido inválido");
         };
     }

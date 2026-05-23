@@ -45,7 +45,7 @@ function statusBadgeClasses(status: PedidoAPI['status']) {
     return 'bg-emerald-100 text-emerald-700 border-emerald-200';
   }
 
-  if (status === 'rejeitado') {
+  if (status === 'rejeitado' || status === 'invalido') {
     return 'bg-red-100 text-red-700 border-red-200';
   }
 
@@ -54,6 +54,31 @@ function statusBadgeClasses(status: PedidoAPI['status']) {
   }
 
   return 'bg-orange-100 text-orange-700 border-orange-200';
+}
+
+function montarAvisoPrazo(pedido: PedidoAPI) {
+  if (pedido.status !== 'aceito' || !pedido.prazoEntregaLimite) {
+    return null;
+  }
+
+  const prazo = new Date(pedido.prazoEntregaLimite);
+  const agora = new Date();
+  const diferencaMs = prazo.getTime() - agora.getTime();
+  const diasRestantes = Math.ceil(diferencaMs / (1000 * 60 * 60 * 24));
+
+  if (diferencaMs < 0) {
+    return `Prazo expirado em ${prazo.toLocaleDateString('pt-BR')}. Pedido será invalidado.`;
+  }
+
+  if (diasRestantes <= 1) {
+    return `Entrega vence hoje (${prazo.toLocaleDateString('pt-BR')}).`;
+  }
+
+  if (diasRestantes <= 2) {
+    return `Faltam ${diasRestantes} dias para o prazo de entrega (${prazo.toLocaleDateString('pt-BR')}).`;
+  }
+
+  return null;
 }
 
 export function ContaPage() {
@@ -385,10 +410,21 @@ export function ContaPage() {
                         <p className="mt-1 font-bold text-blue-700">
                           R$ {pedido.total.toFixed(2)}
                         </p>
-                        <div className="mt-3 grid gap-2 text-sm text-slate-500 sm:grid-cols-2">
+                        <div className="mt-3 grid gap-2 text-sm text-slate-500 sm:grid-cols-3">
                           <p>Aprovado em: {pedido.aprovadoEm ? new Date(pedido.aprovadoEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
-                          <p>Entregue em: {pedido.entregueEm ? new Date(pedido.entregueEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
+                          <p>Prazo limite: {pedido.prazoEntregaLimite ? new Date(pedido.prazoEntregaLimite).toLocaleDateString('pt-BR') : 'Aguardando'}</p>
+                          <p>Entregue em: {pedido.entregueEm ? new Date(pedido.entregueEm).toLocaleDateString('pt-BR') : 'Aguardando'}</p>
                         </div>
+                        {pedido.status === 'aceito' && montarAvisoPrazo(pedido) ? (
+                          <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                            {montarAvisoPrazo(pedido)}
+                          </div>
+                        ) : null}
+                        {pedido.status === 'invalido' ? (
+                          <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                            Pedido invalidado: {pedido.motivoRejeicao || 'Prazo de entrega expirado'}.
+                          </div>
+                        ) : null}
                         <p className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadgeClasses(pedido.status)}`}>
                           {pedido.status}
                         </p>
@@ -425,10 +461,14 @@ export function ContaPage() {
                           </span>
                         </div>
 
-                        <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-2">
+                        <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
                           <div>
                             <p className="font-semibold text-slate-900">Aprovado em</p>
                             <p>{pedido.aprovadoEm ? new Date(pedido.aprovadoEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Prazo limite</p>
+                            <p>{pedido.prazoEntregaLimite ? new Date(pedido.prazoEntregaLimite).toLocaleString('pt-BR') : 'Aguardando'}</p>
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">Entregue em</p>
@@ -455,6 +495,16 @@ export function ContaPage() {
                             </div>
                           ))}
                         </div>
+                        {pedido.status === 'aceito' && montarAvisoPrazo(pedido) ? (
+                          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                            {montarAvisoPrazo(pedido)}
+                          </div>
+                        ) : null}
+                        {pedido.status === 'invalido' ? (
+                          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                            Pedido invalidado: {pedido.motivoRejeicao || 'Prazo de entrega expirado'}.
+                          </div>
+                        ) : null}
 
                         {pedido.status === 'em analise' ? (
                           <div className="mt-4 flex flex-col gap-3 sm:flex-row">

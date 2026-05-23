@@ -35,11 +35,13 @@ export type PedidoPessoaAPI = {
 export type PedidoAPI = {
   id: number
   chaveAcesso: string | null
-  status: 'em analise' | 'aceito' | 'rejeitado' | 'entregue'
+  status: 'em analise' | 'aceito' | 'rejeitado' | 'entregue' | 'invalido'
   motivoRejeicao?: string | null
   criadoEm: string
   aprovadoEm?: string | null
+  prazoEntregaLimite?: string | null
   entregueEm?: string | null
+  invalidadoEm?: string | null
   comprador: PedidoPessoaAPI
   vendedor: PedidoPessoaAPI
   itens: PedidoItemAPI[]

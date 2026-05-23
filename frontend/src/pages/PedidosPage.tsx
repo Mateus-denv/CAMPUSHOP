@@ -13,7 +13,7 @@ function statusClasses(status: PedidoAPI['status']) {
     return 'bg-emerald-100 text-emerald-700'
   }
 
-  if (status === 'rejeitado') {
+  if (status === 'rejeitado' || status === 'invalido') {
     return 'bg-red-100 text-red-700'
   }
 
@@ -26,6 +26,31 @@ function statusClasses(status: PedidoAPI['status']) {
 
 function formatarData(data?: string | null) {
   return data ? new Date(data).toLocaleString('pt-BR') : 'Aguardando confirmação'
+}
+
+function montarAvisoPrazo(pedido: PedidoAPI) {
+  if (pedido.status !== 'aceito' || !pedido.prazoEntregaLimite) {
+    return null
+  }
+
+  const prazo = new Date(pedido.prazoEntregaLimite)
+  const agora = new Date()
+  const diferencaMs = prazo.getTime() - agora.getTime()
+  const diasRestantes = Math.ceil(diferencaMs / (1000 * 60 * 60 * 24))
+
+  if (diferencaMs < 0) {
+    return `Prazo expirado em ${prazo.toLocaleDateString('pt-BR')}. Pedido será invalidado.`
+  }
+
+  if (diasRestantes <= 1) {
+    return `Entrega vence hoje (${prazo.toLocaleDateString('pt-BR')}).`;
+  }
+
+  if (diasRestantes <= 2) {
+    return `Faltam ${diasRestantes} dias para o prazo de entrega (${prazo.toLocaleDateString('pt-BR')}).`;
+  }
+
+  return null
 }
 
 export function PedidosPage() {
@@ -109,10 +134,14 @@ export function PedidosPage() {
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-3 rounded-[1.25rem] border border-slate-200 p-4 text-sm text-slate-600 sm:grid-cols-2">
+              <div className="mt-3 grid gap-3 rounded-[1.25rem] border border-slate-200 p-4 text-sm text-slate-600 sm:grid-cols-3">
                 <div>
                   <p className="font-semibold text-slate-900">Aprovado em</p>
                   <p>{formatarData(pedido.aprovadoEm)}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">Prazo limite</p>
+                  <p>{formatarData(pedido.prazoEntregaLimite)}</p>
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900">Entregue em</p>
@@ -138,8 +167,19 @@ export function PedidosPage() {
                   Pedido em análise. Aguarde o vendedor aceitar para seguir com a negociação.
                 </p>
               ) : pedido.status === 'aceito' ? (
-                <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                  Pedido aceito pelo vendedor. O código de acesso já está disponível para a entrega.
+                <>
+                  <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    Pedido aceito pelo vendedor. O código de acesso já está disponível para a entrega.
+                  </p>
+                  {montarAvisoPrazo(pedido) ? (
+                    <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                      {montarAvisoPrazo(pedido)}
+                    </p>
+                  ) : null}
+                </>
+              ) : pedido.status === 'invalido' ? (
+                <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  Pedido invalidado: {pedido.motivoRejeicao || 'Prazo de entrega expirado'}.
                 </p>
               ) : pedido.status === 'entregue' ? (
                 <p className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">

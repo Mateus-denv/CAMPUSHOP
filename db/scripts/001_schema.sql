@@ -60,10 +60,12 @@ CREATE TABLE IF NOT EXISTS pedido (
   id_vendedor INT NOT NULL,
   chave_entrega VARCHAR(8) UNIQUE,
   valor_pedido DECIMAL(10,2) NOT NULL,
-  status_pedido ENUM('aceito', 'rejeitado', 'em analise') NOT NULL DEFAULT 'em analise',
+  status_pedido ENUM('aceito', 'rejeitado', 'em analise', 'invalido') NOT NULL DEFAULT 'em analise',
   motivo_rejeicao VARCHAR(255),
   data_aprovacao DATETIME,
+  prazo_entrega_limite DATETIME,
   data_entrega DATETIME,
+  data_invalidacao DATETIME,
   data_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_pedido_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
   -- Vincula o vendedor dono do produto negociado para rastreabilidade do pedido.
