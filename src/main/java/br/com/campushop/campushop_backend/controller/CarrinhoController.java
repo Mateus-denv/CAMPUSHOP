@@ -44,7 +44,7 @@ public class CarrinhoController {
 
     // 2. Adicionar item ao carrinho
     @PostMapping("/adicionar")
-    public ResponseEntity<Carrinho> adicionarAoCarrinho(
+    public ResponseEntity<?> adicionarAoCarrinho(
             @RequestBody Map<String, Integer> request,
             Authentication authentication) {
         
@@ -63,13 +63,18 @@ public class CarrinhoController {
             return ResponseEntity.badRequest().build();
         }
         
-        Carrinho item = carrinhoService.adicionarAoCarrinho(
-            usuarioOpt.get().getId(),
-            produtoOpt.get(),
-            quantidade
-        );
-        
-        return ResponseEntity.ok(item);
+        try {
+            Carrinho item = carrinhoService.adicionarAoCarrinho(
+                usuarioOpt.get().getId(),
+                produtoOpt.get(),
+                quantidade
+            );
+
+            return ResponseEntity.ok(item);
+        } catch (IllegalArgumentException e) {
+            // Erros de quantidade/estoque viram resposta 400 para o frontend exibir o aviso certo.
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
     }
 
     // 3. Remover item do carrinho
@@ -91,7 +96,7 @@ public class CarrinhoController {
 
     // 4. Atualizar quantidade de item
     @PutMapping("/{id}")
-    public ResponseEntity<Carrinho> atualizarQuantidade(
+    public ResponseEntity<?> atualizarQuantidade(
             @PathVariable Integer id,
             @RequestBody Map<String, Integer> request,
             Authentication authentication) {
@@ -104,9 +109,14 @@ public class CarrinhoController {
         }
         
         Integer quantidade = request.get("quantidade");
-        Carrinho item = carrinhoService.atualizarQuantidade(id, quantidade, usuarioOpt.get().getId());
-        
-        return ResponseEntity.ok(item);
+
+        try {
+            Carrinho item = carrinhoService.atualizarQuantidade(id, quantidade, usuarioOpt.get().getId());
+            return ResponseEntity.ok(item);
+        } catch (IllegalArgumentException e) {
+            // A atualização inválida precisa voltar como 400 para bloquear o ajuste na UI.
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
     }
 
     // 5. Limpar carrinho inteiro

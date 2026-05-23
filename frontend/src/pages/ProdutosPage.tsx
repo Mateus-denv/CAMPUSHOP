@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { produtoAPI } from '@/lib/api-service'
-import { addToCartWithSnapshot, countCartItems, isFavorite, toggleFavorite } from '@/lib/shop-storage'
+import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
+import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -21,11 +21,12 @@ export function ProdutosPage() {
   const [erro, setErro] = useState('')
   const [itensNoCarrinho, setItensNoCarrinho] = useState(0)
   const [notificacao, setNotificacao] = useState('')
+  const [notificacaoErro, setNotificacaoErro] = useState(false)
   const [favoritos, setFavoritos] = useState<number[]>([])
 
   useEffect(() => {
     carregarProdutos()
-    setItensNoCarrinho(countCartItems())
+    carregarCarrinho()
   }, [])
 
   useEffect(() => {
@@ -60,29 +61,47 @@ export function ProdutosPage() {
     }
   }
 
-  const adicionarAoCarrinho = (produtoId: number) => {
+  const carregarCarrinho = async () => {
+    try {
+      const response = await carrinhoAPI.obter()
+      const itens = response.data ?? []
+
+      // Sincroniza o cache local para não quebrar o resumo do pedido que ainda usa o storage.
+      saveCart(
+        itens.map((item) => ({
+          productId: item.produto.idProduto,
+          quantidade: item.quantidade,
+        }))
+      )
+      setItensNoCarrinho(itens.reduce((total, item) => total + item.quantidade, 0))
+    } catch {
+      setItensNoCarrinho(countCartItems())
+    }
+  }
+
+  const mostrarNotificacao = (texto: string, erro = false) => {
+    setNotificacao(texto)
+    setNotificacaoErro(erro)
+    setTimeout(() => {
+      setNotificacao('')
+      setNotificacaoErro(false)
+    }, 2500)
+  }
+
+  const adicionarAoCarrinho = async (produtoId: number) => {
     const produto = produtos.find((item) => item.idProduto === produtoId)
     if (!produto) {
       return
     }
 
-    addToCartWithSnapshot(
-      {
-        id: produto.idProduto,
-        nome: produto.nomeProduto || 'Produto sem nome',
-        descricao: produto.descricao || '',
-        preco: produto.preco,
-        estoque: produto.estoque,
-        condicao: 'Novo',
-        // Salva apenas o nome real do vendedor para não persistir texto genérico.
-        vendedor: produto.vendedorNome?.trim() || '',
-      },
-      1
-    )
-
-    setItensNoCarrinho(countCartItems())
-    setNotificacao(`"${produto.nomeProduto || 'Produto'}" foi adicionado ao carrinho.`)
-    setTimeout(() => setNotificacao(''), 2500)
+    try {
+      await carrinhoAPI.adicionar(produtoId, 1)
+      await carregarCarrinho()
+      mostrarNotificacao(`"${produto.nomeProduto || 'Produto'}" foi adicionado ao carrinho.`)
+    } catch (error: any) {
+      const mensagemErro = error?.response?.data?.erro || 'Não foi possível adicionar o produto ao carrinho.'
+      mostrarNotificacao(mensagemErro, true)
+    }
   }
 
   const favoritarProduto = (produtoId: number) => {
@@ -126,7 +145,7 @@ export function ProdutosPage() {
     <Layout>
       <div>
         {notificacao && (
-          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <div className={`mb-4 rounded-2xl px-4 py-3 text-sm font-semibold ${notificacaoErro ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
             {notificacao}
           </div>
         )}
@@ -171,9 +190,14 @@ export function ProdutosPage() {
                 <span className="text-2xl font-bold text-blue-700">
                   R$ {produto.preco.toFixed(2)}
                 </span>
-                <span className="text-sm text-slate-500">
-                  {produto.estoque} em estoque
-                </span>
+                <div className="text-right text-sm text-slate-500">
+                  <span>{produto.estoque} em estoque</span>
+                  {produto.estoque > 0 && produto.estoque <= 10 && (
+                    <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                      {produto.estoque === 1 ? 'Alerta: há somente essa unidade' : `Alerta: há somente ${produto.estoque} restantes`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <button

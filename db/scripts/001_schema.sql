@@ -40,6 +40,19 @@ CREATE TABLE IF NOT EXISTS produto (
   CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
+-- Mantém a reserva do carrinho persistida por usuário e produto, com quantidade válida.
+CREATE TABLE IF NOT EXISTS carrinho (
+  id_carrinho INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  id_produto INT NOT NULL,
+  quantidade INT NOT NULL,
+  data_adicao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_carrinho_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+  CONSTRAINT fk_carrinho_produto FOREIGN KEY (id_produto) REFERENCES produto(id_produto) ON DELETE CASCADE,
+  CONSTRAINT uk_carrinho_usuario_produto UNIQUE (id_usuario, id_produto),
+  CONSTRAINT chk_carrinho_quantidade CHECK (quantidade > 0)
+);
+
 -- Tabela de pedidos com chave de entrega unica e status controlado do fluxo de aprovacao.
 CREATE TABLE IF NOT EXISTS pedido (
   id_pedido INT AUTO_INCREMENT PRIMARY KEY,

@@ -27,15 +27,39 @@ public class CarrinhoService {
         return carrinhoRepository.findByUsuarioId(usuarioId);
     }
 
+    private void validarQuantidadeSolicitada(Integer quantidade) {
+        // A quantidade precisa ser positiva para evitar itens vazios no carrinho.
+        if (quantidade == null || quantidade <= 0) {
+            throw new IllegalArgumentException("A quantidade deve ser maior que zero");
+        }
+    }
+
+    private void validarEstoqueDisponivel(Produto produto, Integer quantidadeSolicitada) {
+        validarQuantidadeSolicitada(quantidadeSolicitada);
+
+        // Impede reservar mais do que o saldo atual do produto.
+        if (produto.getEstoque() == null || produto.getEstoque() < quantidadeSolicitada) {
+            throw new IllegalArgumentException("Quantidade solicitada ultrapassa o estoque disponível");
+        }
+    }
+
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
+        validarEstoqueDisponivel(produto, quantidade);
+
         // Verificar se o produto já está no carrinho
         List<Carrinho> itens = listarPorUsuario(usuarioId);
 
         for (Carrinho item : itens) {
             if (item.getProduto().getIdProduto().equals(produto.getIdProduto())) {
-                // Produto já existe, atualizar quantidade
-                item.setQuantidade(item.getQuantidade() + quantidade);
+                int quantidadeAtualizada = item.getQuantidade() + quantidade;
+
+                // A soma precisa continuar dentro do estoque para não criar reserva inválida.
+                if (quantidadeAtualizada > produto.getEstoque()) {
+                    throw new IllegalArgumentException("Quantidade solicitada ultrapassa o estoque disponível");
+                }
+
+                item.setQuantidade(quantidadeAtualizada);
                 return carrinhoRepository.save(item);
             }
         }
@@ -71,11 +95,9 @@ public class CarrinhoService {
         Optional<Carrinho> item = carrinhoRepository.findById(carrinhoId);
 
         if (item.isPresent() && item.get().getUsuario().getId().equals(usuarioId)) {
-            if (novaQuantidade <= 0) {
-                carrinhoRepository.deleteById(carrinhoId);
-                return null;
-            }
+            validarEstoqueDisponivel(item.get().getProduto(), novaQuantidade);
 
+            // Mantém o item salvo, mas impede zerar ou extrapolar o estoque.
             item.get().setQuantidade(novaQuantidade);
             return carrinhoRepository.save(item.get());
         } else {
@@ -102,7 +124,7 @@ public class CarrinhoService {
 
     // Valida se há estoque suficiente para o item  
     public boolean validarEstoque(Produto produto, Integer quantidade) {
-        return produto.getEstoque() >= quantidade;
+        return quantidade != null && quantidade > 0 && produto.getEstoque() >= quantidade;
     }
     
 }
