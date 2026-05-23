@@ -117,11 +117,11 @@ export function ContaPage() {
     }
   };
 
-  const atualizarStatusPedido = async (pedidoId: number, novoStatus: PedidoAPI['status']) => {
+  const atualizarStatusPedido = async (pedidoId: number, novoStatus: PedidoAPI['status'], codigoAcesso?: string) => {
     setPedidoEmProcesso(pedidoId);
 
     try {
-      await pedidosAPI.atualizarStatus(pedidoId, novoStatus);
+      await pedidosAPI.atualizarStatus(pedidoId, novoStatus, codigoAcesso);
 
       const [comprasResponse, recebidosResponse] = await Promise.all([
         pedidosAPI.meus(),
@@ -134,6 +134,8 @@ export function ContaPage() {
       setMensagemConfig(
         novoStatus === 'aceito'
           ? 'Pedido aceito com sucesso.'
+          : novoStatus === 'entregue'
+            ? 'Entrega confirmada com sucesso.'
           : 'Pedido rejeitado com sucesso.'
       );
       window.dispatchEvent(new Event('campushop-orders-changed'));
@@ -141,11 +143,25 @@ export function ContaPage() {
       if (aba !== 'Pedidos recebidos') {
         setAba('Pedidos recebidos');
       }
-    } catch {
-      setErroConfig('Não foi possível atualizar o status do pedido.');
+    } catch (error: any) {
+      setErroConfig(
+        error?.response?.data?.message || 'Não foi possível atualizar o status do pedido.'
+      );
     } finally {
       setPedidoEmProcesso(null);
     }
+  };
+
+  const solicitarEntregaPedido = async (pedidoId: number) => {
+    // O código é pedido só no momento da entrega para validar a compra aprovada.
+    const codigoAcesso = window.prompt('Informe o código de acesso do comprador para confirmar a entrega:');
+
+    if (!codigoAcesso || !codigoAcesso.trim()) {
+      setErroConfig('O código de acesso é obrigatório para concluir a entrega.');
+      return;
+    }
+
+    await atualizarStatusPedido(pedidoId, 'entregue', codigoAcesso.trim());
   };
   // Salva as alterações de perfil no backend e atualiza a sessão local para manter os dados consistentes.
   const salvarPerfil = async (event: React.FormEvent) => {
@@ -364,11 +380,15 @@ export function ContaPage() {
                           Pedido {pedido.id}
                         </p>
                         <p className="text-sm text-slate-500">
-                          {pedido.itens.length} itens • {pedido.chaveAcesso}
+                          {pedido.itens.length} itens • {pedido.chaveAcesso || 'Aguardando aprovação'}
                         </p>
                         <p className="mt-1 font-bold text-blue-700">
                           R$ {pedido.total.toFixed(2)}
                         </p>
+                        <div className="mt-3 grid gap-2 text-sm text-slate-500 sm:grid-cols-2">
+                          <p>Aprovado em: {pedido.aprovadoEm ? new Date(pedido.aprovadoEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
+                          <p>Entregue em: {pedido.entregueEm ? new Date(pedido.entregueEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
+                        </div>
                         <p className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadgeClasses(pedido.status)}`}>
                           {pedido.status}
                         </p>
@@ -405,11 +425,18 @@ export function ContaPage() {
                           </span>
                         </div>
 
-                        <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
+                        <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-2">
                           <div>
-                            <p className="font-semibold text-slate-900">Código</p>
-                            <p>{pedido.chaveAcesso}</p>
+                            <p className="font-semibold text-slate-900">Aprovado em</p>
+                            <p>{pedido.aprovadoEm ? new Date(pedido.aprovadoEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
                           </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Entregue em</p>
+                            <p>{pedido.entregueEm ? new Date(pedido.entregueEm).toLocaleString('pt-BR') : 'Aguardando'}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 rounded-[1.25rem] border border-slate-200 p-4 text-sm text-slate-600 sm:grid-cols-2">
                           <div>
                             <p className="font-semibold text-slate-900">Total</p>
                             <p>R$ {pedido.total.toFixed(2)}</p>
@@ -454,6 +481,28 @@ export function ContaPage() {
                             >
                               Abrir chat
                             </button>
+                          </div>
+                        ) : pedido.status === 'aceito' ? (
+                          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                            <button
+                              type="button"
+                              disabled={pedidoEmProcesso === pedido.id}
+                              onClick={() => solicitarEntregaPedido(pedido.id)}
+                              className="rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {pedidoEmProcesso === pedido.id ? 'Confirmando...' : 'Entregar produto'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => navigate('/chat')}
+                              className="rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                              Abrir chat
+                            </button>
+                          </div>
+                        ) : pedido.status === 'entregue' ? (
+                          <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                            Entrega confirmada com o código informado. O histórico ficou salvo para métricas.
                           </div>
                         ) : pedido.status === 'rejeitado' && pedido.motivoRejeicao ? (
                           <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

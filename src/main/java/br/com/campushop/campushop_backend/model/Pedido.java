@@ -25,9 +25,17 @@ public class Pedido {
     @JoinColumn(name = "id_vendedor", nullable = false)
     private Usuario vendedor;
 
-    // Mantem a chave de entrega persistida no formato definido no banco.
-    @Column(name = "chave_entrega", nullable = false, unique = true, length = 8)
+    // A chave nasce só depois da aprovação do vendedor e fica disponível para a entrega.
+    @Column(name = "chave_entrega", unique = true, length = 8)
     private String chaveEntrega;
+
+    // Marca quando o vendedor aprovou o pedido e gerou a chave de acesso.
+    @Column(name = "data_aprovacao")
+    private LocalDateTime dataAprovacao;
+
+    // Registra quando a entrega foi concluída com sucesso.
+    @Column(name = "data_entrega")
+    private LocalDateTime dataEntrega;
 
     // Usa BigDecimal para preservar precisao de valores monetarios (DECIMAL no MySQL).
     @Column(name = "valor_pedido", nullable = false, precision = 10, scale = 2)
@@ -78,6 +86,22 @@ public class Pedido {
 
     public void setChaveEntrega(String chaveEntrega) {
         this.chaveEntrega = chaveEntrega;
+    }
+
+    public LocalDateTime getDataAprovacao() {
+        return dataAprovacao;
+    }
+
+    public void setDataAprovacao(LocalDateTime dataAprovacao) {
+        this.dataAprovacao = dataAprovacao;
+    }
+
+    public LocalDateTime getDataEntrega() {
+        return dataEntrega;
+    }
+
+    public void setDataEntrega(LocalDateTime dataEntrega) {
+        this.dataEntrega = dataEntrega;
     }
 
     public BigDecimal getValorPedido() {

@@ -12,6 +12,8 @@ public record PedidoResponse(
         String status,
         String motivoRejeicao,
         String criadoEm,
+        String aprovadoEm,
+        String entregueEm,
         PedidoPartyResponse comprador,
         PedidoPartyResponse vendedor,
         List<PedidoItemResponse> itens,
@@ -24,6 +26,8 @@ public record PedidoResponse(
                 pedido.getStatusPedido(),
                 pedido.getMotivoRejeicao(),
                 pedido.getDataPedido() != null ? pedido.getDataPedido().toString() : null,
+                pedido.getDataAprovacao() != null ? pedido.getDataAprovacao().toString() : null,
+                pedido.getDataEntrega() != null ? pedido.getDataEntrega().toString() : null,
                 new PedidoPartyResponse(
                         pedido.getUsuario() != null ? pedido.getUsuario().getId() : null,
                         pedido.getUsuario() != null ? pedido.getUsuario().getNomeCompleto() : null,

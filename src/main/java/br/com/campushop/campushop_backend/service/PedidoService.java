@@ -62,7 +62,10 @@ public class PedidoService {
             Pedido pedido = new Pedido();
             pedido.setUsuario(comprador);
             pedido.setVendedor(grupo.vendedor());
-            pedido.setChaveEntrega(gerarChaveEntrega());
+            // A chave só é criada depois que o vendedor aprova o pedido.
+            pedido.setChaveEntrega(null);
+            pedido.setDataAprovacao(null);
+            pedido.setDataEntrega(null);
             pedido.setStatusPedido(STATUS_EM_ANALISE);
             pedido.setDataPedido(LocalDateTime.now());
             pedido.setValorPedido(grupo.total());
@@ -122,11 +125,12 @@ public class PedidoService {
         } else if (STATUS_REJEITADO.equals(novoStatus)) {
             pedido.setStatusPedido(STATUS_REJEITADO);
             pedido.setMotivoRejeicao(null);
+            pedido.setChaveEntrega(null);
+            pedido.setDataAprovacao(null);
+            pedido.setDataEntrega(null);
             pedidoRepository.save(pedido);
         } else if (STATUS_ENTREGUE.equals(novoStatus)) {
-            pedido.setStatusPedido(STATUS_ENTREGUE);
-            pedido.setMotivoRejeicao(null);
-            pedidoRepository.save(pedido);
+            entregarPedido(pedido, request.codigoAcesso());
         } else {
             throw new RuntimeException("Status de pedido inválido");
         }
@@ -139,6 +143,10 @@ public class PedidoService {
     private void aceitarPedido(Pedido pedido) {
         pedido.setStatusPedido(STATUS_ACEITO);
         pedido.setMotivoRejeicao(null);
+        // A geração acontece no momento da aprovação para que o comprador receba um código válido.
+        pedido.setChaveEntrega(gerarChaveEntrega());
+        pedido.setDataAprovacao(LocalDateTime.now());
+        pedido.setDataEntrega(null);
 
         for (PedidoItem item : pedido.getItens()) {
             Produto produto = item.getProduto();
@@ -161,6 +169,23 @@ public class PedidoService {
             }
         }
 
+        pedidoRepository.save(pedido);
+    }
+
+    private void entregarPedido(Pedido pedido, String codigoInformado) {
+        if (pedido.getChaveEntrega() == null) {
+            throw new RuntimeException("O pedido precisa ser aprovado antes da entrega");
+        }
+
+        String codigoNormalizado = normalizarCodigoEntrega(codigoInformado);
+        if (!pedido.getChaveEntrega().equalsIgnoreCase(codigoNormalizado)) {
+            throw new RuntimeException("Código de acesso inválido");
+        }
+
+        // A entrega só é concluída quando o código apresentado bate com o código gerado na aprovação.
+        pedido.setStatusPedido(STATUS_ENTREGUE);
+        pedido.setMotivoRejeicao(null);
+        pedido.setDataEntrega(LocalDateTime.now());
         pedidoRepository.save(pedido);
     }
 
@@ -218,6 +243,14 @@ public class PedidoService {
         } while (pedidoRepository.existsByChaveEntrega(chave));
 
         return chave;
+    }
+
+    private String normalizarCodigoEntrega(String codigoInformado) {
+        if (codigoInformado == null || codigoInformado.trim().isEmpty()) {
+            throw new RuntimeException("Código de acesso é obrigatório para concluir a entrega");
+        }
+
+        return codigoInformado.trim().toUpperCase();
     }
 
     private String normalizeStatus(String status) {

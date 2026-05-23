@@ -34,10 +34,12 @@ export type PedidoPessoaAPI = {
 
 export type PedidoAPI = {
   id: number
-  chaveAcesso: string
+  chaveAcesso: string | null
   status: 'em analise' | 'aceito' | 'rejeitado' | 'entregue'
   motivoRejeicao?: string | null
   criadoEm: string
+  aprovadoEm?: string | null
+  entregueEm?: string | null
   comprador: PedidoPessoaAPI
   vendedor: PedidoPessoaAPI
   itens: PedidoItemAPI[]
@@ -68,9 +70,10 @@ export const pedidosAPI = {
   meus: () => api.get<PedidoAPI[]>('/api/pedidos/meus'),
   recebidos: () => api.get<PedidoAPI[]>('/api/pedidos/recebidos'),
   pendentesContagem: () => api.get<{ total: number }>('/api/pedidos/recebidos/pendentes/contagem'),
-  atualizarStatus: (id: number, status: PedidoAPI['status']) =>
+  atualizarStatus: (id: number, status: PedidoAPI['status'], codigoAcesso?: string) =>
     api.put<PedidoAPI>(`/api/pedidos/${id}/status`, {
       status,
+      codigoAcesso,
     }),
 }
 

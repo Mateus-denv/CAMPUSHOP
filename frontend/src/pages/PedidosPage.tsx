@@ -24,6 +24,10 @@ function statusClasses(status: PedidoAPI['status']) {
   return 'bg-orange-100 text-orange-700'
 }
 
+function formatarData(data?: string | null) {
+  return data ? new Date(data).toLocaleString('pt-BR') : 'Aguardando confirmação'
+}
+
 export function PedidosPage() {
   const [pedidos, setPedidos] = useState<PedidoAPI[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -93,7 +97,7 @@ export function PedidosPage() {
               <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
                 <div>
                   <p className="font-semibold text-slate-900">Código de acesso</p>
-                  <p>{pedido.chaveAcesso}</p>
+                  <p>{pedido.chaveAcesso || 'Aguardando aprovação do vendedor'}</p>
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900">Vendedor</p>
@@ -102,6 +106,17 @@ export function PedidosPage() {
                 <div>
                   <p className="font-semibold text-slate-900">Compra</p>
                   <p>{pedido.itens.length} item(ns)</p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-3 rounded-[1.25rem] border border-slate-200 p-4 text-sm text-slate-600 sm:grid-cols-2">
+                <div>
+                  <p className="font-semibold text-slate-900">Aprovado em</p>
+                  <p>{formatarData(pedido.aprovadoEm)}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">Entregue em</p>
+                  <p>{formatarData(pedido.entregueEm)}</p>
                 </div>
               </div>
 
@@ -124,7 +139,11 @@ export function PedidosPage() {
                 </p>
               ) : pedido.status === 'aceito' ? (
                 <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                  Pedido aceito pelo vendedor. Em breve você poderá avançar para o chat.
+                  Pedido aceito pelo vendedor. O código de acesso já está disponível para a entrega.
+                </p>
+              ) : pedido.status === 'entregue' ? (
+                <p className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                  Pedido entregue e confirmado. As datas ficaram registradas para consulta futura.
                 </p>
               ) : pedido.status === 'rejeitado' && pedido.motivoRejeicao ? (
                 <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

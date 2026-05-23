@@ -4,5 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public record UpdatePedidoStatusRequest(
         @NotBlank(message = "Status do pedido é obrigatório")
-        String status) {
+        String status,
+        String codigoAcesso) {
 }
