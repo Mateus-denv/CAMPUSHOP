@@ -1,12 +1,14 @@
 import { useSyncExternalStore } from 'react'
 
 export type Usuario = {
+  id?: number
   nome?: string
   nomeCompleto?: string
   email?: string
   ra?: string
   token?: string
   perfil?: string
+  role?: string
 }
 
 export type Produto = {

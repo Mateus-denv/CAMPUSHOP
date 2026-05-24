@@ -4,7 +4,10 @@ SELECT 'usuario' AS tabela, COUNT(*) AS total FROM usuario
 UNION ALL
 SELECT 'categoria' AS tabela, COUNT(*) AS total FROM categoria
 UNION ALL
-SELECT 'produto' AS tabela, COUNT(*) AS total FROM produto;
+SELECT 'produto' AS tabela, COUNT(*) AS total FROM produto
+UNION ALL
+-- Inclui validacao basica da nova tabela de pedidos.
+SELECT 'pedido' AS tabela, COUNT(*) AS total FROM pedido;
 
 SELECT 'usuarios_duplicados_email' AS validacao, COUNT(*) AS total
 FROM (

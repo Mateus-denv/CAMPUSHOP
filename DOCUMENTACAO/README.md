@@ -2,7 +2,7 @@
 
 **Documentação completa do projeto CampusShop** - Um e-commerce full-stack para comunidade acadêmica.
 
-Criado em: Abril 2026 | Versão: 1.0 | Status: ✅ Completo
+Atualizado em: Maio 2026 | Versão: 2.0 | Status: ✅ Implementação ~80% completa
 
 ## 📋 Índice Rápido
 

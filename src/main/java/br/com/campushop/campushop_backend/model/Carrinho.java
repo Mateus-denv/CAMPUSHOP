@@ -23,7 +23,7 @@ public class Carrinho {
     @Column(nullable = false)
     private Integer quantidade;
 
-    @Column(name = "data_adicaio")
+    @Column(name = "data_adicao")
     private LocalDateTime dataAdicao;
 
     public Carrinho() {
@@ -34,6 +34,14 @@ public class Carrinho {
         this.produto = produto;
         this.quantidade = quantidade;
         this.dataAdicao = LocalDateTime.now();
+    }
+
+    @PrePersist
+    private void prepararPersistencia() {
+        // Garante a data de inclusão mesmo quando o item é criado via construtor padrão.
+        if (this.dataAdicao == null) {
+            this.dataAdicao = LocalDateTime.now();
+        }
     }
 
     // Getters e Setters

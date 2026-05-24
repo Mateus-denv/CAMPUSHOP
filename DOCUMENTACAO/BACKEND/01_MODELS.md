@@ -360,6 +360,181 @@ Pode ser atualizado ou deletado
 
 ---
 
+## 📋 Model: Pedido
+
+**Arquivo:** `Pedido.java`
+
+**Descrição:** Representa um pedido de compra realizado por um usuário.
+
+### Atributos Principais
+
+| Atributo | Tipo | Restrições | Descrição |
+|----------|------|-----------|-----------|
+| `idPedido` | Integer | PK, Auto-increment | Identificador único do pedido |
+| `usuario` | Usuario | FK, NOT NULL | Comprador do pedido |
+| `vendedor` | Usuario | FK, NOT NULL | Vendedor (pode ser diferente por item) |
+| `chaveEntrega` | String | UNIQUE | Chave de acesso ao pedido (formato: `[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}`) |
+| `statusPedido` | String | Enum | Status: `em analise`, `aceito`, `rejeitado`, `invalido` |
+| `valorPedido` | Double | NOT NULL | Valor total do pedido |
+| `dataPedido` | LocalDateTime | NOT NULL | Data/hora de criação |
+| `dataAtualizacao` | LocalDateTime | - | Última modificação |
+
+### Relacionamentos
+
+- **Muitos para 1 com Usuario (comprador):**
+  ```java
+  @ManyToOne
+  @JoinColumn(name = "id_usuario")
+  private Usuario usuario;
+  ```
+
+- **Muitos para 1 com Usuario (vendedor):**
+  ```java
+  @ManyToOne
+  @JoinColumn(name = "id_vendedor")
+  private Usuario vendedor;
+  ```
+
+- **1 para Muitos com PedidoItem:**
+  ```java
+  @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+  private List<PedidoItem> itens;
+  ```
+
+### Status do Pedido
+
+- **`em analise`** - Pedido criado, aguardando resposta do vendedor
+- **`aceito`** - Vendedor aceitou o pedido, gera chaveEntrega
+- **`rejeitado`** - Vendedor rejeitou o pedido
+- **`invalido`** - Pedido inválido (erro de processamento)
+
+### Métodos Importantes
+
+```java
+getIdPedido()                  // ID do pedido
+getUsuario()                   // Comprador
+getVendedor()                  // Vendedor
+getChaveEntrega()              // Chave de acesso
+getStatusPedido()              // Status atual
+getValorPedido()               // Total
+getItens()                     // Items do pedido
+calcularValorTotal()           // Soma items
+atualizarStatus(String novo)   // Muda status
+gerarChaveEntrega()            // Gera chave automática
+```
+
+### Exemplo de Uso
+
+```java
+// Criar pedido a partir do carrinho
+Pedido pedido = new Pedido();
+pedido.setUsuario(comprador);
+pedido.setVendedor(vendedor);
+pedido.setStatusPedido("em analise");
+pedido.setDataPedido(LocalDateTime.now());
+pedido.setValorPedido(carrinho.calcularTotal());
+
+// Copiar items do carrinho para pedido
+for (CarrinhoItem item : carrinho.getItens()) {
+    PedidoItem pedidoItem = new PedidoItem();
+    pedidoItem.setPedido(pedido);
+    pedidoItem.setProduto(item.getProduto());
+    pedidoItem.setQuantidade(item.getQuantidade());
+    pedidoItem.setPrecoUnitario(item.getProduto().getPreco());
+    pedido.getItens().add(pedidoItem);
+}
+
+pedidoRepository.save(pedido);
+```
+
+---
+
+## 🛍️ Model: PedidoItem
+
+**Arquivo:** `PedidoItem.java`
+
+**Descrição:** Representa um item (produto) dentro de um pedido.
+
+### Atributos Principais
+
+| Atributo | Tipo | Restrições | Descrição |
+|----------|------|-----------|-----------|
+| `idPedidoItem` | Integer | PK, Auto-increment | Identificador único |
+| `pedido` | Pedido | FK, NOT NULL | Pedido ao qual pertence |
+| `produto` | Produto | FK, NOT NULL | Produto sendo vendido |
+| `quantidade` | Integer | NOT NULL, > 0 | Quantidade comprada |
+| `precoUnitario` | Double | NOT NULL | Preço na época da compra |
+
+### Relacionamentos
+
+- **Muitos para 1 com Pedido:**
+  ```java
+  @ManyToOne
+  @JoinColumn(name = "id_pedido")
+  private Pedido pedido;
+  ```
+
+- **Muitos para 1 com Produto:**
+  ```java
+  @ManyToOne
+  @JoinColumn(name = "id_produto")
+  private Produto produto;
+  ```
+
+### Cálculos
+
+```java
+// Subtotal do item
+getSubtotal() {
+    return precoUnitario * quantidade;
+}
+```
+
+### Exemplo de Uso
+
+```java
+// Adicionar item ao pedido
+PedidoItem item = new PedidoItem();
+item.setPedido(pedido);
+item.setProduto(produto);
+item.setQuantidade(2);
+item.setPrecoUnitario(99.90);
+
+pedidoItemRepository.save(item);
+```
+
+---
+
+## 📊 Diagrama Completo de Relacionamentos
+
+```
+┌──────────────┐
+│   Usuario    │
+└──────────────┘
+      │ 1
+      ├─────────────── (M) Produto
+      ├─────────────── (1) Carrinho
+      │                      │ 1
+      │                      └─── (M) CarrinhoItem
+      │                               │ M
+      │                               └─── Produto (muitos)
+      │
+      └─ Como Comprador ── (M) Pedido
+      └─ Como Vendedor  ── (M) Pedido (relacionamento separado)
+                                 │ 1
+                                 └─── (M) PedidoItem
+                                         │ M
+                                         └─── Produto (muitos)
+
+┌──────────────┐
+│  Categoria   │
+└──────────────┘
+      │ 1
+      └─────────────── (M) Produto
+```
+
+---
+
 ## 🎯 Próximos Passos
 
 - Veja [02_CONTROLLERS.md](./02_CONTROLLERS.md) para entender como esses models são usados

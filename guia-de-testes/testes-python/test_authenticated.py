@@ -5,11 +5,13 @@ Script de testes com autenticação - CampusShop
 Testa rotas autenticadas
 """
 
+import os
 import requests
 import json
 from datetime import datetime
+import random
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = os.getenv("CAMPUSHOP_API_URL", "http://localhost:8080")
 
 class Colors:
     GREEN = '\033[92m'
@@ -33,19 +35,53 @@ def print_error(msg):
 def print_info(msg):
     print(f"{Colors.YELLOW}ℹ {msg}{Colors.RESET}")
 
+def generate_unique_email():
+    return f"usuario{int(datetime.now().timestamp())}@campushop.com"
+
+
+def generate_unique_ra():
+    return ''.join(str(random.randint(0, 9)) for _ in range(9))
+
+
+def register_test_user(email, senha):
+    dados = {
+        "nomeCompleto": "Teste Automático",
+        "email": email,
+        "ra": generate_unique_ra(),
+        "senha": senha,
+        "confirmarSenha": senha,
+        "instituicao": "Universidade Teste",
+        "cidade": "Salvador",
+        "perfil": "aluno",
+        "cpfCnpj": "11144477735",
+        "dataNascimento": "1999-06-15",
+        "saldoVendas": 0.0
+    }
+    return requests.post(f"{BASE_URL}/api/auth/register", json=dados)
+
+
 def test_with_user():
-    """Testa com um usuário existente"""
+    """Testa com um usuário existente ou cadastrado dinamicamente"""
     
     print_section("TESTES COM AUTENTICAÇÃO")
     
-    # Dados de login para usuário existente
-    login_data = {
-        "email": "joana@mail.com",
-        "senha": "senha123"
-    }
+    email = generate_unique_email()
+    senha = "Senha@123"
+    login_data = {"email": email, "senha": senha}
     
-    print("1. Fazendo login com usuário existente...")
+    print("1. Fazendo login com usuário de teste...")
     response = requests.post(f"{BASE_URL}/api/auth/login", json=login_data)
+    
+    if response.status_code != 200:
+        print_info(f"Login falhou ({response.status_code}), tentando registrar usuário de teste...")
+        reg_response = register_test_user(email, senha)
+        if reg_response.status_code in [200, 201]:
+            print_success(f"Usuário registrado com sucesso: {email}")
+            response = requests.post(f"{BASE_URL}/api/auth/login", json=login_data)
+        else:
+            print_error(f"Falha ao registrar usuário: Status {reg_response.status_code}")
+            print_info(f"Resposta: {reg_response.text}")
+            return None
     
     if response.status_code != 200:
         print_error(f"Falha no login: Status {response.status_code}")
@@ -152,11 +188,13 @@ def test_with_user():
     
     # Teste: Limpar carrinho
     print("\n9. Limpando carrinho...")
-    response = requests.delete(f"{BASE_URL}/api/carrinho/limpar", headers=headers)
+    response = requests.delete(f"{BASE_URL}/api/carrinho", headers=headers)
     if response.status_code in [200, 204]:
         print_success(f"Carrinho limpo com sucesso")
+    elif response.status_code == 404:
+        print_info("Carrinho não encontrado ou já vazio")
     else:
-        print_info(f"Carrinho já estava vazio ou não foi necessário limpar")
+        print_info(f"Carrinho não foi limpo (Status: {response.status_code})")
     
     print_section("TESTES COMPLETADOS")
 

@@ -1,9 +1,10 @@
-import { ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/store'
+import { pedidosAPI } from '@/lib/api-service'
 import { clearAuth } from '@/lib/auth-listener'
-import { LogOut, User } from 'lucide-react'
 import { countCartItems } from '@/lib/shop-storage'
+import { useAuthStore } from '@/store'
+import { LogOut, User } from 'lucide-react'
+import { ReactNode, useEffect, useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Logo } from './Logo'
 
 type LayoutProps = {
@@ -24,6 +25,23 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate()
   const { usuario, setUsuario } = useAuthStore()
   const carrinhoCount = countCartItems()
+  const [pedidosPendentes, setPedidosPendentes] = useState(0)
+
+  useEffect(() => {
+    const carregarPendentes = async () => {
+      try {
+        const response = await pedidosAPI.pendentesContagem()
+        setPedidosPendentes(response.data?.total ?? 0)
+      } catch {
+        setPedidosPendentes(0)
+      }
+    }
+
+    carregarPendentes()
+    window.addEventListener('campushop-orders-changed', carregarPendentes)
+
+    return () => window.removeEventListener('campushop-orders-changed', carregarPendentes)
+  }, [usuario])
 
   const handleLogout = () => {
     setUsuario(null)
@@ -67,6 +85,11 @@ export function Layout({ children }: LayoutProps) {
                 <div className="hidden items-center gap-3 rounded-full bg-slate-100 px-4 py-2 sm:flex">
                   <User className="h-4 w-4 text-slate-600" />
                   <span className="text-sm font-semibold text-slate-700">{usuario.nome}</span>
+                  {pedidosPendentes > 0 ? (
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">
+                      {pedidosPendentes} novos
+                    </span>
+                  ) : null}
                 </div>
                 <button
                   onClick={handleLogout}
@@ -103,7 +126,14 @@ export function Layout({ children }: LayoutProps) {
                 ].join(' ')
               }
             >
-              {item.label}
+              <span className="inline-flex items-center gap-2">
+                {item.label}
+                {item.to === '/conta' && pedidosPendentes > 0 ? (
+                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">
+                    {pedidosPendentes}
+                  </span>
+                ) : null}
+              </span>
             </NavLink>
           ))}
         </nav>

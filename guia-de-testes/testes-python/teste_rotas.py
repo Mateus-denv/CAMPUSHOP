@@ -1,11 +1,46 @@
 #!/usr/bin/env python3
 """Script para testar todas as rotas da API CampusShop"""
 
+import os
+import random
 import requests
 import json
 from datetime import datetime
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = os.getenv("CAMPUSHOP_API_URL", "http://localhost:8080")
+
+
+def generate_unique_email():
+    return f"usuario{int(datetime.now().timestamp())}@example.com"
+
+
+def generate_unique_ra():
+    return ''.join(str(random.randint(0, 9)) for _ in range(9))
+
+
+def register_test_user(email, senha):
+    payload = {
+        "nomeCompleto": "Teste Rotas",
+        "email": email,
+        "ra": generate_unique_ra(),
+        "senha": senha,
+        "confirmarSenha": senha,
+        "instituicao": "Universidade Teste",
+        "cidade": "Salvador",
+        "perfil": "aluno",
+        "cpfCnpj": "11144477735",
+        "dataNascimento": "1999-06-15",
+        "saldoVendas": 0.0
+    }
+    return requests.post(f"{BASE_URL}/api/auth/register", json=payload, timeout=5)
+
+
+def print_success(msg):
+    print(f"✓ {msg}")
+
+
+def print_info(msg):
+    print(f"ℹ {msg}")
 
 print("\n" + "="*50)
 print("TESTE DE ROTAS - CAMPUSHOP API")
@@ -39,9 +74,11 @@ except Exception as e:
 
 # 3. Testar LOGIN
 print("[3] POST /api/auth/login")
+email = generate_unique_email()
+senha = "Senha@123"
 login_data = {
-    "email": "usuario@example.com",
-    "senha": "123456"
+    "email": email,
+    "senha": senha
 }
 
 try:
@@ -50,6 +87,20 @@ try:
         json=login_data,
         timeout=5
     )
+    if response.status_code != 200:
+        print_info(f"Login falhou ({response.status_code}), tentando registrar usuário: {email}")
+        reg_response = register_test_user(email, senha)
+        if reg_response.status_code in [200, 201]:
+            print_success(f"Usuário registrado: {email}")
+            response = requests.post(
+                f"{BASE_URL}/api/auth/login",
+                json=login_data,
+                timeout=5
+            )
+        else:
+            print_error(f"Falha ao registrar usuário: Status {reg_response.status_code}")
+            print_info(f"Resposta: {reg_response.text}")
+
     print(f"✓ Status: {response.status_code}")
     
     if response.status_code == 200:

@@ -590,6 +590,234 @@ Retorna uma categoria específica.
 
 ---
 
+## 📋 PedidoController
+
+**Arquivo:** `PedidoController.java`
+
+**Rota Base:** `/api/pedidos`
+
+**Descrição:** Gerencia pedidos de compra e histórico de transações.
+
+### Métodos
+
+#### 1. **POST /api/pedidos/confirmar**
+
+Confirma os itens do carrinho como um novo pedido.
+
+**Entrada (JSON):**
+
+```json
+{
+  "vendedor_id": 2
+}
+```
+
+**Validações:**
+
+- Usuário deve estar autenticado
+- Carrinho não pode estar vazio
+- Todos os produtos devem ter estoque
+- Cada item do carrinho vira um pedido separado
+
+**Retorno (Sucesso - 201 Created):**
+
+```json
+{
+  "pedidos": [
+    {
+      "idPedido": 50,
+      "usuario": {
+        "id": 1,
+        "nomeCompleto": "João Comprador"
+      },
+      "vendedor": {
+        "id": 2,
+        "nomeCliente": "Loja ABC"
+      },
+      "statusPedido": "em analise",
+      "valorPedido": 5000.00,
+      "dataPedido": "2026-05-23T14:30:00",
+      "itens": [
+        {
+          "idPedidoItem": 100,
+          "produto": {
+            "idProduto": 1,
+            "nomeProduto": "Notebook"
+          },
+          "quantidade": 1,
+          "precoUnitario": 5000.00
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Lógica Interna:**
+
+1. Busca carrinho do usuário autenticado
+2. Se carrinho está vazio, retorna erro
+3. Para cada item do carrinho, cria um Pedido com o vendedor correspondente
+4. Valida estoque de cada produto
+5. Copia CarrinhoItems para PedidoItems
+6. Limpa o carrinho
+7. Retorna lista de pedidos criados
+
+---
+
+#### 2. **GET /api/pedidos/meus**
+
+Retorna todos os pedidos do usuário (como comprador).
+
+**Query Parameters:**
+
+```
+?status=em analise&pagina=0&tamanho=10
+```
+
+**Retorno (Sucesso - 200 OK):**
+
+```json
+{
+  "conteudo": [
+    {
+      "idPedido": 50,
+      "chaveEntrega": "A1B2C345",
+      "statusPedido": "em analise",
+      "valorPedido": 5000.00,
+      "dataPedido": "2026-05-23T14:30:00",
+      "vendedor": {
+        "id": 2,
+        "nomeCliente": "Loja ABC"
+      },
+      "itens": [...]
+    }
+  ],
+  "total": 5,
+  "pagina": 0,
+  "tamanho": 10
+}
+```
+
+---
+
+#### 3. **GET /api/pedidos/recebidos**
+
+Retorna pedidos que o usuário recebeufoi como vendedor.
+
+**Query Parameters:**
+
+```
+?status=aceito&pagina=0&tamanho=10
+```
+
+**Retorno (Sucesso - 200 OK):**
+
+```json
+{
+  "conteudo": [
+    {
+      "idPedido": 51,
+      "chaveEntrega": "B2C3D456",
+      "statusPedido": "aceito",
+      "valorPedido": 2500.00,
+      "dataPedido": "2026-05-22T10:15:00",
+      "usuario": {
+        "id": 3,
+        "nomeCompleto": "Maria Comprador"
+      },
+      "itens": [...]
+    }
+  ],
+  "total": 12,
+  "pagina": 0,
+  "tamanho": 10
+}
+```
+
+---
+
+#### 4. **PUT /api/pedidos/{id}**
+
+Atualiza o status de um pedido (vendedor aceitando/rejeitando).
+
+**Entrada (JSON):**
+
+```json
+{
+  "statusPedido": "aceito"
+}
+```
+
+**Valores válidos para statusPedido:**
+
+- `aceito` - Vendedor aceita a compra (gera chaveEntrega)
+- `rejeitado` - Vendedor rejeita a compra
+- `em analise` - Mantém em análise (não muda)
+- `invalido` - Marca como inválido (erro)
+
+**Validações:**
+
+- Usuário deve estar autenticado
+- Usuário deve ser o vendedor do pedido
+- Status deve ser válido
+- Pedido não pode estar já finalizado (aceito ou rejeitado por vendor)
+
+**Retorno (Sucesso - 200 OK):**
+
+```json
+{
+  "idPedido": 50,
+  "statusPedido": "aceito",
+  "chaveEntrega": "A1B2C345",
+  "dataAtualizacao": "2026-05-23T15:00:00"
+}
+```
+
+**Retorno (Erro - 403 Forbidden):**
+
+```json
+{
+  "message": "Você não é o vendedor deste pedido"
+}
+```
+
+---
+
+#### 5. **GET /api/pedidos/{id}**
+
+Retorna detalhes de um pedido específico.
+
+**Parâmetros:**
+
+- `id` (Path): ID do pedido
+
+**Retorno (Sucesso - 200 OK):**
+
+```json
+{
+  "idPedido": 50,
+  "usuario": {...},
+  "vendedor": {...},
+  "chaveEntrega": "A1B2C345",
+  "statusPedido": "aceito",
+  "valorPedido": 5000.00,
+  "dataPedido": "2026-05-23T14:30:00",
+  "dataAtualizacao": "2026-05-23T15:00:00",
+  "itens": [
+    {
+      "idPedidoItem": 100,
+      "produto": {...},
+      "quantidade": 1,
+      "precoUnitario": 5000.00,
+      "subtotal": 5000.00
+    }
+  ]
+}
+```
+
+---
+
 ## 🏠 HomeController
 
 **Arquivo:** `HomeController.java`

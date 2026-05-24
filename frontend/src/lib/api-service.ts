@@ -1,12 +1,59 @@
-import { Carrinho } from '@/store'
 import api from './api'
+
+export type CarrinhoBackendProduto = {
+  idProduto: number
+  nomeProduto: string
+  descricao: string
+  preco: number
+  estoque: number
+  vendedor_id?: number
+  nomeVendedor?: string
+}
+
+export type CarrinhoBackendItem = {
+  id: number
+  quantidade: number
+  produto: CarrinhoBackendProduto
+}
+
+export type PedidoItemAPI = {
+  productId: number
+  productName: string
+  quantidade: number
+  precoUnitario: number
+  vendedorId?: number
+  vendedorNome: string
+}
+
+export type PedidoPessoaAPI = {
+  id?: number
+  nome: string
+  email?: string
+  perfil?: string
+}
+
+export type PedidoAPI = {
+  id: number
+  chaveAcesso: string | null
+  status: 'em analise' | 'aceito' | 'rejeitado' | 'entregue' | 'invalido'
+  motivoRejeicao?: string | null
+  criadoEm: string
+  aprovadoEm?: string | null
+  prazoEntregaLimite?: string | null
+  entregueEm?: string | null
+  invalidadoEm?: string | null
+  comprador: PedidoPessoaAPI
+  vendedor: PedidoPessoaAPI
+  itens: PedidoItemAPI[]
+  total: number
+}
 
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
 }
 
 export const carrinhoAPI = {
-  obter: () => api.get<Carrinho>('/api/carrinho'),
+  obter: () => api.get<CarrinhoBackendItem[]>('/api/carrinho'),
   adicionar: (produtoId: number, quantidade: number) =>
     api.post('/api/carrinho/adicionar', {
       produtoId,
@@ -17,12 +64,19 @@ export const carrinhoAPI = {
       quantidade,
     }),
   remover: (itemId: number) => api.delete(`/api/carrinho/${itemId}`),
-  finalizar: (endereco: string, telefone: string) =>
-    api.post('/api/carrinho/finalizar', {
-      endereco,
-      telefone,
+  limpar: () => api.delete('/api/carrinho'),
+}
+
+export const pedidosAPI = {
+  confirmar: () => api.post<PedidoAPI[]>('/api/pedidos/confirmar'),
+  meus: () => api.get<PedidoAPI[]>('/api/pedidos/meus'),
+  recebidos: () => api.get<PedidoAPI[]>('/api/pedidos/recebidos'),
+  pendentesContagem: () => api.get<{ total: number }>('/api/pedidos/recebidos/pendentes/contagem'),
+  atualizarStatus: (id: number, status: PedidoAPI['status'], codigoAcesso?: string) =>
+    api.put<PedidoAPI>(`/api/pedidos/${id}/status`, {
+      status,
+      codigoAcesso,
     }),
-  limpar: () => api.delete('/api/carrinho/limpar'),
 }
 
 export const authAPI = {

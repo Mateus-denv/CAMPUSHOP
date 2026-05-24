@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -70,6 +71,7 @@ public class AuthController {
             novoUsuario.setNomeCliente(request.getNomeCompleto().trim());
             novoUsuario.setAtivado(true);
             novoUsuario.setDataCadastro(java.time.LocalDate.now());
+            novoUsuario.setSaldoVendas(BigDecimal.ZERO);
 
             Usuario salvo = usuarioService.salvar(novoUsuario);
             logger.info("Usuário registrado com sucesso: {} (ID: {})", email, salvo.getId());

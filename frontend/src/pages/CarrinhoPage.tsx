@@ -1,146 +1,166 @@
+import { Layout } from '@/components/Layout'
+import { carrinhoAPI, pedidosAPI, type CarrinhoBackendItem } from '@/lib/api-service'
+import { cacheProduct, saveCart } from '@/lib/shop-storage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Layout } from '@/components/Layout'
-import { produtoAPI } from '@/lib/api-service'
-import { products } from '@/lib/mock-data'
-import { cacheProduct, createOrderFromCart, getCachedProduct, getCart, removeFromCart, updateCartItem } from '@/lib/shop-storage'
-
-type ApiProduct = {
-  idProduto: number
-  nomeProduto: string
-  descricao: string
-  preco: number
-  estoque: number
-  vendedor?: string
-}
 
 export function CarrinhoPage() {
   const navigate = useNavigate()
-  const [cart, setCart] = useState(getCart())
+  const [cart, setCart] = useState<CarrinhoBackendItem[]>([])
   const [modalChat, setModalChat] = useState(false)
   const [mensagem, setMensagem] = useState('')
-  const [produtosApi, setProdutosApi] = useState<ApiProduct[]>([])
+  const [carregandoCarrinho, setCarregandoCarrinho] = useState(true)
 
   // Evita inventar nome de vendedor; a tela só mostra o nome real ou um texto neutro.
   const resolverNomeVendedor = (nome?: string) => nome?.trim() || 'Sem vendedor informado'
 
-  // Detecta valores legados para deixar a API sobrescrever o nome quando existir.
-  const vendedorEhLegado = (nome?: string) => {
-    const normalizado = resolverNomeVendedor(nome)
-    return normalizado === 'Sem vendedor informado' || normalizado === 'Vendedor CampusShop'
-  }
-
   useEffect(() => {
-    const carregarProdutos = async () => {
+    const carregarCarrinho = async () => {
       try {
-        const response = await produtoAPI.listarTodos()
-        // Normaliza possíveis formatos de vendedor vindos do backend.
-        const normalizados: ApiProduct[] = (response.data ?? []).map((produto: any) => ({
-          idProduto: Number(produto.idProduto ?? produto.id),
-          nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
-          descricao: produto.descricao ?? '',
-          preco: Number(produto.preco ?? 0),
-          estoque: Number(produto.estoque ?? 0),
-          vendedor:
-            produto.nomeVendedor ??
-            produto.vendedor ??
-            produto.usuario?.nomeCompleto ??
-            produto.usuario?.nomeCliente ??
-            undefined,
-        }))
-        setProdutosApi(normalizados)
+        const response = await carrinhoAPI.obter()
+        const itens = response.data ?? []
+
+        setCart(itens)
+
+        // Mantém o storage local sincronizado para o resumo do pedido continuar funcionando.
+        saveCart(
+          itens.map((item) => ({
+            productId: item.produto.idProduto,
+            quantidade: item.quantidade,
+          }))
+        )
+
+        // Reaproveita o snapshot do produto para a confirmação do pedido local.
+        itens.forEach((item) => {
+          cacheProduct({
+            id: item.produto.idProduto,
+            nome: item.produto.nomeProduto,
+            descricao: item.produto.descricao,
+            preco: item.produto.preco,
+            estoque: item.produto.estoque,
+            condicao: 'Novo',
+            vendedorId: item.produto.vendedor_id,
+            vendedor: resolverNomeVendedor(item.produto.nomeVendedor),
+          })
+        })
       } catch {
-        setProdutosApi([])
+        setCart([])
+        saveCart([])
+      } finally {
+        setCarregandoCarrinho(false)
       }
     }
 
-    carregarProdutos()
+    carregarCarrinho()
   }, [])
-
-  useEffect(() => {
-    // Atualiza o cache local quando o nome real do vendedor chegar pela API.
-    cart.forEach((item) => {
-      const cached = getCachedProduct(item.productId)
-      const apiProduct = produtosApi.find((produto) => produto.idProduto === item.productId)
-
-      if (!cached || !apiProduct) {
-        return
-      }
-
-      const nomeVendedorApi = apiProduct.vendedor?.trim()
-      const vendedorAtual = cached.vendedor?.trim()
-
-      if (nomeVendedorApi && vendedorEhLegado(vendedorAtual)) {
-        cacheProduct({
-          ...cached,
-          vendedor: nomeVendedorApi,
-        })
-      }
-    })
-  }, [cart, produtosApi])
 
   const cartWithProducts = useMemo(
     () =>
-      cart
-        .map((item) => {
-          const cached = getCachedProduct(item.productId)
-          const apiProduct = produtosApi.find((produto) => produto.idProduto === item.productId)
-          const product = cached
-            ? {
-              id: cached.id,
-              nome: apiProduct?.nomeProduto || cached.nome,
-              descricao: apiProduct?.descricao || cached.descricao,
-              categoria: 'Marketplace',
-              condicao: cached.condicao ?? 'Novo',
-              preco: apiProduct?.preco ?? cached.preco,
-              // Prioriza o vendedor real da API e, se não existir, usa o texto neutro.
-              vendedor: resolverNomeVendedor(vendedorEhLegado(cached.vendedor) ? apiProduct?.vendedor : cached.vendedor),
-              local: 'Campus',
-            }
-            : apiProduct
-              ? {
-                id: apiProduct.idProduto,
-                nome: apiProduct.nomeProduto || 'Produto sem nome',
-                descricao: apiProduct.descricao,
-                categoria: 'Marketplace',
-                condicao: 'Novo',
-                preco: apiProduct.preco,
-                // Mostra o nome real do vendedor quando a API o disponibiliza.
-                vendedor: resolverNomeVendedor(apiProduct.vendedor),
-                local: 'Campus',
-              }
-              : products.find((p) => p.id === item.productId)
-
-          if (!product) {
-            return null
-          }
-          return { productId: item.productId, product, quantidade: item.quantidade }
-        })
-        .filter((item): item is { productId: number; product: (typeof products)[number]; quantidade: number } => item !== null),
-    [cart, produtosApi]
+      cart.map((item) => ({
+        carrinhoId: item.id,
+        productId: item.produto.idProduto,
+        quantidade: item.quantidade,
+        product: {
+          id: item.produto.idProduto,
+          nome: item.produto.nomeProduto,
+          descricao: item.produto.descricao,
+          categoria: 'Marketplace',
+          condicao: 'Novo',
+          preco: item.produto.preco,
+          vendedor: resolverNomeVendedor(item.produto.nomeVendedor),
+          local: 'Campus',
+          estoque: item.produto.estoque,
+        },
+      })),
+    [cart]
   )
 
   const total = cartWithProducts.reduce((acc, item) => acc + item.product.preco * item.quantidade, 0)
 
-  const atualizarQuantidade = (productId: number, quantidade: number) => {
-    updateCartItem(productId, quantidade)
-    setCart(getCart())
-  }
-
-  const excluirItem = (productId: number) => {
-    removeFromCart(productId)
-    setCart(getCart())
-  }
-
-  const finalizarPedido = () => {
-    const pedido = createOrderFromCart()
-    if (!pedido) {
-      setMensagem('Adicione produtos no carrinho antes de finalizar.')
-      return
+  const alertaEstoque = (estoque: number) => {
+    if (estoque > 10) {
+      return null
     }
-    setMensagem(`Pedido ${pedido.id} criado com sucesso!`)
-    setCart(getCart())
-    setTimeout(() => navigate('/pedidos'), 700)
+
+    // Quando o saldo está baixo, a tela precisa avisar com destaque visual claro.
+    return (
+      <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+        {estoque === 1 ? 'Alerta: há somente essa unidade' : `Alerta: há somente ${estoque} restantes`}
+      </span>
+    )
+  }
+
+  const recarregarCarrinho = async () => {
+    try {
+      const response = await carrinhoAPI.obter()
+      const itens = response.data ?? []
+      setCart(itens)
+      saveCart(
+        itens.map((item) => ({
+          productId: item.produto.idProduto,
+          quantidade: item.quantidade,
+        }))
+      )
+    } catch {
+      // Se a recarga falhar, preservamos a última visão carregada para não apagar a tela do usuário.
+    }
+  }
+
+  const atualizarQuantidade = async (itemId: number, quantidade: number) => {
+    try {
+      // O botão de menos nunca deixa chegar em zero; o backend reforça a mesma regra.
+      await carrinhoAPI.atualizar(itemId, quantidade)
+      await recarregarCarrinho()
+    } catch (error: any) {
+      const mensagemErro = error?.response?.data?.erro || 'Não foi possível atualizar a quantidade.'
+      setMensagem(mensagemErro)
+    }
+  }
+
+  const excluirItem = async (itemId: number) => {
+    try {
+      await carrinhoAPI.remover(itemId)
+      await recarregarCarrinho()
+    } catch {
+      setMensagem('Não foi possível remover o item do carrinho.')
+    }
+  }
+
+  const confirmarpedido = async () => {
+    try {
+      const response = await pedidosAPI.confirmar()
+      const pedidosCriados = response.data
+
+      if (!pedidosCriados || !pedidosCriados.length) {
+        setMensagem('Adicione produtos no carrinho antes de confirmar o pedido.')
+        return
+      }
+
+      // Após gerar o pedido local, limpamos também a reserva persistida no banco.
+      await carrinhoAPI.limpar()
+      setCart([])
+      saveCart([])
+      // Mostra quais pedidos foram abertos para facilitar a conferência do usuário.
+      setMensagem(
+        pedidosCriados.length === 1
+          ? `Pedido ${pedidosCriados[0].id} criado com sucesso!`
+          : `${pedidosCriados.length} pedidos foram criados com sucesso!`
+      )
+      window.dispatchEvent(new Event('campushop-orders-changed'))
+      setTimeout(() => navigate('/pedidos'), 700)
+    } catch {
+      setMensagem('Não foi possível confirmar o pedido agora.')
+    }
+  }
+
+  if (carregandoCarrinho) {
+    return (
+      <Layout>
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">Carregando seu carrinho...</p>
+        </section>
+      </Layout>
+    )
   }
 
   return (
@@ -164,20 +184,21 @@ export function CarrinhoPage() {
               </div>
             )}
 
-            {cartWithProducts.map(({ productId, product: p, quantidade: q }) => (
-              <div key={productId} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
+            {cartWithProducts.map(({ carrinhoId, product: p, quantidade: q }) => (
+              <div key={carrinhoId} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
                 <div className="flex h-24 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-2xl sm:w-24">📦</div>
                 <div className="flex-1">
                   <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">{p.condicao}</span>
                   <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{p.nome}</h3>
                   <p className="text-sm text-slate-500">Vendido por: {p.vendedor}</p>
+                  {alertaEstoque(p.estoque)}
                   <p className="mt-2 text-2xl font-black text-blue-700">R$ {p.preco.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-center">
-                  <button onClick={() => atualizarQuantidade(productId, Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
+                  <button onClick={() => atualizarQuantidade(carrinhoId, Math.max(1, q - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">−</button>
                   <span className="w-8 text-center font-semibold text-slate-700">{q}</span>
-                  <button onClick={() => atualizarQuantidade(productId, q + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50">+</button>
-                  <button onClick={() => excluirItem(productId)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
+                  <button onClick={() => atualizarQuantidade(carrinhoId, q + 1)} disabled={q >= p.estoque} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">+</button>
+                  <button onClick={() => excluirItem(carrinhoId)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
                 </div>
               </div>
             ))}
@@ -203,7 +224,7 @@ export function CarrinhoPage() {
                 <strong className="text-lg text-slate-900">Total</strong>
                 <strong className="text-xl text-blue-700">R$ {total.toFixed(2)}</strong>
               </div>
-              <button onClick={finalizarPedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Finalizar pedido</button>
+              <button onClick={confirmarpedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Confirmar pedido</button>
               <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Conversar com vendedor</button>
               <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Salvar para depois</button>
             </div>

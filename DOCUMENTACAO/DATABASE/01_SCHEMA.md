@@ -227,69 +227,137 @@ CREATE TABLE carrinhoItem (
 
 ### 6. pedido
 
-**Descrição:** Pedidos finalizados.
+**Descrição:** Pedidos finalizados - registra transação entre comprador e vendedor.
 
 **Criação:**
 
 ```sql
 CREATE TABLE pedido (
   idPedido INT AUTO_INCREMENT PRIMARY KEY,
-  idUsuario INT NOT NULL,
+  id_usuario INT NOT NULL,
+  id_vendedor INT NOT NULL,
+  chaveEntrega VARCHAR(20) NOT NULL UNIQUE,
+  statusPedido VARCHAR(20) NOT NULL DEFAULT 'em analise',
+  valorPedido DOUBLE NOT NULL,
   dataPedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  total DOUBLE NOT NULL,
-  status VARCHAR(20) DEFAULT 'PENDENTE',
-  endereco VARCHAR(255),
-  observacoes TEXT,
-
-  FOREIGN KEY (idUsuario) REFERENCES usuario(id)
+  dataAtualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  -- Constraints
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+  FOREIGN KEY (id_vendedor) REFERENCES usuario(id) ON DELETE CASCADE,
+  
+  -- Validação de status
+  CHECK (statusPedido IN ('em analise', 'aceito', 'rejeitado', 'invalido')),
+  
+  -- Validação de chave (formato: [A-Z][0-9][A-Z][0-9][A-Z][0-9]{3})
+  CHECK (chaveEntrega REGEXP '^[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}$')
 );
 ```
 
 **Atributos:**
 
-| Campo         | Tipo         | Restrições         | Descrição                              |
-| ------------- | ------------ | ------------------ | -------------------------------------- |
-| `idPedido`    | INT          | PK, AUTO_INCREMENT | ID único                               |
-| `idUsuario`   | INT          | NOT NULL, FK       | Comprador                              |
-| `dataPedido`  | TIMESTAMP    | -                  | Quando fez                             |
-| `total`       | DOUBLE       | NOT NULL           | Valor total                            |
-| `status`      | VARCHAR(20)  | DEFAULT 'PENDENTE' | PENDENTE, ENVIADO, ENTREGUE, CANCELADO |
-| `endereco`    | VARCHAR(255) | -                  | Endereço de entrega                    |
-| `observacoes` | TEXT         | -                  | Observações do pedido                  |
+| Campo | Tipo | Restrições | Descrição |
+|-------|------|-----------|-----------|
+| `idPedido` | INT | PK, AUTO_INCREMENT | Identificador único |
+| `id_usuario` | INT | NOT NULL, FK | Comprador (referencia usuario) |
+| `id_vendedor` | INT | NOT NULL, FK | Vendedor (referencia usuario) |
+| `chaveEntrega` | VARCHAR(20) | UNIQUE, CHECK REGEXP | Chave de acesso (ex: A1B2C345) |
+| `statusPedido` | VARCHAR(20) | DEFAULT 'em analise' | Status: `em analise`, `aceito`, `rejeitado`, `invalido` |
+| `valorPedido` | DOUBLE | NOT NULL | Valor total do pedido |
+| `dataPedido` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Quando foi criado |
+| `dataAtualizacao` | TIMESTAMP | - | Última modificação |
+
+**Status Possíveis:**
+
+- `em analise` - Pedido aguardando aprovação do vendedor
+- `aceito` - Vendedor aceitou, chaveEntrega foi gerada
+- `rejeitado` - Vendedor rejeitou a compra
+- `invalido` - Pedido foi invalidado (erro de processamento)
+
+**Exemplo de Chave Entrega:**
+
+- `A1B2C345` (Letra, Número, Letra, Número, Letra, 3 Números)
+
+**Índices:**
+
+- `INDEX idx_pedido_usuario` - Para buscar pedidos do comprador
+- `INDEX idx_pedido_vendedor` - Para buscar pedidos recebidos pelo vendedor
+- `INDEX idx_pedido_status` - Para filtrar por status
+- `UNIQUE idx_chaveEntrega` - Garante unicidade da chave
 
 ---
 
 ### 7. pedidoItem
 
-**Descrição:** Items dentro de um pedido.
+**Descrição:** Items individuais dentro de um pedido - registra cada produto vendido.
 
 **Criação:**
 
 ```sql
 CREATE TABLE pedidoItem (
-  idItem INT AUTO_INCREMENT PRIMARY KEY,
-  idPedido INT NOT NULL,
-  idProduto INT NOT NULL,
+  idPedidoItem INT AUTO_INCREMENT PRIMARY KEY,
+  id_pedido INT NOT NULL,
+  id_produto INT NOT NULL,
   quantidade INT NOT NULL,
   precoUnitario DOUBLE NOT NULL,
-  subtotal DOUBLE NOT NULL,
-
-  FOREIGN KEY (idPedido) REFERENCES pedido(idPedido) ON DELETE CASCADE,
-  FOREIGN KEY (idProduto) REFERENCES produto(idProduto)
+  dataCadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Constraints
+  FOREIGN KEY (id_pedido) REFERENCES pedido(idPedido) ON DELETE CASCADE,
+  FOREIGN KEY (id_produto) REFERENCES produto(idProduto) ON DELETE RESTRICT,
+  
+  -- Validações
+  CHECK (quantidade > 0),
+  CHECK (precoUnitario > 0)
 );
 ```
 
----
+**Atributos:**
+
+| Campo | Tipo | Restrições | Descrição |
+|-------|------|-----------|-----------|
+| `idPedidoItem` | INT | PK, AUTO_INCREMENT | Identificador único do item |
+| `id_pedido` | INT | NOT NULL, FK | Pedido ao qual pertence |
+| `id_produto` | INT | NOT NULL, FK | Produto sendo vendido |
+| `quantidade` | INT | NOT NULL, > 0 | Quantidade comprada |
+| `precoUnitario` | DOUBLE | NOT NULL, > 0 | Preço unitário na época da compra |
+| `dataCadastro` | TIMESTAMP | - | Quando o item foi adicionado ao pedido |
+
+**Cálculos:**
+
+```sql
+-- Subtotal de um item
+SELECT 
+  pi.idPedidoItem,
+  p.nomeProduto,
+  pi.quantidade,
+  pi.precoUnitario,
+  (pi.quantidade * pi.precoUnitario) as subtotal
+FROM pedidoItem pi
+JOIN produto p ON pi.id_produto = p.idProduto
+WHERE pi.id_pedido = 1;
+```
+
+**Nota:** `ON DELETE CASCADE` - Se pedido é deletado, itens também são. `ON DELETE RESTRICT` - Produto não pode ser deletado se estiver em pedidos.
+
+**Índices:**
+
+- `INDEX idx_pedidoItem_pedido` - Para buscar itens de um pedido
+- `INDEX idx_pedidoItem_produto` - Para saber em quais pedidos um produto aparece
 
 ## 🔗 Relacionamentos
 
 ```
 usuario (1)
+  ├─── Como COMPRADOR (1) → (M) pedido
+  │
+  ├─── Como VENDEDOR (1) → (M) pedido
+  │
   ├─── (1) → (1) carrinho
   │
-  ├─── (1) → (M) produto
+  ├─── (1) → (M) produto (vendedor)
   │
-  └─── (1) → (M) pedido
+  └─── (1) → (M) [carrinhoItem] (via carrinho)
 
 
 categoria (1)
@@ -307,6 +375,10 @@ carrinho (1)
 
 
 pedido (1)
+  ├─── (M) → (1) usuario (comprador)
+  │
+  ├─── (M) → (1) usuario (vendedor)
+  │
   └─── (1) → (M) pedidoItem
 ```
 
@@ -415,29 +487,43 @@ LIMIT 10;
 
 ### Uniqueness
 
-- `email` em usuario
-- `ra` em usuario
-- `nomeCategoria` em categoria
-- `(idCarrinho, idProduto)` em carrinhoItem
+- `email` em usuario (NOT NULL UNIQUE)
+- `ra` em usuario (NOT NULL UNIQUE)
+- `nomeCategoria` em categoria (NOT NULL UNIQUE)
+- `chaveEntrega` em pedido (NOT NULL UNIQUE)
+- `(idCarrinho, idProduto)` em carrinhoItem (UNIQUE)
 
 ### Foreign Keys (Integridade Referencial)
 
 - `produto.idCategoria` → `categoria.idCategoria`
-- `produto.idUsuario` → `usuario.id`
-- `carrinho.idUsuario` → `usuario.id`
-- `carrinhoItem.idCarrinho` → `carrinho.idCarrinho`
-- `carrinhoItem.idProduto` → `produto.idProduto`
-- `pedido.idUsuario` → `usuario.id`
-- `pedidoItem.idPedido` → `pedido.idPedido`
-- `pedidoItem.idProduto` → `produto.idProduto`
+- `produto.idUsuario` → `usuario.id` (vendedor)
+- `carrinho.idUsuario` → `usuario.id` (ON DELETE CASCADE)
+- `carrinhoItem.idCarrinho` → `carrinho.idCarrinho` (ON DELETE CASCADE)
+- `carrinhoItem.idProduto` → `produto.idProduto` (ON DELETE CASCADE)
+- `pedido.id_usuario` → `usuario.id` (comprador, ON DELETE CASCADE)
+- `pedido.id_vendedor` → `usuario.id` (vendedor, ON DELETE CASCADE)
+- `pedidoItem.id_pedido` → `pedido.idPedido` (ON DELETE CASCADE)
+- `pedidoItem.id_produto` → `produto.idProduto` (ON DELETE RESTRICT)
 
 ### Checks (Regras de Negócio)
 
-- `estoque` ≥ 0
-- `preco` > 0
-- `status` IN ('ATIVO', 'INATIVO', 'PAUSADO')
-- `tipoConta` IN ('CLIENTE', 'VENDEDOR')
-- `pedido.status` IN ('PENDENTE', 'ENVIADO', 'ENTREGUE', 'CANCELADO')
+**Produto:**
+- `estoque >= 0`
+- `preco > 0`
+- `status IN ('ATIVO', 'INATIVO', 'PAUSADO')`
+
+**Usuario:**
+- `tipoConta IN ('CLIENTE', 'VENDEDOR')`
+- `ativado IN (0, 1)`
+
+**Pedido:**
+- `statusPedido IN ('em analise', 'aceito', 'rejeitado', 'invalido')`
+- `valorPedido > 0`
+- `chaveEntrega REGEXP '^[A-Z][0-9][A-Z][0-9][A-Z][0-9]{3}$'` (ex: A1B2C345)
+
+**PedidoItem:**
+- `quantidade > 0`
+- `precoUnitario > 0`
 
 ---
 
@@ -461,9 +547,13 @@ CREATE INDEX idx_carrinhoItem_carrinho ON carrinhoItem(idCarrinho);
 CREATE INDEX idx_carrinhoItem_produto ON carrinhoItem(idProduto);
 
 -- Pedido/PedidoItem
-CREATE INDEX idx_pedido_usuario ON pedido(idUsuario);
-CREATE INDEX idx_pedido_data ON pedido(dataPedido);
-CREATE INDEX idx_pedidoItem_pedido ON pedidoItem(idPedido);
+CREATE INDEX idx_pedido_usuario ON pedido(id_usuario);          -- Buscar por comprador
+CREATE INDEX idx_pedido_vendedor ON pedido(id_vendedor);        -- Buscar por vendedor
+CREATE INDEX idx_pedido_status ON pedido(statusPedido);         -- Filtrar por status
+CREATE INDEX idx_pedido_chave ON pedido(chaveEntrega);          -- Buscar por chave
+CREATE INDEX idx_pedido_data ON pedido(dataPedido);             -- Range queries por data
+CREATE INDEX idx_pedidoItem_pedido ON pedidoItem(id_pedido);    -- Items de um pedido
+CREATE INDEX idx_pedidoItem_produto ON pedidoItem(id_produto);  -- Pedidos com um produto
 ```
 
 ---

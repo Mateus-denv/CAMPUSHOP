@@ -449,6 +449,135 @@ produtoRepository.deleteAll();
 
 ---
 
+## 📋 PedidoRepository
+
+**Arquivo:** `PedidoRepository.java`
+
+**Descrição:** Acesso a dados de pedidos.
+
+### Métodos Customizados
+
+#### 1. **findByUsuario(Usuario usuario)**
+
+Lista todos os pedidos de um comprador.
+
+```java
+List<Pedido> findByUsuario(Usuario usuario);
+```
+
+**SQL Gerado:**
+
+```sql
+SELECT * FROM pedido WHERE id_usuario = ?
+```
+
+---
+
+#### 2. **findByUsuarioAndStatusPedido(Usuario usuario, String status)**
+
+Lista pedidos de um comprador com um status específico.
+
+```java
+List<Pedido> findByUsuarioAndStatusPedido(Usuario usuario, String status);
+```
+
+**Exemplo:**
+
+```java
+List<Pedido> pedidosEmAnalise = pedidoRepository
+    .findByUsuarioAndStatusPedido(usuario, "em analise");
+```
+
+---
+
+#### 3. **findByVendedor(Usuario vendedor)**
+
+Lista todos os pedidos recebidos por um vendedor.
+
+```java
+List<Pedido> findByVendedor(Usuario vendedor);
+```
+
+---
+
+#### 4. **findByVendedorAndStatusPedido(Usuario vendedor, String status)**
+
+Lista pedidos recebidos por um vendedor com um status específico.
+
+```java
+List<Pedido> findByVendedorAndStatusPedido(Usuario vendedor, String status);
+```
+
+---
+
+#### 5. **findByStatusPedido(String status)**
+
+Lista todos os pedidos com um status específico.
+
+```java
+List<Pedido> findByStatusPedido(String status);
+```
+
+---
+
+#### 6. **findByChaveEntrega(String chave)**
+
+Busca pedido pela chave de entrega.
+
+```java
+Optional<Pedido> findByChaveEntrega(String chave);
+```
+
+---
+
+#### 7. **findByDataPedidoBetween(LocalDateTime inicio, LocalDateTime fim)**
+
+Busca pedidos dentro de um período.
+
+```java
+List<Pedido> findByDataPedidoBetween(LocalDateTime inicio, LocalDateTime fim);
+```
+
+---
+
+## 🛍️ PedidoItemRepository
+
+**Arquivo:** `PedidoItemRepository.java`
+
+**Descrição:** Acesso a dados de itens de pedidos.
+
+### Métodos Customizados
+
+#### 1. **findByPedido_IdPedido(Integer idPedido)**
+
+Lista todos os itens de um pedido.
+
+```java
+List<PedidoItem> findByPedido_IdPedido(Integer idPedido);
+```
+
+---
+
+#### 2. **findByProduto_IdProduto(Integer idProduto)**
+
+Lista todos os itens que contêm um produto específico.
+
+```java
+List<PedidoItem> findByProduto_IdProduto(Integer idProduto);
+```
+
+---
+
+#### 3. **findByPedido(Pedido pedido)**
+
+Lista itens de um pedido usando objeto Pedido.
+
+```java
+List<PedidoItem> findByPedido(Pedido pedido);
+```
+
+---
+
 ## ⚠️ N+1 Query Problem
 
 Quando há relacionamentos, pode ocorrer o problema N+1:
