@@ -87,7 +87,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/produtos" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/categorias" element={<Navigate to="/produtos" replace />} />
       <Route path="/produtos" element={<CategoriasPage />} />
@@ -101,7 +101,7 @@ function App() {
       <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
       <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
       <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/produtos" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
 }
