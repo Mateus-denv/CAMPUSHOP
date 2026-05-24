@@ -4,10 +4,11 @@
 Testes de UI - Verificação das páginas frontend
 """
 
+import os
 import requests
 from bs4 import BeautifulSoup
 
-BASE_URL = "http://localhost:5173"
+BASE_URL = os.getenv("CAMPUSHOP_FRONTEND_URL", "http://localhost:8080")
 
 class Colors:
     GREEN = '\033[92m'

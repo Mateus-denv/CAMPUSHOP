@@ -3,11 +3,12 @@
 """
 Script para testar fluxo completo de cadastro de produto usando urllib
 """
+import os
 import urllib.request
 import json
 from datetime import datetime
 
-BASE_URL = "http://localhost:8080/api"
+BASE_URL = os.getenv("CAMPUSHOP_API_URL", "http://localhost:8080/api")
 
 def print_section(title):
     print(f"\n{'='*60}")
@@ -49,7 +50,8 @@ def test_registro():
         "cidade": "São Paulo",
         "perfil": "aluno",
         "cpfCnpj": "11144477735",  # CPF válido
-        "dataNascimento": "1999-06-15"  # Maior de 18 anos
+        "dataNascimento": "1999-06-15",  # Maior de 18 anos
+        "saldoVendas": 0.0
     }
     
     status, resp = make_request("POST", f"{BASE_URL}/auth/register", data=dados)
@@ -72,8 +74,8 @@ def test_login():
     print_section("2. TESTE DE LOGIN")
     
     dados = {
-        "email": "joana@mail.com",
-        "senha": "senha123"
+        "email": "maria@campushop.com",
+        "senha": "123456"
     }
     
     status, resp = make_request("POST", f"{BASE_URL}/auth/login", data=dados)

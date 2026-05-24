@@ -1,6 +1,7 @@
 package br.com.campushop.campushop_backend.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -53,6 +54,9 @@ public class Usuario {
 
     @Column(name = "data_cadastro", nullable = false)
     private LocalDate dataCadastro;
+
+    @Column(name = "saldo_vendas", nullable = false, precision = 38, scale = 2)
+    private BigDecimal saldoVendas = BigDecimal.ZERO;
 
     // Constructors
     public Usuario() {
@@ -182,6 +186,14 @@ public class Usuario {
 
     public void setDataCadastro(LocalDate dataCadastro) {
         this.dataCadastro = dataCadastro;
+    }
+
+    public BigDecimal getSaldoVendas() {
+        return saldoVendas;
+    }
+
+    public void setSaldoVendas(BigDecimal saldoVendas) {
+        this.saldoVendas = saldoVendas;
     }
 
     public LocalDate getDataNascimento() {
