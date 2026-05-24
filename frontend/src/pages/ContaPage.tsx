@@ -11,6 +11,8 @@ type UsuarioProduto = {
   descricao: string;
   estoque: number;
   preco?: number;
+  status?: string;
+  visivelParaComprador?: boolean;
   categoria?: {
     idCategoria: number;
     nome_categoria: string;
@@ -56,6 +58,24 @@ function statusBadgeClasses(status: PedidoAPI['status']) {
   return 'bg-orange-100 text-orange-700 border-orange-200';
 }
 
+function statusProdutoClasses(status?: string) {
+  const valor = (status || 'ATIVO').toUpperCase();
+
+  if (valor === 'ATIVO') {
+    return 'border-emerald-200 bg-emerald-100 text-emerald-700';
+  }
+
+  if (valor === 'INATIVO') {
+    return 'border-slate-200 bg-slate-100 text-slate-600';
+  }
+
+  if (valor === 'FORA_DE_ESTOQUE') {
+    return 'border-orange-200 bg-orange-100 text-orange-700';
+  }
+
+  return 'border-blue-200 bg-blue-100 text-blue-700';
+}
+
 function montarAvisoPrazo(pedido: PedidoAPI) {
   if (pedido.status !== 'aceito' || !pedido.prazoEntregaLimite) {
     return null;
@@ -98,6 +118,9 @@ export function ContaPage() {
   const [mensagemConfig, setMensagemConfig] = useState("");
   const [erroConfig, setErroConfig] = useState("");
   const [excluindoConta, setExcluindoConta] = useState(false);
+  const [produtoEmProcesso, setProdutoEmProcesso] = useState<number | null>(null);
+  const [mensagemProdutos, setMensagemProdutos] = useState("");
+  const [erroProdutos, setErroProdutos] = useState("");
 
   useEffect(() => {
     if (aba === "Meus Produtos") {
@@ -139,6 +162,46 @@ export function ContaPage() {
       setProdutos(response.data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
+    }
+  };
+
+  const abrirEdicaoProduto = (produtoId: number) => {
+    navigate(`/cadastrar-produto?produtoId=${produtoId}`);
+  };
+
+  const alternarStatusProduto = async (produto: UsuarioProduto) => {
+    setProdutoEmProcesso(produto.idProduto);
+    setErroProdutos("");
+    setMensagemProdutos("");
+
+    const novoStatus = (produto.status || 'ATIVO').toUpperCase() === 'ATIVO' ? 'INATIVO' : 'ATIVO';
+
+    try {
+      await produtoAPI.atualizarStatus(produto.idProduto, novoStatus);
+      await carregarMeusProdutos();
+      setMensagemProdutos(novoStatus === 'ATIVO' ? 'Produto reativado com sucesso.' : 'Produto desativado com sucesso.');
+    } catch (error: any) {
+      setErroProdutos(error?.response?.data?.message || 'Não foi possível atualizar o status do produto.');
+    } finally {
+      setProdutoEmProcesso(null);
+    }
+  };
+
+  const alternarVisibilidadeProduto = async (produto: UsuarioProduto) => {
+    setProdutoEmProcesso(produto.idProduto);
+    setErroProdutos("");
+    setMensagemProdutos("");
+
+    const novoValor = !produto.visivelParaComprador;
+
+    try {
+      await produtoAPI.atualizarVisibilidade(produto.idProduto, novoValor);
+      await carregarMeusProdutos();
+      setMensagemProdutos(novoValor ? 'Produto exibido novamente para compradores.' : 'Produto ocultado dos compradores.');
+    } catch (error: any) {
+      setErroProdutos(error?.response?.data?.message || 'Não foi possível atualizar a visibilidade do produto.');
+    } finally {
+      setProdutoEmProcesso(null);
     }
   };
 
@@ -346,6 +409,16 @@ export function ContaPage() {
                 <p className="mt-1 text-slate-500">
                   Gerencie os produtos que você anunciou.
                 </p>
+                {mensagemProdutos ? (
+                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    {mensagemProdutos}
+                  </div>
+                ) : null}
+                {erroProdutos ? (
+                  <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {erroProdutos}
+                  </div>
+                ) : null}
                 {produtos.length === 0 ? (
                   <div className="mt-4 text-center">
                     <p className="text-slate-500">
@@ -359,24 +432,68 @@ export function ContaPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                    {/* Ajuste: mostrar 2 produtos por linha na listagem de "Meus produtos" */}
                     {produtos.map((produto) => (
                       <div
                         key={produto.idProduto}
-                        className="rounded-2xl border border-slate-200 p-4 shadow-sm"
+                        className="flex h-full flex-col rounded-2xl border border-slate-200 p-4 shadow-sm"
                       >
-                        <h4 className="font-bold text-slate-900">
-                          {produto.nomeProduto}
-                        </h4>
-                        <p className="text-sm text-slate-600">
+                        <div className="flex items-start justify-between gap-3">
+                          <h4 className="font-bold text-slate-900">
+                            {produto.nomeProduto}
+                          </h4>
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${statusProdutoClasses(produto.status)}`}>
+                            {(produto.status || 'ATIVO').replace('_', ' ')}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-600">
                           {produto.descricao}
                         </p>
                         <p className="mt-2 font-semibold text-blue-600">
                           R$ {produto.preco?.toFixed(2)}
                         </p>
-                        <p className="text-sm text-slate-500">
-                          Estoque: {produto.estoque}
-                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                          <span className={`rounded-full border px-2.5 py-1 ${produto.visivelParaComprador === false ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                            {produto.visivelParaComprador === false ? 'Oculto dos compradores' : 'Visível para compradores'}
+                          </span>
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600">
+                            Estoque: {produto.estoque}
+                          </span>
+                        </div>
+                        <div className="mt-4 grid gap-2">
+                          <button
+                            type="button"
+                            onClick={() => abrirEdicaoProduto(produto.idProduto)}
+                            className="rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            Editar produto
+                          </button>
+                          <button
+                            type="button"
+                            disabled={produtoEmProcesso === produto.idProduto}
+                            onClick={() => alternarStatusProduto(produto)}
+                            className="rounded-2xl bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {produtoEmProcesso === produto.idProduto
+                              ? 'Atualizando...'
+                              : (produto.status || 'ATIVO').toUpperCase() === 'ATIVO'
+                                ? 'Desativar produto'
+                                : 'Ativar produto'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={produtoEmProcesso === produto.idProduto}
+                            onClick={() => alternarVisibilidadeProduto(produto)}
+                            className="rounded-2xl border border-blue-200 px-4 py-3 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {produtoEmProcesso === produto.idProduto
+                              ? 'Aguarde...'
+                              : produto.visivelParaComprador === false
+                                ? 'Desocultar para compradores'
+                                : 'Ocultar dos compradores'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -590,7 +707,8 @@ export function ContaPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                    {/* Ajuste: mostrar 2 produtos por linha na listagem de "Favoritos" */}
                     {favoritos.map((produto) => (
                       <div
                         key={produto.id}

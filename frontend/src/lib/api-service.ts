@@ -6,6 +6,8 @@ export type CarrinhoBackendProduto = {
   descricao: string
   preco: number
   estoque: number
+  status?: string
+  visivelParaComprador?: boolean
   vendedor_id?: number
   nomeVendedor?: string
 }
@@ -128,6 +130,9 @@ export const produtoAPI = {
   salvar: (produto: any) => api.post('/api/produtos', produto), // Centraliza chamada da criação de produto no backend.
   listarMeus: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
   obterPorUsuario: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
+  atualizar: (id: number, produto: any) => api.put(`/api/produtos/${id}`, produto), // Reaproveita a edição completa do produto no backend.
+  atualizarStatus: (id: number, status: string) => api.put(`/api/produtos/${id}/status`, { status }), // Alterna ativação do produto sem mexer nos demais campos.
+  atualizarVisibilidade: (id: number, visivelParaComprador: boolean) => api.put(`/api/produtos/${id}/visibilidade`, { visivelParaComprador }), // Alterna a visibilidade para compradores de forma independente.
   deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
 }
 // Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.

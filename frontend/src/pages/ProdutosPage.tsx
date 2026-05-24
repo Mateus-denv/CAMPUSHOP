@@ -11,6 +11,8 @@ type Produto = {
   descricao: string
   preco: number
   estoque: number
+  status?: string
+  visivelParaComprador?: boolean
   vendedor_id?: number
   vendedorNome?: string
 }
@@ -45,6 +47,8 @@ export function ProdutosPage() {
         descricao: produto.descricao ?? '',
         preco: Number(produto.preco ?? 0),
         estoque: Number(produto.estoque ?? 0),
+        status: produto.status,
+        visivelParaComprador: produto.visivelParaComprador,
         vendedor_id: produto.vendedor_id,
         vendedorNome:
           produto.nomeVendedor ??
@@ -163,7 +167,8 @@ export function ProdutosPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Ajuste: mostrar 2 produtos por linha em telas maiores */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {produtos.map((produto) => (
             <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="mb-2 flex items-start justify-between gap-2">

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
 import { Button, Card, Input } from '@/components/UI'
-import { produtoAPI, categoriaAPI } from '@/lib/api-service'
+import { categoriaAPI, produtoAPI } from '@/lib/api-service'
+import { AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 type Categoria = {
     idCategoria: number
@@ -10,15 +10,33 @@ type Categoria = {
     descricao: string
 }
 
+type ProdutoForm = {
+    nomeProduto: string
+    descricao: string
+    estoque: string
+    preco: string
+    dimensoes: string
+    peso: string
+    categoriaId: string
+    status: string
+    visivelParaComprador: boolean
+}
+
 export function CadastrarProdutoPage() {
     const navigate = useNavigate()
-    const [nomeProduto, setNomeProduto] = useState('')
-    const [descricao, setDescricao] = useState('')
-    const [estoque, setEstoque] = useState('')
-    const [preco, setPreco] = useState('')
-    const [dimensoes, setDimensoes] = useState('')
-    const [peso, setPeso] = useState('')
-    const [categoriaId, setCategoriaId] = useState('')
+    const [searchParams] = useSearchParams()
+    const [produtoIdEdicao, setProdutoIdEdicao] = useState<number | null>(null)
+    const [form, setForm] = useState<ProdutoForm>({
+        nomeProduto: '',
+        descricao: '',
+        estoque: '',
+        preco: '',
+        dimensoes: '',
+        peso: '',
+        categoriaId: '',
+        status: 'ATIVO',
+        visivelParaComprador: true,
+    })
     const [categorias, setCategorias] = useState<Categoria[]>([])
     const [erro, setErro] = useState('')
     const [carregando, setCarregando] = useState(false)
@@ -40,56 +58,109 @@ export function CadastrarProdutoPage() {
         carregarCategorias()
     }, [])
 
+    useEffect(() => {
+        const produtoId = searchParams.get('produtoId')
+        if (!produtoId) {
+            return
+        }
+
+        const idNumerico = Number(produtoId)
+        if (!idNumerico) {
+            setErro('Produto inválido para edição.')
+            return
+        }
+
+        const carregarProduto = async () => {
+            try {
+                setCarregando(true)
+                const response = await produtoAPI.obterPorId(idNumerico)
+                const produto = response.data ?? {}
+
+                setProdutoIdEdicao(idNumerico)
+                setForm({
+                    nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+                    descricao: produto.descricao ?? '',
+                    estoque: String(produto.estoque ?? ''),
+                    preco: produto.preco != null ? String(produto.preco) : '',
+                    dimensoes: produto.dimensoes ?? '',
+                    peso: produto.peso != null ? String(produto.peso) : '',
+                    categoriaId: String(produto.categoria?.idCategoria ?? ''),
+                    status: produto.status ?? 'ATIVO',
+                    visivelParaComprador: produto.visivelParaComprador ?? true,
+                })
+                setSemDimensoes(!produto.dimensoes)
+            } catch (err: any) {
+                setErro(err.response?.data?.message || 'Não foi possível carregar o produto para edição.')
+            } finally {
+                setCarregando(false)
+            }
+        }
+
+        carregarProduto()
+    }, [searchParams])
+
+    const atualizarCampo = <K extends keyof ProdutoForm>(campo: K, valor: ProdutoForm[K]) => {
+        setForm((atual) => ({
+            ...atual,
+            [campo]: valor,
+        }))
+    }
+
     const handleSalvar = async (e: React.FormEvent) => {
         e.preventDefault()
         setErro('')
         setCarregando(true)
 
         try {
-            if (!nomeProduto.trim()) {
+            if (!form.nomeProduto.trim()) {
                 setErro('Nome do produto é obrigatório')
                 return
             }
-            if (!descricao.trim()) {
+            if (!form.descricao.trim()) {
                 setErro('Descrição do produto é obrigatória')
                 return
             }
-            if (!estoque.trim() || Number(estoque) < 0 || Number.isNaN(Number(estoque))) {
+            if (!form.estoque.trim() || Number(form.estoque) < 0 || Number.isNaN(Number(form.estoque))) {
                 setErro('Estoque deve ser um número válido e maior ou igual a zero')
                 return
             }
-            if (!preco.trim() || Number(preco.replace(',', '.')) <= 0 || Number.isNaN(Number(preco.replace(',', '.')))) {
+            if (!form.preco.trim() || Number(form.preco.replace(',', '.')) <= 0 || Number.isNaN(Number(form.preco.replace(',', '.')))) {
                 setErro('Preço deve ser um valor positivo')
                 return
             }
-            if (!categoriaId) {
+            if (!form.categoriaId) {
                 setErro('Categoria é obrigatória')
                 return
             }
-            if (!semDimensoes && dimensoes.trim() && dimensoes.trim().length < 3) {
+            if (!semDimensoes && form.dimensoes.trim() && form.dimensoes.trim().length < 3) {
                 setErro('Dimensões, se informadas, devem ser descritivas')
                 return
             }
-            if (peso.trim() && (Number(peso.replace(',', '.')) <= 0 || Number.isNaN(Number(peso.replace(',', '.'))))) {
+            if (form.peso.trim() && (Number(form.peso.replace(',', '.')) <= 0 || Number.isNaN(Number(form.peso.replace(',', '.'))))) {
                 setErro('Peso deve ser um valor positivo')
                 return
             }
 
             const produto = {
-                nomeProduto: nomeProduto.trim(),
-                descricao: descricao.trim(),
-                estoque: Number(estoque),
-                preco: Number(preco.replace(',', '.')),
-                status: 'ATIVO',
-                dimensoes: semDimensoes ? null : dimensoes.trim() || null,
-                peso: peso.trim() ? Number(peso.replace(',', '.')) : null,
-                categoria: { idCategoria: Number(categoriaId) }
+                nomeProduto: form.nomeProduto.trim(),
+                descricao: form.descricao.trim(),
+                estoque: Number(form.estoque),
+                preco: Number(form.preco.replace(',', '.')),
+                status: form.status,
+                visivelParaComprador: form.visivelParaComprador,
+                dimensoes: semDimensoes ? null : form.dimensoes.trim() || null,
+                peso: form.peso.trim() ? Number(form.peso.replace(',', '.')) : null,
+                categoria: { idCategoria: Number(form.categoriaId) }
             }
 
-            await produtoAPI.salvar(produto)
+            if (produtoIdEdicao) {
+                await produtoAPI.atualizar(produtoIdEdicao, produto)
+            } else {
+                await produtoAPI.salvar(produto)
+            }
             navigate('/conta')
         } catch (err: any) {
-            setErro(err.response?.data?.message || 'Erro ao cadastrar produto')
+            setErro(err.response?.data?.message || (produtoIdEdicao ? 'Erro ao atualizar produto' : 'Erro ao cadastrar produto'))
         } finally {
             setCarregando(false)
         }
@@ -102,8 +173,8 @@ export function CadastrarProdutoPage() {
                     <div className="p-8 sm:p-10">
                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <h1 className="text-3xl font-black tracking-tight text-slate-900">Cadastrar produto</h1>
-                                <p className="mt-2 text-sm text-slate-600">Preencha os dados do produto e anuncie no CampusShop.</p>
+                                <h1 className="text-3xl font-black tracking-tight text-slate-900">{produtoIdEdicao ? 'Editar produto' : 'Cadastrar produto'}</h1>
+                                <p className="mt-2 text-sm text-slate-600">{produtoIdEdicao ? 'Ajuste os dados do produto e salve a atualização.' : 'Preencha os dados do produto e anuncie no CampusShop.'}</p>
                             </div>
                             <Link
                                 to="/conta"
@@ -124,37 +195,37 @@ export function CadastrarProdutoPage() {
                             <Input
                                 label="Nome do produto"
                                 placeholder="Ex: Lápis, Sanduíche, Mochila"
-                                value={nomeProduto}
-                                onChange={(e) => setNomeProduto(e.target.value)}
+                                value={form.nomeProduto}
+                                onChange={(e) => atualizarCampo('nomeProduto', e.target.value)}
                             />
                             <Input
                                 label="Descrição"
                                 placeholder="Descreva o produto"
-                                value={descricao}
-                                onChange={(e) => setDescricao(e.target.value)}
+                                value={form.descricao}
+                                onChange={(e) => atualizarCampo('descricao', e.target.value)}
                             />
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <Input
                                     label="Estoque"
                                     placeholder="0"
                                     type="number"
-                                    value={estoque}
-                                    onChange={(e) => setEstoque(e.target.value)}
+                                    value={form.estoque}
+                                    onChange={(e) => atualizarCampo('estoque', e.target.value)}
                                 />
                                 <Input
                                     label="Preço"
                                     placeholder="49.90"
                                     type="text"
-                                    value={preco}
-                                    onChange={(e) => setPreco(e.target.value)}
+                                    value={form.preco}
+                                    onChange={(e) => atualizarCampo('preco', e.target.value)}
                                 />
                             </div>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
                                     <select
-                                        value={categoriaId}
-                                        onChange={(e) => setCategoriaId(e.target.value)}
+                                        value={form.categoriaId}
+                                        onChange={(e) => atualizarCampo('categoriaId', e.target.value)}
                                         className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     >
                                         <option value="">Selecione uma categoria</option>
@@ -181,20 +252,20 @@ export function CadastrarProdutoPage() {
                                 <Input
                                     label="Dimensões (opcional)"
                                     placeholder="Ex: 20x2x1 cm"
-                                    value={dimensoes}
-                                    onChange={(e) => setDimensoes(e.target.value)}
+                                    value={form.dimensoes}
+                                    onChange={(e) => atualizarCampo('dimensoes', e.target.value)}
                                 />
                             )}
                             <Input
                                 label="Peso (opcional)"
                                 placeholder="Ex: 0.12"
                                 type="text"
-                                value={peso}
-                                onChange={(e) => setPeso(e.target.value)}
+                                value={form.peso}
+                                onChange={(e) => atualizarCampo('peso', e.target.value)}
                             />
 
                             <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
-                                Cadastrar produto
+                                {produtoIdEdicao ? 'Salvar alterações' : 'Cadastrar produto'}
                             </Button>
                         </form>
                     </div>
