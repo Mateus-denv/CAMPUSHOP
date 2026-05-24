@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { MediaImage } from '@/components/MediaImage'
 import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
 import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
@@ -195,6 +196,13 @@ export function ProdutosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {produtosFiltrados.map((produto) => (
             <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <MediaImage
+                src={`/api/produtos/${produto.idProduto}/imagens/principal`}
+                alt={produto.nomeProduto}
+                fallbackLabel="Sem imagem"
+                className="mb-4 h-48 w-full rounded-[1.25rem]"
+                imageClassName="h-48 w-full rounded-[1.25rem]"
+              />
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
                 <button

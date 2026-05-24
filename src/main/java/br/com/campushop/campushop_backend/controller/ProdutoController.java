@@ -1,14 +1,18 @@
 package br.com.campushop.campushop_backend.controller;
 
 import br.com.campushop.campushop_backend.model.Produto; // Importando a classe Produto para usar nos métodos do controller
+import br.com.campushop.campushop_backend.model.ImagemAnexo;
 import br.com.campushop.campushop_backend.model.Usuario; // Importando a classe Usuario
 import br.com.campushop.campushop_backend.service.ProdutoService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
+import br.com.campushop.campushop_backend.service.ImagemService;
 import org.springframework.beans.factory.annotation.Autowired; // Importando a anotação @Autowired para injetar o ProdutoRepository
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*; // Importando as anotações para criar endpoints REST
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.Nullable;
 
@@ -28,6 +32,9 @@ public class ProdutoController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private ImagemService imagemService;
 
     // DTO pequeno para devolver exatamente os campos usados pela tela de produtos/carrinho.
     public record ProdutoResponse(
@@ -65,6 +72,8 @@ public class ProdutoController {
     public record AtualizarStatusProdutoRequest(String status) {}
 
     public record AtualizarVisibilidadeProdutoRequest(Boolean visivelParaComprador) {}
+
+    public record ImagemResponse(Integer id, String nomeArquivo, String contentType, String url, String dataUpload) {}
 
     // 1. Ler todos (Read)
     @GetMapping
@@ -167,6 +176,77 @@ public class ProdutoController {
         }
     }
 
+    @PostMapping(value = "/{id}/imagens", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> enviarImagens(@PathVariable Integer id,
+            @RequestParam("imagens") List<MultipartFile> imagens,
+            Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(java.util.Map.of("message", "Não autenticado"));
+            }
+
+            Produto produto = produtoService.buscarPorId(id)
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+            if (produto.getUsuario() == null || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(java.util.Map.of("message", "Você não pode alterar imagens deste produto"));
+            }
+
+            List<ImagemAnexo> salvas = imagemService.salvarImagensProduto(produto, imagens);
+            return ResponseEntity.ok(salvas.stream().map(this::toImagemResponse).collect(java.util.stream.Collectors.toList()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/imagens")
+    public ResponseEntity<List<ImagemResponse>> listarImagens(@PathVariable Integer id) {
+        try {
+            List<ImagemResponse> imagens = imagemService.listarImagensProduto(id).stream()
+                    .map(this::toImagemResponse)
+                    .collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(imagens);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/imagens/principal")
+    public ResponseEntity<byte[]> obterImagemPrincipal(@PathVariable Integer id) {
+        return imagemService.buscarImagemPrincipalProduto(id)
+                .map(this::buildImageResponse)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/imagens/{imagemId}")
+    public ResponseEntity<byte[]> obterImagem(@PathVariable Integer id, @PathVariable Integer imagemId) {
+        return imagemService.buscarImagemProdutoPorId(id, imagemId)
+                .map(this::buildImageResponse)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}/imagens/{imagemId}")
+    public ResponseEntity<Void> excluirImagem(@PathVariable Integer id, @PathVariable Integer imagemId,
+            Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Produto produto = produtoService.buscarPorId(id)
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+            if (produto.getUsuario() == null || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            imagemService.excluirImagemProduto(id, imagemId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PutMapping("/{id}/status")
     public ResponseEntity<ProdutoResponse> atualizarStatus(@PathVariable Integer id,
             @RequestBody AtualizarStatusProdutoRequest request) {
@@ -220,5 +300,24 @@ public class ProdutoController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private ImagemResponse toImagemResponse(ImagemAnexo imagem) {
+        String url = imagem.getProduto() != null && imagem.getProduto().getIdProduto() != null
+                ? "/api/produtos/" + imagem.getProduto().getIdProduto() + "/imagens/" + imagem.getId()
+                : "/api/usuarios/" + imagem.getUsuario().getId() + "/foto";
+
+        return new ImagemResponse(
+                imagem.getId(),
+                imagem.getNomeArquivo(),
+                imagem.getContentType(),
+                url,
+                imagem.getDataUpload() != null ? imagem.getDataUpload().toString() : null);
+    }
+
+    private ResponseEntity<byte[]> buildImageResponse(ImagemAnexo imagem) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(imagem.getContentType()))
+                .body(imagem.getDados());
     }
 }

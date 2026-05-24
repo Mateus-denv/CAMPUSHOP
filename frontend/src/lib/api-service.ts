@@ -1,5 +1,13 @@
 import api from './api'
 
+export type ProdutoImagemAPI = {
+  id: number
+  nomeArquivo: string
+  contentType: string
+  url: string
+  dataUpload?: string | null
+}
+
 export type CarrinhoBackendProduto = {
   idProduto: number
   nomeProduto: string
@@ -133,6 +141,17 @@ export const produtoAPI = {
   atualizar: (id: number, produto: any) => api.put(`/api/produtos/${id}`, produto), // Reaproveita a edição completa do produto no backend.
   atualizarStatus: (id: number, status: string) => api.put(`/api/produtos/${id}/status`, { status }), // Alterna ativação do produto sem mexer nos demais campos.
   atualizarVisibilidade: (id: number, visivelParaComprador: boolean) => api.put(`/api/produtos/${id}/visibilidade`, { visivelParaComprador }), // Alterna a visibilidade para compradores de forma independente.
+  listarImagens: (id: number) => api.get<ProdutoImagemAPI[]>(`/api/produtos/${id}/imagens`),
+  enviarImagens: (id: number, imagens: File[]) => {
+    const formData = new FormData()
+
+    imagens.forEach((imagem) => {
+      formData.append('imagens', imagem)
+    })
+
+    return api.post(`/api/produtos/${id}/imagens`, formData)
+  },
+  excluirImagem: (produtoId: number, imagemId: number) => api.delete(`/api/produtos/${produtoId}/imagens/${imagemId}`),
   deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
 }
 // Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.
@@ -143,5 +162,11 @@ export const usuarioAPI = {
       nomeCompleto,
       email,
     }),
+  atualizarFotoPerfil: (imagem: File) => {
+    const formData = new FormData()
+    formData.append('imagem', imagem)
+
+    return api.post('/api/usuarios/me/foto', formData)
+  },
   excluir: (id: number) => api.delete(`/api/usuarios/${id}`), // Centraliza chamada da exclusão de usuário autenticado no backend.
 }
