@@ -84,6 +84,7 @@ public class SecurityConfig {
                                                                 "/produtos",
                                                                 // APIs públicas necessárias para o frontend sem autenticação
                                                                 "/api/carrinho",
+                                                                "/api/usuarios/*/foto",
                                                                 // Observação: endpoints de /api/pedidos/** exigem autenticação
                                                                 "/api/auth/**")
                                                 .permitAll()

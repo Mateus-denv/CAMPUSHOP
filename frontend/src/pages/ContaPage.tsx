@@ -1,5 +1,7 @@
 import { Layout } from "@/components/Layout";
-import { pedidosAPI, produtoAPI, usuarioAPI, type PedidoAPI } from "@/lib/api-service";
+import { MediaImage } from "@/components/MediaImage";
+import { pedidosAPI, produtoAPI, type PedidoAPI } from "@/lib/api-service";
+import { buildUserPhotoUrl } from "@/lib/image-utils";
 import { getFavoriteProducts } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
@@ -110,11 +112,6 @@ export function ContaPage() {
   const [pedidosRecebidos, setPedidosRecebidos] = useState<PedidoAPI[]>([]);
   const [pedidoEmProcesso, setPedidoEmProcesso] = useState<number | null>(null);
   const { usuario, setUsuario } = useAuthStore();
-  const [nomePerfil, setNomePerfil] = useState("");
-  const [emailPerfil, setEmailPerfil] = useState("");
-  const [raPerfil, setRaPerfil] = useState("");
-  const [erroPerfil, setErroPerfil] = useState("");
-  const [mensagemPerfil, setMensagemPerfil] = useState("");
   const [mensagemConfig, setMensagemConfig] = useState("");
   const [erroConfig, setErroConfig] = useState("");
   const [excluindoConta, setExcluindoConta] = useState(false);
@@ -148,12 +145,6 @@ export function ContaPage() {
     };
 
     carregarPedidos();
-  }, [usuario]);
-
-  useEffect(() => {
-    setNomePerfil(usuario?.nomeCompleto || usuario?.nome || "");
-    setEmailPerfil(usuario?.email || "");
-    setRaPerfil(usuario?.ra || "");
   }, [usuario]);
 
   const carregarMeusProdutos = async () => {
@@ -251,49 +242,6 @@ export function ContaPage() {
 
     await atualizarStatusPedido(pedidoId, 'entregue', codigoAcesso.trim());
   };
-  // Salva as alterações de perfil no backend e atualiza a sessão local para manter os dados consistentes.
-  const salvarPerfil = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setErroPerfil("");
-    setMensagemPerfil("");
-
-    if (!nomePerfil.trim()) {
-      setErroPerfil("Nome é obrigatório");
-      return;
-    }
-
-    if (!emailPerfil.trim() || !emailPerfil.includes("@")) {
-      setErroPerfil("Informe um email válido");
-      return;
-    }
-
-    // R.A é único e não pode ser alterado, então não tentamos enviar para o backend. Ele é apenas exibido como leitura.
-    try {
-      // Persiste no backend para garantir que o novo nome/email sobreviva a logout/login.
-      const response = await usuarioAPI.atualizarPerfil(
-        nomePerfil.trim(),
-        emailPerfil.trim().toLowerCase(), // Normaliza email para evitar problemas de case sensitivity no backend
-      );
-
-      const usuarioAtualizado = response.data?.user ?? response.data;
-      const novoToken = response.data?.token;
-
-      // Atualiza sessão local com os dados retornados pela API, mantendo frontend e backend consistentes.
-      setUsuario(usuarioAtualizado);
-      localStorage.setItem("user", JSON.stringify(usuarioAtualizado)); // Atualiza os dados do usuário armazenados localmente para refletir as mudanças feitas no backend.
-
-      // Quando o email muda, o backend pode enviar token novo; gravamos para evitar sessão inválida.
-      if (novoToken) {
-        localStorage.setItem("token", novoToken);
-      }
-
-      setMensagemPerfil("Perfil atualizado com sucesso!");
-    } catch (error: any) {
-      setErroPerfil(
-        error?.response?.data?.message || "Erro ao atualizar perfil",
-      );
-    }
-  };
 
   const excluirConta = async () => {
     setErroConfig("");
@@ -343,7 +291,15 @@ export function ContaPage() {
       <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <aside className="rounded-[1.75rem] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm">
-            <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-slate-200 to-slate-100" />
+            <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-50">
+              <MediaImage
+                src={buildUserPhotoUrl(usuario?.id)}
+                alt={nome}
+                fallbackLabel="Sem foto"
+                className="h-20 w-20 rounded-full"
+                imageClassName="h-20 w-20 rounded-full"
+              />
+            </div>
             <h2 className="mt-4 text-center text-2xl font-black tracking-tight text-slate-900">
               {nome}
             </h2>
@@ -360,10 +316,10 @@ export function ContaPage() {
               + Anunciar produto
             </a>
             <button
-              onClick={() => setAba("Editar Perfil")}
+              onClick={() => navigate("/conta/editar")}
               className="mt-3 w-full rounded-2xl border border-slate-200 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Editar perfil
+              Editar conta
             </button>
             <button
               onClick={() => setAba("Configurações")}
@@ -734,73 +690,22 @@ export function ContaPage() {
             ) : aba === "Editar Perfil" ? (
               <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
                 <h3 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                  Editar perfil
+                  Editar conta
                 </h3>
                 <p className="mt-1 text-slate-500">
-                  Atualize suas informações principais da conta.
+                  A edição de conta agora fica em uma página dedicada.
                 </p>
 
-                {erroPerfil && (
-                  <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                    {erroPerfil}
-                  </div>
-                )}
+                <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                  Use a tela de edição para alterar nome, email e foto de perfil sem misturar isso ao painel.
+                </div>
 
-                {mensagemPerfil && (
-                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                    {mensagemPerfil}
-                  </div>
-                )}
-
-                <form onSubmit={salvarPerfil} className="mt-4 grid gap-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Nome completo
-                    </label>
-                    <input
-                      value={nomePerfil}
-                      onChange={(event) => setNomePerfil(event.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={emailPerfil}
-                      onChange={(event) => setEmailPerfil(event.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      placeholder="seu@email.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      R.A
-                    </label>
-                    <input
-                      value={raPerfil}
-                      readOnly
-                      disabled
-                      className="w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 outline-none"
-                      placeholder="R.A"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">
-                      R.A é único e não pode ser alterado.
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="mt-2 w-full rounded-2xl bg-slate-900 py-3 font-semibold text-white"
-                  >
-                    Salvar alterações
-                  </button>
-                </form>
+                <Link
+                  to="/conta/editar"
+                  className="mt-4 inline-flex rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Ir para edição da conta
+                </Link>
               </div>
             ) : aba === "Configurações" ? (
               <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">

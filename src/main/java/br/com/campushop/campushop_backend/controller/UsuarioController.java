@@ -5,20 +5,27 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.com.campushop.campushop_backend.dto.AuthResponse;
 import br.com.campushop.campushop_backend.dto.UpdateProfileRequest;
+import br.com.campushop.campushop_backend.model.ImagemAnexo;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.security.JwtTokenProvider;
+import br.com.campushop.campushop_backend.service.ImagemService;
 import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -29,6 +36,9 @@ public class UsuarioController {
     // Injeção de dependência para o serviço de usuário, necessário para operações de perfil e exclusão de conta.
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private ImagemService imagemService;
 
     private final CustomUserDetailsService customUserDetailsService; // Injeção de dependência para carregar detalhes do usuário, necessário para reemissão de token após atualização de perfil.
     private final JwtTokenProvider jwtTokenProvider; // Injeção de dependência para geração de token JWT, necessário para reemissão de token após atualização de perfil.
@@ -64,6 +74,31 @@ public class UsuarioController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage())); // Retorna mensagem de erro detalhada para o frontend em caso de falha na atualização de perfil, como validação ou regras de negócio.
         }
+    }
+
+    @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> atualizarFotoPerfil(@RequestPart("imagem") MultipartFile imagem,
+            Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Não autenticado"));
+        }
+
+        try {
+            Usuario usuario = usuarioService.buscarPorEmail(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+            imagemService.salvarFotoPerfil(usuario, imagem);
+            return ResponseEntity.ok(Map.of("message", "Foto de perfil atualizada com sucesso"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> obterFotoPerfil(@PathVariable Integer id) {
+        return imagemService.buscarFotoPerfil(id)
+                .map(this::buildImageResponse)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -111,5 +146,11 @@ public class UsuarioController {
         user.put("ra", usuario.getRa());
         user.put("role", usuario.getTipoConta());
         return user;
+    }
+
+    private ResponseEntity<byte[]> buildImageResponse(ImagemAnexo imagem) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(imagem.getContentType()))
+                .body(imagem.getDados());
     }
 }

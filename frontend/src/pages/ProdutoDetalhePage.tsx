@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { MediaImage } from '@/components/MediaImage'
 import api from '@/lib/api'
 import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
 import { saveCart } from '@/lib/shop-storage'
@@ -18,6 +19,14 @@ type ProdutoDetalhe = {
   vendedorCidade?: string | null
 }
 
+type ImagemProduto = {
+  id: number
+  nomeArquivo: string
+  contentType: string
+  url: string
+  dataUpload?: string | null
+}
+
 export function ProdutoDetalhePage() {
   const { id } = useParams()
   const [produto, setProduto] = useState<ProdutoDetalhe | null>(null)
@@ -25,6 +34,7 @@ export function ProdutoDetalhePage() {
   const [erro, setErro] = useState('')
   const [adicionandoAoCarrinho, setAdicionandoAoCarrinho] = useState(false)
   const [mensagemAcao, setMensagemAcao] = useState('')
+  const [imagens, setImagens] = useState<ImagemProduto[]>([])
 
   useEffect(() => {
     const carregarProduto = async () => {
@@ -71,6 +81,14 @@ export function ProdutoDetalhePage() {
         }
 
         setProduto(produtoObj)
+
+        try {
+          const imagensResponse = await produtoAPI.listarImagens(produtoId)
+          setImagens(imagensResponse.data ?? [])
+        } catch (imageErr) {
+          console.debug('Nenhuma imagem de produto foi carregada:', imageErr)
+          setImagens([])
+        }
       } catch (err) {
         console.error('Erro ao carregar produto:', err)
         setErro('Não foi possível carregar os dados deste produto.')
@@ -140,15 +158,28 @@ export function ProdutoDetalhePage() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
           <div>
-            {/* Mantém a área visual da imagem, mas sem inventar metadados que não vêm da API. */}
-            <div className="flex h-80 items-center justify-center rounded-[1.75rem] bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
-              Imagem principal
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <div className="h-24 rounded-2xl border border-slate-200 bg-slate-50" />
-              <div className="h-24 rounded-2xl border border-slate-200 bg-slate-50" />
-              <div className="h-24 rounded-2xl border border-slate-200 bg-slate-50" />
-            </div>
+            <MediaImage
+              src={imagens[0]?.url || `/api/produtos/${produto.idProduto}/imagens/principal`}
+              alt={produto.nomeProduto}
+              fallbackLabel="Sem imagem cadastrada"
+              className="h-80 w-full rounded-[1.75rem]"
+              imageClassName="h-80 w-full rounded-[1.75rem]"
+            />
+
+            {imagens.length > 1 ? (
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {imagens.slice(1, 4).map((imagem) => (
+                  <MediaImage
+                    key={imagem.id}
+                    src={imagem.url}
+                    alt={imagem.nomeArquivo}
+                    fallbackLabel="Imagem"
+                    className="h-24 rounded-2xl border border-slate-200 bg-slate-50"
+                    imageClassName="h-24 w-full rounded-2xl"
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div>

@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { MediaImage } from '@/components/MediaImage'
 import { categoriaAPI, produtoAPI } from '@/lib/api-service'
 import { isFavorite, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
@@ -207,9 +208,13 @@ export function CategoriasPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
           {produtosFiltrados.map((produto) => (
             <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="flex h-40 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">
-                Imagem
-              </div>
+              <MediaImage
+                src={`/api/produtos/${produto.idProduto}/imagens/principal`}
+                alt={produto.nomeProduto}
+                fallbackLabel="Sem imagem"
+                className="h-40 w-full"
+                imageClassName="h-40 w-full"
+              />
               <div className="p-5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">

@@ -6,6 +6,7 @@ import { CarrinhoPage } from '@/pages/CarrinhoPage'
 import { CategoriasPage } from '@/pages/CategoriasPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { ContaPage } from '@/pages/ContaPage'
+import { EditarContaPage } from '@/pages/EditarContaPage'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PedidosPage } from '@/pages/PedidosPage'
@@ -100,6 +101,7 @@ function App() {
       <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
       <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
       <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
+      <Route path="/conta/editar" element={usuario ? <EditarContaPage /> : <Navigate to="/login" replace />} />
       <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
