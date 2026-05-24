@@ -41,6 +41,21 @@ CREATE TABLE IF NOT EXISTS produto (
   CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
+-- Armazena fotos de perfil e imagens dos anúncios em banco para evitar arquivos soltos no disco.
+CREATE TABLE IF NOT EXISTS imagem_anexo (
+  id_imagem INT AUTO_INCREMENT PRIMARY KEY,
+  tipo VARCHAR(20) NOT NULL,
+  nome_arquivo VARCHAR(255) NOT NULL,
+  content_type VARCHAR(100) NOT NULL,
+  tamanho_bytes BIGINT NOT NULL,
+  dados LONGBLOB NOT NULL,
+  data_upload DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id_usuario INT NULL,
+  id_produto INT NULL,
+  CONSTRAINT fk_imagem_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+  CONSTRAINT fk_imagem_produto FOREIGN KEY (id_produto) REFERENCES produto(id_produto) ON DELETE CASCADE
+);
+
 -- Mantém a reserva do carrinho persistida por usuário e produto, com quantidade válida.
 CREATE TABLE IF NOT EXISTS carrinho (
   id_carrinho INT AUTO_INCREMENT PRIMARY KEY,

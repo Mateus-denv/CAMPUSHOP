@@ -132,4 +132,9 @@ public class UsuarioService {
         }
     }
 
+    // Busca usuário por ID (usado pelo frontend para exibir dados públicos do vendedor)
+    public Optional<Usuario> buscarPorId(Integer id) {
+        return usuarioRepository.findById(id);
+    }
+
 }

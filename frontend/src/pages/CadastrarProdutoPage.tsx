@@ -1,7 +1,9 @@
+import { MediaImage } from '@/components/MediaImage'
 import { Button, Card, Input } from '@/components/UI'
-import { categoriaAPI, produtoAPI } from '@/lib/api-service'
+import { categoriaAPI, produtoAPI, type ProdutoImagemAPI } from '@/lib/api-service'
+import { buildProductImageUrl, getAllowedImageAccept, getImageGuidance, validateImageFile } from '@/lib/image-utils'
 import { AlertCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 type Categoria = {
@@ -41,6 +43,10 @@ export function CadastrarProdutoPage() {
     const [erro, setErro] = useState('')
     const [carregando, setCarregando] = useState(false)
     const [semDimensoes, setSemDimensoes] = useState(false)
+    const [imagensSelecionadas, setImagensSelecionadas] = useState<File[]>([])
+    const [previewImagens, setPreviewImagens] = useState<string[]>([])
+    const [imagensExistentes, setImagensExistentes] = useState<ProdutoImagemAPI[]>([])
+    const [carregandoImagens, setCarregandoImagens] = useState(false)
 
     useEffect(() => {
         const carregarCategorias = async () => {
@@ -99,6 +105,22 @@ export function CadastrarProdutoPage() {
         carregarProduto()
     }, [searchParams])
 
+    useEffect(() => {
+        const produtoId = searchParams.get('produtoId')
+        if (!produtoId || !produtoIdEdicao) {
+            setImagensExistentes([])
+            return
+        }
+
+        carregarImagensProduto(produtoIdEdicao)
+    }, [produtoIdEdicao, searchParams])
+
+    useEffect(() => {
+        return () => {
+            previewImagens.forEach((url) => URL.revokeObjectURL(url))
+        }
+    }, [previewImagens])
+
     const atualizarCampo = <K extends keyof ProdutoForm>(campo: K, valor: ProdutoForm[K]) => {
         setForm((atual) => ({
             ...atual,
@@ -106,7 +128,85 @@ export function CadastrarProdutoPage() {
         }))
     }
 
-    const handleSalvar = async (e: React.FormEvent) => {
+    const carregarImagensProduto = async (produtoId: number) => {
+        try {
+            setCarregandoImagens(true)
+            const response = await produtoAPI.listarImagens(produtoId)
+            setImagensExistentes(response.data ?? [])
+        } catch (error) {
+            console.error('Erro ao carregar imagens do produto:', error)
+            setImagensExistentes([])
+        } finally {
+            setCarregandoImagens(false)
+        }
+    }
+
+    const atualizarImagens = async (event: ChangeEvent<HTMLInputElement>) => {
+        const arquivos = Array.from(event.target.files ?? [])
+        setErro('')
+
+        const limiteRestante = Math.max(0, 3 - imagensExistentes.length)
+
+        if (!arquivos.length) {
+            setImagensSelecionadas([])
+            setPreviewImagens([])
+            return
+        }
+
+        if (arquivos.length > limiteRestante) {
+            setErro(`Você pode enviar no máximo ${limiteRestante} imagem(ns) adicional(is).`)
+            event.target.value = ''
+            return
+        }
+
+        const novasPreviews: string[] = []
+        for (const arquivo of arquivos) {
+            const validacao = await validateImageFile(arquivo, 'produto')
+            if (validacao) {
+                novasPreviews.forEach((url) => URL.revokeObjectURL(url))
+                setErro(validacao)
+                event.target.value = ''
+                return
+            }
+
+            novasPreviews.push(URL.createObjectURL(arquivo))
+        }
+
+        previewImagens.forEach((url) => URL.revokeObjectURL(url))
+        setImagensSelecionadas(arquivos)
+        setPreviewImagens(novasPreviews)
+        event.target.value = ''
+    }
+
+    const removerPreviewImagem = (indice: number) => {
+        setPreviewImagens((atuais) => {
+            const removida = atuais[indice]
+            if (removida) {
+                URL.revokeObjectURL(removida)
+            }
+
+            return atuais.filter((_, posicao) => posicao !== indice)
+        })
+        setImagensSelecionadas((atuais) => atuais.filter((_, posicao) => posicao !== indice))
+    }
+
+    const excluirImagemExistente = async (imagemId: number) => {
+        if (!produtoIdEdicao) {
+            return
+        }
+
+        try {
+            setCarregando(true)
+            await produtoAPI.excluirImagem(produtoIdEdicao, imagemId)
+            await carregarImagensProduto(produtoIdEdicao)
+        } catch (error: any) {
+            setErro(error?.response?.data?.message || 'Não foi possível excluir a imagem.')
+        } finally {
+            setCarregando(false)
+        }
+    }
+
+    const handleSalvar = async (e: FormEvent) => {
         e.preventDefault()
         setErro('')
         setCarregando(true)
@@ -153,10 +253,26 @@ export function CadastrarProdutoPage() {
                 categoria: { idCategoria: Number(form.categoriaId) }
             }
 
+            let idProdutoFinal = produtoIdEdicao
+
             if (produtoIdEdicao) {
                 await produtoAPI.atualizar(produtoIdEdicao, produto)
             } else {
-                await produtoAPI.salvar(produto)
+                const resposta = await produtoAPI.salvar(produto)
+                const produtoCriado = resposta.data ?? {}
+                idProdutoFinal = Number(produtoCriado.idProduto ?? produtoCriado.id ?? 0) || null
+                if (idProdutoFinal) {
+                    setProdutoIdEdicao(idProdutoFinal)
+                }
+            }
+
+            if (imagensSelecionadas.length && idProdutoFinal) {
+                try {
+                    await produtoAPI.enviarImagens(idProdutoFinal, imagensSelecionadas)
+                } catch (uploadErr: any) {
+                    setErro(uploadErr?.response?.data?.message || 'Produto salvo, mas não foi possível enviar as imagens.')
+                    return
+                }
             }
             navigate('/conta')
         } catch (err: any) {
@@ -263,6 +379,95 @@ export function CadastrarProdutoPage() {
                                 value={form.peso}
                                 onChange={(e) => atualizarCampo('peso', e.target.value)}
                             />
+
+                            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-black tracking-tight text-slate-900">Imagens do anúncio</h2>
+                                        <p className="text-sm text-slate-600">{getImageGuidance('produto')} Você pode manter até 3 imagens por anúncio.</p>
+                                    </div>
+                                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">16:9</span>
+                                </div>
+
+                                        {produtoIdEdicao ? (
+                                            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white p-3">
+                                                <p className="mb-2 text-sm font-semibold text-slate-700">Imagens já salvas</p>
+                                                {carregandoImagens ? (
+                                                    <p className="text-sm text-slate-500">Carregando imagens...</p>
+                                                ) : imagensExistentes.length > 0 ? (
+                                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                                        {imagensExistentes.map((imagem, index) => (
+                                                            <div key={imagem.id} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-50">
+                                                                <MediaImage
+                                                                    src={imagem.url}
+                                                                    alt={imagem.nomeArquivo}
+                                                                    fallbackLabel="Sem imagem"
+                                                                    className="h-40 w-full"
+                                                                    imageClassName="h-40 w-full"
+                                                                />
+                                                                <div className="flex items-center justify-between gap-2 px-3 py-3">
+                                                                    <span className="text-xs font-semibold text-slate-500">Imagem {index + 1}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => excluirImagemExistente(imagem.id)}
+                                                                        className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+                                                                    >
+                                                                        Excluir
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <MediaImage
+                                                        src={buildProductImageUrl(produtoIdEdicao)}
+                                                        alt={form.nomeProduto || 'Imagem do produto'}
+                                                        fallbackLabel="Sem imagem cadastrada"
+                                                        className="h-56 w-full rounded-[1.25rem]"
+                                                        imageClassName="h-56 w-full rounded-[1.25rem]"
+                                                    />
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                <label className="mt-4 flex cursor-pointer flex-col gap-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-white p-4 transition hover:border-slate-400 hover:bg-slate-50">
+                                            <span className="text-sm font-semibold text-slate-700">Selecionar imagens do anúncio</span>
+                                    <span className="text-sm text-slate-500">JPG, JPEG, WebP ou AVIF, até 2 MB por imagem.</span>
+                                            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Restam {Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)} espaço(s)</span>
+                                    <input
+                                        type="file"
+                                        accept={getAllowedImageAccept()}
+                                        multiple
+                                        onChange={atualizarImagens}
+                                                disabled={imagensExistentes.length >= 3}
+                                        className="sr-only"
+                                    />
+                                </label>
+
+                                {previewImagens.length > 0 ? (
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        {previewImagens.map((preview, index) => (
+                                                    <div key={preview} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white">
+                                                        <div className="relative">
+                                                            <img
+                                                                src={preview}
+                                                                alt={`Pré-visualização ${index + 1}`}
+                                                                className="h-40 w-full object-cover"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removerPreviewImagem(index)}
+                                                                className="absolute right-2 top-2 rounded-full bg-slate-900/80 p-2 text-white transition hover:bg-slate-900"
+                                                                aria-label={`Remover imagem ${index + 1}`}
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : null}
+                            </div>
 
                             <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
                                 {produtoIdEdicao ? 'Salvar alterações' : 'Cadastrar produto'}
