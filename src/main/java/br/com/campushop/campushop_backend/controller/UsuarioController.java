@@ -75,6 +75,30 @@ public class UsuarioController {
             return ResponseEntity.notFound().build();
         }
     }
+    // Endpoint para obter dados públicos de um usuário (vendedor) pelo ID.
+    @org.springframework.web.bind.annotation.GetMapping("/{id}")
+    public ResponseEntity<?> obterUsuarioPorId(@PathVariable Integer id) {
+        try {
+            var usuarioOpt = usuarioService.buscarPorId(id);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Usuario usuario = usuarioOpt.get();
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", usuario.getId());
+            user.put("nomeCompleto", usuario.getNomeCompleto());
+            user.put("nome", usuario.getNomeCompleto());
+            user.put("instituicao", usuario.getInstituicaoEnsino());
+            user.put("cidade", usuario.getCidade());
+            user.put("instituicaoEnsino", usuario.getInstituicaoEnsino());
+            user.put("localidade", usuario.getCidade());
+
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Erro ao buscar usuário"));
+        }
+    }
 
     private Map<String, Object> toUserMap(Usuario usuario) {
         // Mantém o mesmo contrato de payload usado no login para simplificar o
