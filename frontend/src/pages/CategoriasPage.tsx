@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { categoriaAPI, produtoAPI } from '@/lib/api-service'
-import { Heart } from 'lucide-react'
 import { isFavorite, toggleFavorite } from '@/lib/shop-storage'
+import { Heart } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 
 type Categoria = {
   idCategoria: number
@@ -21,7 +21,8 @@ type Produto = {
 }
 
 export function CategoriasPage() {
-  const [busca, setBusca] = useState('')
+  const [searchParams] = useSearchParams()
+  const [busca, setBusca] = useState(searchParams.get('busca') ?? '')
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('todas')
   const [ordenacao, setOrdenacao] = useState('Mais recente')
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -54,6 +55,20 @@ export function CategoriasPage() {
         descricao: categoria.descricao ?? ''
       }))
 
+      const obterNomeCategoria = (produto: any, categoriaId: number) => {
+        const nomeDireto =
+          produto.categoria?.nome_categoria ??
+          produto.categoria?.nome ??
+          produto.categoriaNome
+
+        if (nomeDireto) {
+          return nomeDireto
+        }
+
+        const categoriaEncontrada = categoriasNormalizadas.find((categoria) => categoria.idCategoria === categoriaId)
+        return categoriaEncontrada?.nome_categoria ?? 'Sem categoria'
+      }
+
       const produtosNormalizados: Produto[] = (produtosRes.data ?? []).map((produto: any) => ({
         idProduto: Number(produto.idProduto ?? produto.id),
         nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
@@ -61,8 +76,23 @@ export function CategoriasPage() {
         preco: Number(produto.preco ?? 0),
         estoque: Number(produto.estoque ?? 0),
         categoria: {
-          idCategoria: Number(produto.categoria?.idCategoria ?? produto.categoria?.id ?? 0),
-          nome_categoria: produto.categoria?.nome_categoria ?? produto.categoria?.nome ?? 'Sem categoria',
+          idCategoria: Number(
+            produto.categoria?.idCategoria ??
+            produto.categoria?.id ??
+            produto.categoriaId ??
+            produto.categoria_id ??
+            0
+          ),
+          nome_categoria: obterNomeCategoria(
+            produto,
+            Number(
+              produto.categoria?.idCategoria ??
+              produto.categoria?.id ??
+              produto.categoriaId ??
+              produto.categoria_id ??
+              0
+            )
+          ),
           descricao: produto.categoria?.descricao ?? ''
         }
       }))
@@ -139,12 +169,12 @@ export function CategoriasPage() {
     <Layout>
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Todas as categorias</h1>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base">Explore todos os produtos disponíveis</p>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Produtos</h1>
+          <p className="mt-2 text-sm text-slate-500 sm:text-base">Busque produtos e use os filtros para encontrar o que procura no CampusShop</p>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm md:flex-row md:items-center">
-          <span className="font-semibold text-slate-700">Filtros</span>
+          <span className="font-semibold text-slate-700">Buscar produtos</span>
           <input
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
@@ -183,7 +213,7 @@ export function CategoriasPage() {
               <div className="p-5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
-                    {produto.categoria.nome_categoria}
+                    {produto.categoria.nome_categoria || 'Sem categoria'}
                   </span>
                   <button
                     type="button"

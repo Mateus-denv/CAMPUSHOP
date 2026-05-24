@@ -3,7 +3,7 @@ import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
 import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 type Produto = {
   idProduto: number
@@ -18,6 +18,7 @@ type Produto = {
 }
 
 export function ProdutosPage() {
+  const [searchParams] = useSearchParams()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -25,6 +26,7 @@ export function ProdutosPage() {
   const [notificacao, setNotificacao] = useState('')
   const [notificacaoErro, setNotificacaoErro] = useState(false)
   const [favoritos, setFavoritos] = useState<number[]>([])
+  const termoBusca = searchParams.get('busca')?.trim().toLowerCase() ?? ''
 
   useEffect(() => {
     carregarProdutos()
@@ -135,6 +137,17 @@ export function ProdutosPage() {
     setTimeout(() => setNotificacao(''), 2500)
   }
 
+  const produtosFiltrados = produtos.filter((produto) => {
+    if (!termoBusca) {
+      return true
+    }
+
+    return [produto.nomeProduto, produto.descricao, produto.vendedorNome ?? '']
+      .join(' ')
+      .toLowerCase()
+      .includes(termoBusca)
+  })
+
   if (carregando) {
     return (
       <Layout>
@@ -161,6 +174,17 @@ export function ProdutosPage() {
           </Link>
         </div>
 
+        {termoBusca && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <p>
+              Mostrando resultados para "{searchParams.get('busca')}".
+            </p>
+            <Link to="/produtos" className="font-semibold underline decoration-blue-300 underline-offset-4">
+              Limpar busca
+            </Link>
+          </div>
+        )}
+
         {erro && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {erro}
@@ -169,7 +193,7 @@ export function ProdutosPage() {
 
         {/* Ajuste: mostrar 2 produtos por linha em telas maiores */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {produtos.map((produto) => (
+          {produtosFiltrados.map((produto) => (
             <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
@@ -219,6 +243,12 @@ export function ProdutosPage() {
             </Link>
           ))}
         </div>
+
+        {produtosFiltrados.length === 0 && (
+          <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+            Nenhum produto encontrado com essa busca.
+          </div>
+        )}
       </div>
     </Layout>
   )

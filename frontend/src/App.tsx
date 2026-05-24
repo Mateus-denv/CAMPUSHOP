@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { useAuthStore } from '@/store'
 import { authAPI } from '@/lib/api-service'
 import { addAuthListener, hasAuthToken } from '@/lib/auth-listener'
-import { LoginPage } from '@/pages/LoginPage'
-import { HomePage } from '@/pages/HomePage'
-import { CarrinhoPage } from '@/pages/CarrinhoPage'
-import { CadastroPage } from '@/pages/CadastroPage'
-import { CategoriasPage } from '@/pages/CategoriasPage'
-import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
-import { ContaPage } from '@/pages/ContaPage'
-import { ChatPage } from '@/pages/ChatPage'
-import { ProdutosPage } from '@/pages/ProdutosPage'
-import { PedidosPage } from '@/pages/PedidosPage'
 import { CadastrarProdutoPage } from '@/pages/CadastrarProdutoPage'
+import { CadastroPage } from '@/pages/CadastroPage'
+import { CarrinhoPage } from '@/pages/CarrinhoPage'
+import { CategoriasPage } from '@/pages/CategoriasPage'
+import { ChatPage } from '@/pages/ChatPage'
+import { ContaPage } from '@/pages/ContaPage'
+import { HomePage } from '@/pages/HomePage'
+import { LoginPage } from '@/pages/LoginPage'
+import { PedidosPage } from '@/pages/PedidosPage'
+import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
+import { useAuthStore } from '@/store'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 function App() {
   const { usuario, setUsuario } = useAuthStore()
@@ -88,21 +87,21 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/" element={<Navigate to="/produtos" replace />} />
       <Route path="/home" element={<HomePage />} />
-      <Route path="/categorias" element={<CategoriasPage />} />
+      <Route path="/categorias" element={<Navigate to="/produtos" replace />} />
+      <Route path="/produtos" element={<CategoriasPage />} />
       <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
-      <Route path="/produtos" element={<ProdutosPage />} />
       <Route path="/cadastrar-produto" element={usuario ? <CadastrarProdutoPage /> : <Navigate to="/login" replace />} />
 
-      <Route path="/login" element={usuario ? <Navigate to="/home" replace /> : <LoginPage />} />
-      <Route path="/cadastro" element={usuario ? <Navigate to="/home" replace /> : <CadastroPage />} />
+      <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
+      <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />
 
       <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
       <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
       <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
       <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/home" replace />} />
+      <Route path="*" element={<Navigate to="/produtos" replace />} />
     </Routes>
   )
 }

@@ -39,11 +39,14 @@ public class ProdutoController {
             String status,
             Boolean visivelParaComprador,
             Integer vendedor_id,
-            String nomeVendedor) {
+            String nomeVendedor,
+            Integer categoriaId,
+            String categoriaNome) {
 
         public static ProdutoResponse fromEntity(Produto produto) {
             // Resolve o nome do anunciante direto do usuário associado ao produto.
             Usuario usuario = produto.getUsuario();
+            var categoria = produto.getCategoria();
             return new ProdutoResponse(
                     produto.getIdProduto(),
                     produto.getNomeProduto(),
@@ -53,7 +56,9 @@ public class ProdutoController {
                     produto.getStatus(),
                     produto.getVisivelParaComprador(),
                     usuario != null ? usuario.getId() : null,
-                    usuario != null ? usuario.getNomeCompleto() : null);
+                    usuario != null ? usuario.getNomeCompleto() : null,
+                    categoria != null ? categoria.getIdCategoria() : null,
+                    categoria != null ? categoria.getNome_categoria() : null);
         }
     }
 
