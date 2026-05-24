@@ -9,6 +9,8 @@ type ProdutoDetalhe = {
   descricao: string
   preco: number
   estoque: number
+  status?: string
+  visivelParaComprador?: boolean
   nomeVendedor?: string | null
 }
 
@@ -40,6 +42,8 @@ export function ProdutoDetalhePage() {
           descricao: produtoNormalizado.descricao ?? '',
           preco: Number(produtoNormalizado.preco ?? 0),
           estoque: Number(produtoNormalizado.estoque ?? 0),
+          status: produtoNormalizado.status,
+          visivelParaComprador: produtoNormalizado.visivelParaComprador,
           nomeVendedor: produtoNormalizado.nomeVendedor ?? produtoNormalizado.usuario?.nomeCompleto ?? null,
         })
       } catch (err) {

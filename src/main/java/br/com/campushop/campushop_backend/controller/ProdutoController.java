@@ -36,6 +36,8 @@ public class ProdutoController {
             String descricao,
             Integer estoque,
             Double preco,
+            String status,
+            Boolean visivelParaComprador,
             Integer vendedor_id,
             String nomeVendedor) {
 
@@ -48,10 +50,16 @@ public class ProdutoController {
                     produto.getDescricao(),
                     produto.getEstoque(),
                     produto.getPreco(),
+                    produto.getStatus(),
+                    produto.getVisivelParaComprador(),
                     usuario != null ? usuario.getId() : null,
                     usuario != null ? usuario.getNomeCompleto() : null);
         }
     }
+
+    public record AtualizarStatusProdutoRequest(String status) {}
+
+    public record AtualizarVisibilidadeProdutoRequest(Boolean visivelParaComprador) {}
 
     // 1. Ler todos (Read)
     @GetMapping
@@ -74,8 +82,16 @@ public class ProdutoController {
 
     // 2. Ler por ID (Read)
     @GetMapping("/{id}")
-    public ResponseEntity<ProdutoResponse> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<ProdutoResponse> buscarPorId(@PathVariable Integer id, Authentication authentication) {
         return produtoService.buscarPorId(id)
+                .filter(produto -> {
+                    if (authentication != null && authentication.isAuthenticated() && produto.getUsuario() != null) {
+                        return authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())
+                                || produtoService.estaDisponivelParaComprador(produto);
+                    }
+
+                    return produtoService.estaDisponivelParaComprador(produto);
+                })
                 // Expõe o mesmo formato da listagem para simplificar o consumo no frontend.
                 .map(produto -> ResponseEntity.ok(ProdutoResponse.fromEntity(produto)))
                 .orElse(ResponseEntity.notFound().build());
@@ -141,6 +157,28 @@ public class ProdutoController {
         try {
             Produto produto = produtoService.atualizar(id, produtoAtualizado);
             return ResponseEntity.ok(produto);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ProdutoResponse> atualizarStatus(@PathVariable Integer id,
+            @RequestBody AtualizarStatusProdutoRequest request) {
+        try {
+            Produto produto = produtoService.atualizarStatus(id, request.status());
+            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/visibilidade")
+    public ResponseEntity<ProdutoResponse> atualizarVisibilidade(@PathVariable Integer id,
+            @RequestBody AtualizarVisibilidadeProdutoRequest request) {
+        try {
+            Produto produto = produtoService.atualizarVisibilidade(id, request.visivelParaComprador());
+            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }

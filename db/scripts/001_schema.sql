@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS produto (
   estoque INT NOT NULL,
   preco DOUBLE NOT NULL,
   status VARCHAR(20),
+  visivel_para_comprador TINYINT(1) NOT NULL DEFAULT 1,
   dimensoes VARCHAR(255),
   peso DOUBLE,
   -- Guarda o dono (vendedor) do produto para permitir derivar id_vendedor no pedido.

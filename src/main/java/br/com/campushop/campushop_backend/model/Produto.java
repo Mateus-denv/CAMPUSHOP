@@ -27,6 +27,9 @@ public class Produto {
     @Column(length = 20)
     private String status;
 
+    @Column(name = "visivel_para_comprador", nullable = false)
+    private Boolean visivelParaComprador = Boolean.TRUE;
+
     private String dimensoes;
     private Double peso;
 
@@ -89,6 +92,14 @@ public class Produto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getVisivelParaComprador() {
+        return visivelParaComprador;
+    }
+
+    public void setVisivelParaComprador(Boolean visivelParaComprador) {
+        this.visivelParaComprador = visivelParaComprador;
     }
 
     public String getDimensoes() {
