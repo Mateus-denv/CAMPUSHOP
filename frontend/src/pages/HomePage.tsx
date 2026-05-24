@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { categories, products } from '@/lib/mock-data'
 import { ArrowRight, ChevronLeft, ChevronRight, Search, ShieldCheck, Star, Truck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 type DestaqueItem = {
   id: string
@@ -64,21 +64,54 @@ export function HomePage() {
     },
   ]
 
+  const [busca, setBusca] = useState('')
   const [indiceDestaque, setIndiceDestaque] = useState(0)
+  const termoBusca = busca.trim().toLowerCase()
+
+  const destaquesFiltrados = destaques.filter((item) => {
+    if (!termoBusca) {
+      return true
+    }
+
+    return [item.titulo, item.descricao, item.categoria, item.vendedor, item.local, item.tipo]
+      .join(' ')
+      .toLowerCase()
+      .includes(termoBusca)
+  })
 
   useEffect(() => {
-    if (!destaques.length) return
+    if (!destaquesFiltrados.length) {
+      setIndiceDestaque(0)
+      return
+    }
 
     const timer = setInterval(() => {
-      setIndiceDestaque((atual) => (atual + 1) % destaques.length)
+      setIndiceDestaque((atual) => (atual + 1) % destaquesFiltrados.length)
     }, 4500)
 
     return () => clearInterval(timer)
-  }, [destaques.length])
+  }, [destaquesFiltrados.length])
 
-  const destaqueAtual = destaques[indiceDestaque]
-  const irParaAnterior = () => setIndiceDestaque((atual) => (atual - 1 + destaques.length) % destaques.length)
-  const irParaProximo = () => setIndiceDestaque((atual) => (atual + 1) % destaques.length)
+  useEffect(() => {
+    setIndiceDestaque(0)
+  }, [termoBusca])
+
+  const destaqueAtual = destaquesFiltrados[indiceDestaque]
+  const irParaAnterior = () => {
+    if (!destaquesFiltrados.length) {
+      return
+    }
+
+    setIndiceDestaque((atual) => (atual - 1 + destaquesFiltrados.length) % destaquesFiltrados.length)
+  }
+  const irParaProximo = () => {
+    if (!destaquesFiltrados.length) {
+      return
+    }
+
+    setIndiceDestaque((atual) => (atual + 1) % destaquesFiltrados.length)
+  }
+  const totalResultados = destaquesFiltrados.length
 
   return (
     <Layout>
@@ -96,14 +129,27 @@ export function HomePage() {
             </p>
 
             <div className="mt-8 flex max-w-2xl flex-col gap-3 rounded-3xl border border-white/15 bg-white/10 p-3 backdrop-blur sm:flex-row">
-              <div className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-sm">
+              <label className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-sm">
                 <Search className="h-5 w-5 text-slate-400" />
-                <span className="text-sm text-slate-500">Busque livros, eletrônicos, roupas ou serviços</span>
-              </div>
-              <Link to="/categorias" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-transform hover:scale-[1.01]">
+                <input
+                  value={busca}
+                  onChange={(event) => setBusca(event.target.value)}
+                  placeholder="Busque livros, eletrônicos, roupas ou serviços"
+                  aria-label="Buscar destaques na home"
+                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                />
+              </label>
+              <Link
+                to={busca.trim() ? { pathname: '/produtos', search: `?busca=${encodeURIComponent(busca.trim())}` } : '/produtos'}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-transform hover:scale-[1.01]"
+              >
                 Explorar agora <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
+
+            <p className="mt-3 text-sm text-blue-50/80">
+              {termoBusca ? `${totalResultados} resultado${totalResultados === 1 ? ' encontrado' : 's'} para "${busca.trim()}"` : 'Digite para filtrar os destaques exibidos nesta página.'}
+            </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {[
@@ -194,7 +240,7 @@ export function HomePage() {
           </div>
         </div>
 
-        {destaqueAtual && (
+        {destaqueAtual ? (
           <div className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50 p-6 shadow-sm sm:p-8">
             <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
               <div>
@@ -257,17 +303,23 @@ export function HomePage() {
             </button>
 
             <div className="mt-6 flex justify-center gap-2">
-              {destaques.map((item, index) => (
+              {destaquesFiltrados.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setIndiceDestaque(index)}
-                  className={`h-2.5 rounded-full transition-all ${index === indiceDestaque ? 'w-8 bg-slate-900' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
-                    }`}
+                  className={`h-2.5 rounded-full transition-all ${index === indiceDestaque ? 'w-8 bg-slate-900' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`}
                   aria-label={`Ir para destaque ${index + 1}`}
                 />
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="relative mt-6 overflow-hidden rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm sm:p-10">
+            <p className="text-lg font-bold text-slate-900">Nenhum destaque encontrado</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Tente buscar por outro termo ou limpe a pesquisa para ver novamente todos os itens.
+            </p>
           </div>
         )}
       </section>

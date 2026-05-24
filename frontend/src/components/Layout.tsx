@@ -13,7 +13,6 @@ type LayoutProps = {
 
 const navItems = [
   { to: '/home', label: 'Home' },
-  { to: '/categorias', label: 'Categorias' },
   { to: '/produtos', label: 'Produtos' },
   { to: '/carrinho', label: 'Carrinho' },
   { to: '/pedidos', label: 'Pedidos' },
