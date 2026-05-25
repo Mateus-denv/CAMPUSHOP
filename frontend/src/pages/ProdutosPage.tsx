@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { produtoAPI } from '@/lib/api-service'
-import { addToCartWithSnapshot, countCartItems, isFavorite, toggleFavorite } from '@/lib/shop-storage'
+import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
+import { addToCartWithSnapshot, isFavorite, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -25,13 +25,26 @@ export function ProdutosPage() {
 
   useEffect(() => {
     carregarProdutos()
-    setItensNoCarrinho(countCartItems())
+    carregarCarrinho()
   }, [])
 
   useEffect(() => {
     const idsFavoritos = produtos.map((produto) => produto.idProduto).filter((id) => isFavorite(id))
     setFavoritos(idsFavoritos)
   }, [produtos])
+
+  const carregarCarrinho = async () => {
+    try {
+      const response = await carrinhoAPI.obter()
+      const quantidadeTotal = (response.data?.itens ?? []).reduce(
+        (total: number, item: any) => total + Number(item.quantidade ?? 0),
+        0
+      )
+      setItensNoCarrinho(quantidadeTotal)
+    } catch (err: any) {
+      console.error('Erro ao carregar carrinho:', err)
+    }
+  }
 
   const carregarProdutos = async () => {
     try {
@@ -60,29 +73,34 @@ export function ProdutosPage() {
     }
   }
 
-  const adicionarAoCarrinho = (produtoId: number) => {
+  const adicionarAoCarrinho = async (produtoId: number) => {
     const produto = produtos.find((item) => item.idProduto === produtoId)
     if (!produto) {
       return
     }
 
-    addToCartWithSnapshot(
-      {
-        id: produto.idProduto,
-        nome: produto.nomeProduto || 'Produto sem nome',
-        descricao: produto.descricao || '',
-        preco: produto.preco,
-        estoque: produto.estoque,
-        condicao: 'Novo',
-        // Salva apenas o nome real do vendedor para não persistir texto genérico.
-        vendedor: produto.vendedorNome?.trim() || '',
-      },
-      1
-    )
+    try {
+      await carrinhoAPI.adicionar(produto.idProduto, 1)
+      addToCartWithSnapshot(
+        {
+          id: produto.idProduto,
+          nome: produto.nomeProduto || 'Produto sem nome',
+          descricao: produto.descricao,
+          preco: produto.preco,
+          estoque: produto.estoque,
+          vendedor: produto.vendedorNome,
+        },
+        1
+      )
 
-    setItensNoCarrinho(countCartItems())
-    setNotificacao(`"${produto.nomeProduto || 'Produto'}" foi adicionado ao carrinho.`)
-    setTimeout(() => setNotificacao(''), 2500)
+      await carregarCarrinho()
+      setNotificacao(`"${produto.nomeProduto || 'Produto'}" foi adicionado ao carrinho.`)
+      setTimeout(() => setNotificacao(''), 2500)
+    } catch (err: any) {
+      console.error('Erro ao adicionar produto ao carrinho:', err)
+      setNotificacao('Não foi possível adicionar o produto ao carrinho.')
+      setTimeout(() => setNotificacao(''), 2500)
+    }
   }
 
   const favoritarProduto = (produtoId: number) => {
@@ -126,14 +144,18 @@ export function ProdutosPage() {
     <Layout>
       <div>
         {notificacao && (
-          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <div data-testid="product-notification" className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
             {notificacao}
           </div>
         )}
 
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-4xl font-bold">Produtos</h1>
-          <Link to="/carrinho" className="inline-flex w-fit items-center rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50">
+          <Link
+            to="/carrinho"
+            className="inline-flex w-fit items-center rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+            data-testid="cart-link"
+          >
             Ir para carrinho ({itensNoCarrinho})
           </Link>
         </div>
@@ -146,7 +168,12 @@ export function ProdutosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {produtos.map((produto) => (
-            <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            <Link
+              key={produto.idProduto}
+              to={`/produto/${produto.idProduto}`}
+              className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+              data-testid={`product-card-${produto.idProduto}`}
+            >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
                 <button
@@ -161,6 +188,7 @@ export function ProdutosPage() {
                     : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                     }`}
                   aria-label="Favoritar produto"
+                  data-testid={`favorite-${produto.idProduto}`}
                 >
                   <Heart className={`h-4 w-4 ${favoritos.includes(produto.idProduto) ? 'fill-current' : ''}`} />
                 </button>
@@ -183,6 +211,7 @@ export function ProdutosPage() {
                   adicionarAoCarrinho(produto.idProduto)
                 }}
                 disabled={produto.estoque === 0}
+                data-testid={`add-to-cart-${produto.idProduto}`}
                 className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {produto.estoque === 0 ? 'Fora de estoque' : 'Adicionar ao carrinho'}

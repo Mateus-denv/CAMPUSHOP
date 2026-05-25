@@ -86,7 +86,7 @@ export function LoginPage() {
             </div>
 
             {erro && (
-              <div className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+              <div data-testid="login-error" className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
                 <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
                 <p className="text-sm text-red-800">{erro}</p>
               </div>
@@ -102,6 +102,7 @@ export function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="seu@email.com"
+                    data-testid="login-email"
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
                   />
                 </div>
@@ -116,12 +117,14 @@ export function LoginPage() {
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
                     placeholder="••••••••"
+                    data-testid="login-password"
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
+                <span data-testid="login-submit">Entrar</span>
                 Entrar
               </Button>
             </form>

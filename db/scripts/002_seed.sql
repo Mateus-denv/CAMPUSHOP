@@ -36,7 +36,7 @@ VALUES
     'maria@campushop.com',
     'Camaçari',
     'Maria Souza',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2b$10$xPUg/yywvNcMRfiC6LrAWuFhTaJ9WFKQS6tcRgi7UimoFzmURqUnu',
     NULL,
     'comprador',
     NULL,
@@ -51,7 +51,7 @@ VALUES
     'joao@campushop.com',
     'Salvador',
     'Joao Lima',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2b$10$xPUg/yywvNcMRfiC6LrAWuFhTaJ9WFKQS6tcRgi7UimoFzmURqUnu',
     NULL,
     'vendedor',
     NULL,
@@ -70,5 +70,16 @@ AND NOT EXISTS (
   SELECT 1
   FROM produto p
   WHERE p.nome_produto = 'Livro de Lógica de Programação'
+)
+LIMIT 1;
+
+INSERT INTO produto (nome_produto, descricao, estoque, preco, status, id_categoria)
+SELECT 'Produto sem estoque', 'Produto de teste para fluxo de estoque esgotado', 0, 99.90, 'ATIVO', c.id_categoria
+FROM categoria c
+WHERE c.nome_categoria = 'Livros'
+AND NOT EXISTS (
+  SELECT 1
+  FROM produto p
+  WHERE p.nome_produto = 'Produto sem estoque'
 )
 LIMIT 1;

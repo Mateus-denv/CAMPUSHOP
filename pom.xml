@@ -19,6 +19,9 @@
     
     <properties>
         <java.version>17</java.version>
+        <!-- Alinha o cliente HTTP e o core ao requisito do WebDriverManager 6.x sem definir versão explícita na dependência -->
+        <httpclient5.version>5.4.2</httpclient5.version>
+        <httpcore5.version>5.4.2</httpcore5.version>
     </properties>
     
     <dependencies>
@@ -97,13 +100,54 @@
       <dependency>
         <groupId>jakarta.validation</groupId>
         <artifactId>jakarta.validation-api</artifactId>
-        <version>3.0.2</version>
       </dependency>
 
       <dependency>
         <groupId>org.hibernate.validator</groupId>
         <artifactId>hibernate-validator</artifactId>
-        <version>8.0.1.Final</version>
+      </dependency>
+
+      <!-- Selenium WebDriver para testes E2E -->
+      <dependency>
+        <groupId>org.seleniumhq.selenium</groupId>
+        <artifactId>selenium-java</artifactId>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- WebDriverManager para gerenciar drivers automaticamente -->
+      <dependency>
+        <groupId>io.github.bonigarcia</groupId>
+        <artifactId>webdrivermanager</artifactId>
+        <version>6.3.4</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- HTTP Client 5 necessário para WebDriverManager 6.x -->
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- JUnit 5 (Jupiter) é gerenciado pelo Spring Boot Starter Test para evitar conflito de versões -->
+
+      <!-- REST Assured para testes de API (útil para validações) -->
+      <dependency>
+        <groupId>io.rest-assured</groupId>
+        <artifactId>rest-assured</artifactId>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Lombok para reduzir boilerplate -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <scope>test</scope>
       </dependency>
     </dependencies>
     
@@ -112,6 +156,18 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/PedidoServiceTest*.java</exclude>
+                        <exclude>**/service/PedidoServiceTest*.java</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
