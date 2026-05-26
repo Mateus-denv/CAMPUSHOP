@@ -1,99 +1,149 @@
 package br.com.campushop.campushop_backend.e2e.utils;
 
 /**
- * Centralizador de dados para testes E2E.
- * Mantém credenciais, IDs de produtos e URLs consistentes.
- * 
- * Esses dados devem ser cadastrados no banco antes de rodar os testes.
- * Veja: db/scripts/002_seed.sql
+ * centralizador de dados para os testes e2e.
+ * aqui ficam todas as constantes que os testes usam.
+ *
+ * o que tem aqui:
+ * - emails e senhas dos usuarios de teste
+ * - ids e precos dos produtos de teste
+ * - urls das paginas
+ * - timeouts
+ * - mensagens de erro
+ *
+ * importante: os dados aqui devem existir no banco de verdade.
+ * veja o arquivo db/scripts/002_seed.sql para ver o que e criado.
  */
+
 public class TestData {
 
     // =====================================================
-    // Credenciais de Teste
+    // dados do usuario de teste (comprador)
     // =====================================================
 
-    /** Usuário de teste válido - DEVE existir no banco */
+    /** email do usuario de teste (comprador) */
     public static final String TEST_USER_EMAIL = "maria@campushop.com";
+
+    /** senha do usuario de teste */
     public static final String TEST_USER_PASSWORD = "password";
-    public static final String TEST_USER_NAME = "Maria Souza";
 
-    /** Usuário segundo para testes multi-user */
+    /** nome completo do usuario de teste */
+    public static final String TEST_USER_NAME = "maria souza";
+
+    // =====================================================
+    // dados do segundo usuario de teste (vendedor)
+    // =====================================================
+
+    /** email do segundo usuario de teste */
     public static final String TEST_USER_2_EMAIL = "joao@campushop.com";
+
+    /** senha do segundo usuario de teste */
     public static final String TEST_USER_2_PASSWORD = "password";
-    public static final String TEST_USER_2_NAME = "Joao Lima";
+
+    /** nome completo do segundo usuario de teste */
+    public static final String TEST_USER_2_NAME = "joao lima";
 
     // =====================================================
-    // IDs de Produtos para Teste
+    // dados do produto em estoque (para testar adicionar ao carrinho)
     // =====================================================
 
-    /** Produto EM ESTOQUE - com quantidade suficiente */
+    /** id do produto que tem no estoque */
     public static final int PRODUCT_IN_STOCK_ID = 1;
-    public static final String PRODUCT_IN_STOCK_NAME = "Arthur";
+
+    /** nome do produto que tem no estoque */
+    public static final String PRODUCT_IN_STOCK_NAME = "arthur";
+
+    /** preco do produto que tem no estoque */
     public static final double PRODUCT_IN_STOCK_PRICE = 0.10;
 
-    /** Produto SEM ESTOQUE - deve estar com estoque = 0 */
-    public static final int PRODUCT_OUT_OF_STOCK_ID = 999;
-    public static final String PRODUCT_OUT_OF_STOCK_NAME = "Produto sem estoque";
+    // =====================================================
+    // dados do produto sem estoque (para testar botao "fora de estoque")
+    // =====================================================
 
-    /** Segundo produto para testes de múltiplos itens */
+    /** id do produto sem estoque */
+    public static final int PRODUCT_OUT_OF_STOCK_ID = 999;
+
+    /** nome do produto sem estoque */
+    public static final String PRODUCT_OUT_OF_STOCK_NAME = "produto sem estoque";
+
+    // =====================================================
+    // dados do segundo produto em estoque (para testar multiplos itens)
+    // =====================================================
+
+    /** id do segundo produto em estoque */
     public static final int PRODUCT_2_IN_STOCK_ID = 2;
+
+    /** nome do segundo produto em estoque */
     public static final String PRODUCT_2_IN_STOCK_NAME = "empada";
+
+    /** preco do segundo produto em estoque */
     public static final double PRODUCT_2_IN_STOCK_PRICE = 3.00;
 
     // =====================================================
-    // Dados de Checkout/Compra
+    // dados para checkout (ainda nao usado nos testes)
     // =====================================================
 
-    /** Endereço de teste para checkout */
-    public static final String TEST_ADDRESS = "Rua do Teste, 123 - Apt 456";
+    /** endereco falso para testar checkout */
+    public static final String TEST_ADDRESS = "rua do teste, 123 - apt 456";
 
-    /** Telefone de teste para checkout */
+    /** telefone falso para testar checkout */
     public static final String TEST_PHONE = "11987654321";
 
     // =====================================================
-    // Timeouts (em segundos)
+    // timeouts (em segundos)
     // =====================================================
 
-    /** Timeout padrão para elementos aparecerem */
+    /** timeout padrao para esperar elementos aparecerem */
     public static final int DEFAULT_TIMEOUT = 10;
 
-    /** Timeout curto para ações rápidas */
+    /** timeout curto para acoes rapidas */
     public static final int SHORT_TIMEOUT = 3;
 
-    /** Timeout longo para operações assíncronas */
+    /** timeout longo para operacoes que demoram mais */
     public static final int LONG_TIMEOUT = 20;
 
     // =====================================================
-    // URLs
+    // urls das paginas
     // =====================================================
 
+    /** monta a url da pagina home */
     public static String getHomeUrl() {
-        return DriverFactory.getBaseUrl() + "/home";
+        return driverfactory.getbaseurl() + "/home";
     }
 
+    /** monta a url da pagina de login */
     public static String getLoginUrl() {
-        return DriverFactory.getBaseUrl() + "/login";
+        return driverfactory.getbaseurl() + "/login";
     }
 
+    /** monta a url da pagina de produtos */
     public static String getProdutosUrl() {
-        return DriverFactory.getBaseUrl() + "/produtos";
+        return driverfactory.getbaseurl() + "/produtos";
     }
 
+    /** monta a url da pagina do carrinho */
     public static String getCarrinhoUrl() {
-        return DriverFactory.getBaseUrl() + "/carrinho";
+        return driverfactory.getbaseurl() + "/carrinho";
     }
 
+    /** monta a url da pagina de detalhes de um produto */
     public static String getProductDetailUrl(int productId) {
-        return DriverFactory.getBaseUrl() + "/produto/" + productId;
+        return driverfactory.getbaseurl() + "/produto/" + productId;
     }
 
     // =====================================================
-    // Mensagens de Validação
+    // mensagens de validacao (para comparar com o que aparece na tela)
     // =====================================================
 
-    public static final String INVALID_LOGIN_MESSAGE = "Senha incorreta";
-    public static final String USER_NOT_FOUND_MESSAGE = "Usuário não existe";
-    public static final String PRODUCT_OUT_OF_STOCK_MESSAGE = "Fora de estoque";
-    public static final String PRODUCT_ADDED_TO_CART_MESSAGE = "Produto adicionado ao carrinho";
+    /** mensagem que aparece quando a senha esta errada */
+    public static final String INVALID_LOGIN_MESSAGE = "senha incorreta";
+
+    /** mensagem que aparece quando o usuario nao existe */
+    public static final String USER_NOT_FOUND_MESSAGE = "usuario nao existe";
+
+    /** mensagem que aparece no botao quando o produto nao tem estoque */
+    public static final String PRODUCT_OUT_OF_STOCK_MESSAGE = "fora de estoque";
+
+    /** mensagem da notificacao quando produto e adicionado ao carrinho */
+    public static final String PRODUCT_ADDED_TO_CART_MESSAGE = "produto adicionado ao carrinho";
 }
