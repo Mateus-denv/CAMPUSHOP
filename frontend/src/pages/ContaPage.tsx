@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { MediaImage } from "@/components/MediaImage";
-import { pedidosAPI, produtoAPI, type PedidoAPI } from "@/lib/api-service";
+import { contaAPI, pedidosAPI, produtoAPI, usuarioAPI, type ContaMetricasAPI, type PedidoAPI } from "@/lib/api-service";
 import { buildUserPhotoUrl } from "@/lib/image-utils";
 import { getFavoriteProducts } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
@@ -103,6 +103,24 @@ function montarAvisoPrazo(pedido: PedidoAPI) {
   return null;
 }
 
+function formatarMoeda(valor: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(valor)
+}
+
+function formatarDataHora(data?: string | null) {
+  if (!data) {
+    return 'Sem data'
+  }
+
+  return new Date(data).toLocaleString('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
 export function ContaPage() {
   const navigate = useNavigate();
   const [aba, setAba] = useState("Visão Geral");
@@ -110,6 +128,7 @@ export function ContaPage() {
   const [favoritos, setFavoritos] = useState<FavoritoProduto[]>([]);
   const [pedidosCompras, setPedidosCompras] = useState<PedidoAPI[]>([]);
   const [pedidosRecebidos, setPedidosRecebidos] = useState<PedidoAPI[]>([]);
+  const [metricas, setMetricas] = useState<ContaMetricasAPI | null>(null);
   const [pedidoEmProcesso, setPedidoEmProcesso] = useState<number | null>(null);
   const { usuario, setUsuario } = useAuthStore();
   const [mensagemConfig, setMensagemConfig] = useState("");
@@ -132,11 +151,13 @@ export function ContaPage() {
   useEffect(() => {
     const carregarPedidos = async () => {
       try {
-        const [comprasResponse, recebidosResponse] = await Promise.all([
+        const [metricasResponse, comprasResponse, recebidosResponse] = await Promise.all([
+          contaAPI.metricas(),
           pedidosAPI.meus(),
           pedidosAPI.recebidos(),
         ]);
 
+        setMetricas(metricasResponse.data ?? null);
         setPedidosCompras(comprasResponse.data ?? []);
         setPedidosRecebidos(recebidosResponse.data ?? []);
       } catch (error) {
@@ -284,7 +305,16 @@ export function ContaPage() {
   const nome = usuario?.nomeCompleto || usuario?.nome || "Minha conta";
   const email = usuario?.email || "Email não informado";
   const ra = usuario?.ra ? `R.A ${usuario.ra}` : "R.A não informado";
-  const pedidosPendentes = pedidosRecebidos.filter((pedido) => pedido.status === 'em analise').length;
+  const pedidosPendentes = metricas?.pedidosPendentes ?? 0;
+  const produtosAtivos = metricas?.produtosAtivos ?? 0;
+  const produtosTotais = metricas?.produtosTotais ?? produtos.length;
+  const vendasConcluidas = metricas?.vendasConcluidas ?? 0;
+  const comprasConcluidas = metricas?.comprasConcluidas ?? 0;
+  const faturamentoVendas = metricas?.faturamentoVendas ?? 0;
+  const gastoCompras = metricas?.gastoCompras ?? 0;
+  const ticketMedioVendas = metricas?.ticketMedioVendas ?? 0;
+  const ticketMedioCompras = metricas?.ticketMedioCompras ?? 0;
+  const atividadesRecentes = metricas?.atividadesRecentes ?? [];
 
   return (
     <Layout>
@@ -350,11 +380,85 @@ export function ContaPage() {
             </div>
 
             {aba === "Visão Geral" ? (
-              <div className="mt-3 rounded-[1.5rem] border border-slate-200 p-4 shadow-sm">
-                {/* Os cards de métricas foram removidos até existir lógica real para ativos/vendidos/pedidos. */}
-                <div className="mt-4 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
-                  {/* Mantemos a visão geral sem dados fictícios e sem atividade até a implementação das métricas reais. */}
-                  Visão geral temporariamente sem indicadores e atividade recente.
+              <div className="mt-3 space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Visão geral</p>
+                    <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                      Métricas essenciais da sua conta
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-500">
+                      Resumo objetivo com vendas, compras, faturamento e pedidos em andamento.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Produtos ativos</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900">{produtosAtivos}</p>
+                    <p className="mt-1 text-sm text-slate-500">{produtosTotais} anúncios no total</p>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Vendas concluídas</p>
+                    <p className="mt-2 text-3xl font-black text-emerald-700">{vendasConcluidas}</p>
+                    <p className="mt-1 text-sm text-emerald-700/80">{formatarMoeda(faturamentoVendas)} em faturamento</p>
+                  </div>
+                  <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Compras concluídas</p>
+                    <p className="mt-2 text-3xl font-black text-blue-700">{comprasConcluidas}</p>
+                    <p className="mt-1 text-sm text-blue-700/80">{formatarMoeda(gastoCompras)} em compras</p>
+                  </div>
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-700">Pedidos em análise</p>
+                    <p className="mt-2 text-3xl font-black text-orange-700">{pedidosPendentes}</p>
+                    <p className="mt-1 text-sm text-orange-700/80">Aguardando sua ação</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ticket médio de vendas</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{formatarMoeda(ticketMedioVendas)}</p>
+                    <p className="mt-1 text-sm text-slate-500">Baseado nas vendas entregues.</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ticket médio de compras</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{formatarMoeda(ticketMedioCompras)}</p>
+                    <p className="mt-1 text-sm text-slate-500">Baseado nas compras concluídas.</p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Atividade recente</p>
+                      <p className="mt-1 text-sm text-slate-500">Últimos pedidos e movimentações na conta.</p>
+                    </div>
+                  </div>
+
+                  {atividadesRecentes.length === 0 ? (
+                    <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">
+                      Ainda não há atividades suficientes para exibir aqui.
+                    </div>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {atividadesRecentes.map((pedido) => (
+                        <div key={pedido.id} className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-900">Pedido #{pedido.id} • {pedido.tipo}</p>
+                            <p className="text-sm text-slate-500">
+                              {pedido.participante || 'Movimentação da conta'}
+                            </p>
+                          </div>
+                          <div className="text-left sm:text-right">
+                            <p className="text-sm font-semibold text-slate-900">{formatarMoeda(Number(pedido.total || 0))}</p>
+                            <p className="text-xs text-slate-500">{pedido.status} • {formatarDataHora(pedido.data)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : aba === "Meus Produtos" ? (

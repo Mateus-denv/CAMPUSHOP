@@ -89,6 +89,32 @@ export const pedidosAPI = {
     }),
 }
 
+export type ContaAtividadeAPI = {
+  id: number
+  tipo: 'Compra' | 'Venda'
+  status: PedidoAPI['status']
+  total: number
+  data: string | null
+  participante: string | null
+}
+
+export type ContaMetricasAPI = {
+  produtosTotais: number
+  produtosAtivos: number
+  vendasConcluidas: number
+  comprasConcluidas: number
+  pedidosPendentes: number
+  faturamentoVendas: number
+  gastoCompras: number
+  ticketMedioVendas: number
+  ticketMedioCompras: number
+  atividadesRecentes: ContaAtividadeAPI[]
+}
+
+export const contaAPI = {
+  metricas: () => api.get<ContaMetricasAPI>('/api/conta/metricas'),
+}
+
 export const authAPI = {
   login: (email: string, senha: string) =>
     api.post('/api/auth/login', {

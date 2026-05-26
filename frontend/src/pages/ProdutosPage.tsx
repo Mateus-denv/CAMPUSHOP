@@ -16,6 +16,8 @@ type Produto = {
   visivelParaComprador?: boolean
   vendedor_id?: number
   vendedorNome?: string
+  categoriaId?: number
+  categoria?: string
 }
 
 export function ProdutosPage() {
@@ -28,6 +30,9 @@ export function ProdutosPage() {
   const [notificacaoErro, setNotificacaoErro] = useState(false)
   const [favoritos, setFavoritos] = useState<number[]>([])
   const termoBusca = searchParams.get('busca')?.trim().toLowerCase() ?? ''
+  const categoriaFiltroIdBruto = searchParams.get('categoriaId')?.trim() ?? ''
+  const categoriaFiltroNome = searchParams.get('categoria')?.trim().toLowerCase() ?? ''
+  const categoriaFiltroId = categoriaFiltroIdBruto ? Number(categoriaFiltroIdBruto) : null
 
   useEffect(() => {
     carregarProdutos()
@@ -58,6 +63,12 @@ export function ProdutosPage() {
           produto.usuario?.nomeCompleto ??
           produto.usuario?.nomeCliente ??
           '',
+        categoriaId: Number(produto.categoriaId ?? produto.categoria?.idCategoria ?? produto.categoria?.id ?? 0) || undefined,
+        categoria:
+          produto.nomeCategoria ??
+          produto.categoria?.nome_categoria ??
+          produto.categoria?.nome ??
+          (typeof produto.categoria === 'string' ? produto.categoria : ''),
       }))
       setProdutos(produtosNormalizados)
     } catch (err: any) {
@@ -139,6 +150,19 @@ export function ProdutosPage() {
   }
 
   const produtosFiltrados = produtos.filter((produto) => {
+    const produtoCategoriaNome = produto.categoria?.trim().toLowerCase() ?? ''
+    const correspondeCategoria =
+      categoriaFiltroId != null
+        ? (produto.categoriaId != null && produto.categoriaId === categoriaFiltroId) ||
+          (categoriaFiltroNome ? produtoCategoriaNome === categoriaFiltroNome : false)
+        : categoriaFiltroNome
+          ? produtoCategoriaNome === categoriaFiltroNome
+          : true
+
+    if (!correspondeCategoria) {
+      return false
+    }
+
     if (!termoBusca) {
       return true
     }
@@ -148,6 +172,8 @@ export function ProdutosPage() {
       .toLowerCase()
       .includes(termoBusca)
   })
+
+  const categoriaSelecionada = searchParams.get('categoria')?.trim()
 
   if (carregando) {
     return (
@@ -175,10 +201,11 @@ export function ProdutosPage() {
           </Link>
         </div>
 
-        {termoBusca && (
+        {(termoBusca || categoriaSelecionada) && (
           <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
             <p>
-              Mostrando resultados para "{searchParams.get('busca')}".
+              {categoriaSelecionada ? `Filtrando pela categoria "${categoriaSelecionada}".` : null}
+              {termoBusca ? ` Mostrando resultados para "${searchParams.get('busca')}".` : null}
             </p>
             <Link to="/produtos" className="font-semibold underline decoration-blue-300 underline-offset-4">
               Limpar busca
@@ -254,7 +281,7 @@ export function ProdutosPage() {
 
         {produtosFiltrados.length === 0 && (
           <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-            Nenhum produto encontrado com essa busca.
+            Nenhum produto encontrado com esses filtros.
           </div>
         )}
       </div>

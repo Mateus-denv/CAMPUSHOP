@@ -1,6 +1,8 @@
 package br.com.campushop.campushop_backend.service;
 
 import br.com.campushop.campushop_backend.dto.PedidoResponse;
+import br.com.campushop.campushop_backend.dto.ContaAtividadeResponse;
+import br.com.campushop.campushop_backend.dto.ContaMetricasResponse;
 import br.com.campushop.campushop_backend.dto.UpdatePedidoStatusRequest;
 import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Pedido;
@@ -13,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +124,57 @@ public class PedidoService {
                 .count();
     }
 
+        @Transactional(readOnly = true)
+        public ContaMetricasResponse obterMetricasConta(String emailUsuario) {
+        List<Produto> produtos = produtoRepository.findByUsuarioEmail(emailUsuario);
+        List<PedidoResponse> pedidosCompras = listarPedidosDoComprador(emailUsuario);
+        List<PedidoResponse> pedidosRecebidos = listarPedidosDoVendedor(emailUsuario);
+
+        long produtosAtivos = produtos.stream()
+            .filter(produto -> {
+                String status = produto.getStatus();
+                return status == null || "ATIVO".equalsIgnoreCase(status.trim());
+            })
+            .count();
+
+        long vendasConcluidas = pedidosRecebidos.stream()
+            .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
+            .count();
+
+        long comprasConcluidas = pedidosCompras.stream()
+            .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
+            .count();
+
+        BigDecimal faturamentoVendas = somarPedidos(pedidosRecebidos, STATUS_ENTREGUE);
+        BigDecimal gastoCompras = somarPedidos(pedidosCompras, STATUS_ENTREGUE);
+        BigDecimal ticketMedioVendas = calcularMedia(faturamentoVendas, vendasConcluidas);
+        BigDecimal ticketMedioCompras = calcularMedia(gastoCompras, comprasConcluidas);
+        long pedidosPendentes = pedidosRecebidos.stream()
+            .filter(pedido -> STATUS_EM_ANALISE.equalsIgnoreCase(pedido.status()))
+            .count();
+
+        List<ContaAtividadeResponse> atividadesRecentes = new ArrayList<>();
+        pedidosCompras.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Compra", pedido.vendedor() != null ? pedido.vendedor().nome() : null)));
+        pedidosRecebidos.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Venda", pedido.comprador() != null ? pedido.comprador().nome() : null)));
+
+        List<ContaAtividadeResponse> atividadesRecentesOrdenadas = atividadesRecentes.stream()
+            .sorted(Comparator.comparing(this::parseDataAtividade).reversed())
+            .limit(6)
+            .toList();
+
+        return new ContaMetricasResponse(
+            produtos.size(),
+            produtosAtivos,
+            vendasConcluidas,
+            comprasConcluidas,
+            pedidosPendentes,
+            faturamentoVendas,
+            gastoCompras,
+            ticketMedioVendas,
+            ticketMedioCompras,
+            atividadesRecentesOrdenadas);
+        }
+
     @Transactional
     public PedidoResponse atualizarStatus(Integer pedidoId, String emailUsuario, UpdatePedidoStatusRequest request) {
         Pedido pedido = pedidoRepository.findDetalhadoById(pedidoId)
@@ -219,6 +274,53 @@ public class PedidoService {
         for (Pedido pedido : pedidos) {
             invalidarSeVencido(pedido, agora);
         }
+    }
+
+    private ContaAtividadeResponse toAtividade(PedidoResponse pedido, String tipo, String participante) {
+        return new ContaAtividadeResponse(
+                pedido.id(),
+                tipo,
+                pedido.status(),
+                pedido.total(),
+                dataReferenciaPedido(pedido),
+                participante);
+    }
+
+    private String dataReferenciaPedido(PedidoResponse pedido) {
+        if (pedido.entregueEm() != null) {
+            return pedido.entregueEm();
+        }
+
+        if (pedido.aprovadoEm() != null) {
+            return pedido.aprovadoEm();
+        }
+
+        return pedido.criadoEm();
+    }
+
+    private LocalDateTime parseDataAtividade(ContaAtividadeResponse atividade) {
+        String data = atividade.data();
+        if (data == null || data.isBlank()) {
+            return LocalDateTime.MIN;
+        }
+
+        return LocalDateTime.parse(data);
+    }
+
+    private BigDecimal somarPedidos(List<PedidoResponse> pedidos, String statusDesejado) {
+        return pedidos.stream()
+                .filter(pedido -> statusDesejado.equalsIgnoreCase(pedido.status()))
+                .map(PedidoResponse::total)
+                .filter(valor -> valor != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calcularMedia(BigDecimal total, long quantidade) {
+        if (quantidade <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return total.divide(BigDecimal.valueOf(quantidade), 2, RoundingMode.HALF_UP);
     }
 
     private void invalidarSeVencido(Pedido pedido, LocalDateTime agora) {
