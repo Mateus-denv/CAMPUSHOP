@@ -108,27 +108,27 @@ public class TestData {
 
     /** monta a url da pagina home */
     public static String getHomeUrl() {
-        return driverfactory.getbaseurl() + "/home";
+        return DriverFactory.getBaseUrl() + "/home";
     }
 
     /** monta a url da pagina de login */
     public static String getLoginUrl() {
-        return driverfactory.getbaseurl() + "/login";
+        return DriverFactory.getBaseUrl() + "/login";
     }
 
     /** monta a url da pagina de produtos */
     public static String getProdutosUrl() {
-        return driverfactory.getbaseurl() + "/produtos";
+        return DriverFactory.getBaseUrl() + "/produtos";
     }
 
     /** monta a url da pagina do carrinho */
     public static String getCarrinhoUrl() {
-        return driverfactory.getbaseurl() + "/carrinho";
+        return DriverFactory.getBaseUrl() + "/carrinho";
     }
 
     /** monta a url da pagina de detalhes de um produto */
     public static String getProductDetailUrl(int productId) {
-        return driverfactory.getbaseurl() + "/produto/" + productId;
+        return DriverFactory.getBaseUrl() + "/produto/" + productId;
     }
 
     // =====================================================
