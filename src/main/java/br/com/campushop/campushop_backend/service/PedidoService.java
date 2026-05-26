@@ -1,19 +1,5 @@
 package br.com.campushop.campushop_backend.service;
 
-import br.com.campushop.campushop_backend.dto.PedidoResponse;
-import br.com.campushop.campushop_backend.dto.ContaAtividadeResponse;
-import br.com.campushop.campushop_backend.dto.ContaMetricasResponse;
-import br.com.campushop.campushop_backend.dto.UpdatePedidoStatusRequest;
-import br.com.campushop.campushop_backend.model.Carrinho;
-import br.com.campushop.campushop_backend.model.Pedido;
-import br.com.campushop.campushop_backend.model.PedidoItem;
-import br.com.campushop.campushop_backend.model.Produto;
-import br.com.campushop.campushop_backend.model.Usuario;
-import br.com.campushop.campushop_backend.repository.PedidoRepository;
-import br.com.campushop.campushop_backend.repository.ProdutoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -24,6 +10,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.campushop.campushop_backend.dto.ContaAtividadeResponse;
+import br.com.campushop.campushop_backend.dto.ContaMetricasResponse;
+import br.com.campushop.campushop_backend.dto.PedidoResponse;
+import br.com.campushop.campushop_backend.dto.UpdatePedidoStatusRequest;
+import br.com.campushop.campushop_backend.model.Carrinho;
+import br.com.campushop.campushop_backend.model.Pedido;
+import br.com.campushop.campushop_backend.model.PedidoItem;
+import br.com.campushop.campushop_backend.model.Produto;
+import br.com.campushop.campushop_backend.model.Usuario;
+import br.com.campushop.campushop_backend.repository.PedidoRepository;
+import br.com.campushop.campushop_backend.repository.ProdutoRepository;
 
 @Service
 public class PedidoService {
@@ -62,7 +63,8 @@ public class PedidoService {
             throw new RuntimeException("Adicione produtos no carrinho antes de confirmar o pedido");
         }
 
-        // A regra é validada antes de agrupar por vendedor para bloquear o pedido no ponto mais cedo do fluxo.
+        // A regra é validada antes de agrupar por vendedor para bloquear o pedido no
+        // ponto mais cedo do fluxo.
         validarCarrinhoSemProdutosDoProprioComprador(itensCarrinho, comprador);
 
         Map<Integer, GrupoPedido> grupos = agruparPorVendedor(itensCarrinho);
@@ -127,56 +129,58 @@ public class PedidoService {
                 .count();
     }
 
-        @Transactional(readOnly = true)
-        public ContaMetricasResponse obterMetricasConta(String emailUsuario) {
+    @Transactional(readOnly = true)
+    public ContaMetricasResponse obterMetricasConta(String emailUsuario) {
         List<Produto> produtos = produtoRepository.findByUsuarioEmail(emailUsuario);
         List<PedidoResponse> pedidosCompras = listarPedidosDoComprador(emailUsuario);
         List<PedidoResponse> pedidosRecebidos = listarPedidosDoVendedor(emailUsuario);
 
         long produtosAtivos = produtos.stream()
-            .filter(produto -> {
-                String status = produto.getStatus();
-                return status == null || "ATIVO".equalsIgnoreCase(status.trim());
-            })
-            .count();
+                .filter(produto -> {
+                    String status = produto.getStatus();
+                    return status == null || "ATIVO".equalsIgnoreCase(status.trim());
+                })
+                .count();
 
         long vendasConcluidas = pedidosRecebidos.stream()
-            .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
-            .count();
+                .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
+                .count();
 
         long comprasConcluidas = pedidosCompras.stream()
-            .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
-            .count();
+                .filter(pedido -> STATUS_ENTREGUE.equalsIgnoreCase(pedido.status()))
+                .count();
 
         BigDecimal faturamentoVendas = somarPedidos(pedidosRecebidos, STATUS_ENTREGUE);
         BigDecimal gastoCompras = somarPedidos(pedidosCompras, STATUS_ENTREGUE);
         BigDecimal ticketMedioVendas = calcularMedia(faturamentoVendas, vendasConcluidas);
         BigDecimal ticketMedioCompras = calcularMedia(gastoCompras, comprasConcluidas);
         long pedidosPendentes = pedidosRecebidos.stream()
-            .filter(pedido -> STATUS_EM_ANALISE.equalsIgnoreCase(pedido.status()))
-            .count();
+                .filter(pedido -> STATUS_EM_ANALISE.equalsIgnoreCase(pedido.status()))
+                .count();
 
         List<ContaAtividadeResponse> atividadesRecentes = new ArrayList<>();
-        pedidosCompras.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Compra", pedido.vendedor() != null ? pedido.vendedor().nome() : null)));
-        pedidosRecebidos.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Venda", pedido.comprador() != null ? pedido.comprador().nome() : null)));
+        pedidosCompras.forEach(pedido -> atividadesRecentes
+                .add(toAtividade(pedido, "Compra", pedido.vendedor() != null ? pedido.vendedor().nome() : null)));
+        pedidosRecebidos.forEach(pedido -> atividadesRecentes
+                .add(toAtividade(pedido, "Venda", pedido.comprador() != null ? pedido.comprador().nome() : null)));
 
         List<ContaAtividadeResponse> atividadesRecentesOrdenadas = atividadesRecentes.stream()
-            .sorted(Comparator.comparing(this::parseDataAtividade).reversed())
-            .limit(6)
-            .toList();
+                .sorted(Comparator.comparing(this::parseDataAtividade).reversed())
+                .limit(6)
+                .toList();
 
         return new ContaMetricasResponse(
-            produtos.size(),
-            produtosAtivos,
-            vendasConcluidas,
-            comprasConcluidas,
-            pedidosPendentes,
-            faturamentoVendas,
-            gastoCompras,
-            ticketMedioVendas,
-            ticketMedioCompras,
-            atividadesRecentesOrdenadas);
-        }
+                produtos.size(),
+                produtosAtivos,
+                vendasConcluidas,
+                comprasConcluidas,
+                pedidosPendentes,
+                faturamentoVendas,
+                gastoCompras,
+                ticketMedioVendas,
+                ticketMedioCompras,
+                atividadesRecentesOrdenadas);
+    }
 
     @Transactional
     public PedidoResponse atualizarStatus(Integer pedidoId, String emailUsuario, UpdatePedidoStatusRequest request) {
@@ -217,7 +221,8 @@ public class PedidoService {
     private void aceitarPedido(Pedido pedido) {
         pedido.setStatusPedido(STATUS_ACEITO);
         pedido.setMotivoRejeicao(null);
-        // A geração acontece no momento da aprovação para que o comprador receba um código válido.
+        // A geração acontece no momento da aprovação para que o comprador receba um
+        // código válido.
         pedido.setChaveEntrega(gerarChaveEntrega());
         LocalDateTime agora = LocalDateTime.now();
         pedido.setDataAprovacao(agora);
@@ -264,7 +269,8 @@ public class PedidoService {
             throw new RuntimeException("Código de acesso inválido");
         }
 
-        // A entrega só é concluída quando o código apresentado bate com o código gerado na aprovação.
+        // A entrega só é concluída quando o código apresentado bate com o código gerado
+        // na aprovação.
         pedido.setStatusPedido(STATUS_ENTREGUE);
         pedido.setMotivoRejeicao(null);
         pedido.setDataEntrega(LocalDateTime.now());
@@ -383,7 +389,8 @@ public class PedidoService {
             Produto produto = item.getProduto();
             Usuario vendedor = produto != null ? produto.getUsuario() : null;
 
-            // Se o vendedor do produto for o mesmo usuário logado, a compra precisa ser barrada.
+            // Se o vendedor do produto for o mesmo usuário logado, a compra precisa ser
+            // barrada.
             if (vendedor != null && vendedor.getId() != null && vendedor.getId().equals(comprador.getId())) {
                 throw new RuntimeException("Você não pode comprar este produto porque ele pertence ao seu anúncio");
             }

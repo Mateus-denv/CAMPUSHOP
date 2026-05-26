@@ -41,7 +41,8 @@ public class PedidoServiceTest {
 
     @Test
     void deveBloquearConfirmacaoQuandoCompradorEhOProprioVendedor() {
-        // A confirmação precisa falhar antes de criar pedidos quando o carrinho contém produto do próprio usuário.
+        // A confirmação precisa falhar antes de criar pedidos quando o carrinho contém
+        // produto do próprio usuário.
         Usuario comprador = criarUsuario(7, "comprador@campushop.com");
         Usuario vendedor = criarUsuario(7, "comprador@campushop.com");
         Produto produto = criarProduto(9, vendedor);
@@ -51,7 +52,7 @@ public class PedidoServiceTest {
         when(carrinhoService.listarPorUsuario(7)).thenReturn(List.of(item));
 
         RuntimeException excecao = assertThrows(RuntimeException.class,
-            () -> service.confirmarPedidosDoCarrinho("comprador@campushop.com"));
+                () -> service.confirmarPedidosDoCarrinho("comprador@campushop.com"));
 
         assertEquals("Você não pode comprar este produto porque ele pertence ao seu anúncio", excecao.getMessage());
     }

@@ -80,8 +80,8 @@ public class CarrinhoServiceTest {
         produto.setUsuario(vendedor);
 
         IllegalArgumentException excecao = org.junit.jupiter.api.Assertions.assertThrows(
-            IllegalArgumentException.class,
-            () -> service.adicionarAoCarrinho(10, produto, 1));
+                IllegalArgumentException.class,
+                () -> service.adicionarAoCarrinho(10, produto, 1));
 
         assertEquals("Você não pode comprar este produto porque ele pertence ao seu anúncio", excecao.getMessage());
     }
