@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { categoriaAPI, produtoAPI } from '@/lib/api-service'
 import { categories, products } from '@/lib/mock-data'
 import { ArrowRight, ChevronLeft, ChevronRight, Search, ShieldCheck, Star, Truck } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -17,56 +18,65 @@ type DestaqueItem = {
 }
 
 export function HomePage() {
-  const destaques: DestaqueItem[] = [
-    ...products.slice(0, 4).map((product) => ({
-      id: `produto-${product.id}`,
-      tipo: 'Produto' as const,
-      titulo: product.nome,
-      descricao: product.descricao,
-      categoria: product.categoria,
-      precoLabel: `R$ ${product.preco.toFixed(2).replace('.', ',')}`,
-      vendedor: product.vendedor,
-      local: product.local,
-      link: '/produtos',
-    })),
-    {
-      id: 'servico-aulas',
-      tipo: 'Servico',
-      titulo: 'Aulas particulares de Calculo I',
-      descricao: 'Suporte para listas, provas e revisao semanal com estudantes monitores.',
-      categoria: 'Servicos',
-      precoLabel: 'A partir de R$ 60,00',
-      vendedor: 'Equipe CampusShop',
-      local: 'Online e presencial',
-      link: '/chat',
-    },
-    {
-      id: 'servico-fretes',
-      tipo: 'Servico',
-      titulo: 'Frete entre campi',
-      descricao: 'Entrega e retirada combinada para produtos negociados na plataforma.',
-      categoria: 'Servicos',
-      precoLabel: 'A partir de R$ 12,00',
-      vendedor: 'Rede de parceiros',
-      local: 'Campi da regiao',
-      link: '/chat',
-    },
-    {
-      id: 'servico-design',
-      tipo: 'Servico',
-      titulo: 'Design para apresentacoes',
-      descricao: 'Criacao de slides academicos e materiais para TCC com entrega rapida.',
-      categoria: 'Servicos',
-      precoLabel: 'Pacotes a partir de R$ 35,00',
-      vendedor: 'Criadores CampusShop',
-      local: 'Remoto',
-      link: '/chat',
-    },
-  ]
-
   const [busca, setBusca] = useState('')
   const [indiceDestaque, setIndiceDestaque] = useState(0)
   const termoBusca = busca.trim().toLowerCase()
+
+  // Produtos remotos e categorias remotas (fazer fetch do backend quando disponível)
+  const [remoteProducts, setRemoteProducts] = useState<any[]>([])
+  const [remoteCategories, setRemoteCategories] = useState<any[]>([])
+
+  // Normaliza lista de produtos (mock ou remoto) para um formato comum usado pela UI
+  const normalizeProducts = (list: any[]) =>
+    (list ?? []).map((p) => ({
+      id: Number(p.idProduto ?? p.id ?? 0),
+      nome: p.nomeProduto ?? p.nome ?? 'Produto sem nome',
+      descricao: p.descricao ?? '',
+      preco: Number(p.preco ?? p.precoOriginal ?? 0),
+      vendedor: p.nomeVendedor ?? p.vendedorNome ?? p.vendedor ?? p.usuario?.nomeCompleto ?? '',
+      local: p.local ?? p.cidade ?? '',
+    }))
+
+  const produtosNormalizados = normalizeProducts(remoteProducts)
+
+  // Constrói destaques APENAS com produtos reais do backend
+  // Cada produto real vira um item de destaque
+  const destaques: DestaqueItem[] = produtosNormalizados.map((product) => ({
+    id: `produto-${product.id}`,
+    tipo: 'Produto' as const,
+    titulo: product.nome,
+    descricao: product.descricao,
+    categoria: product.categoria || 'Sem categoria',
+    precoLabel: `R$ ${product.preco.toFixed(2).replace('.', ',')}`,
+    vendedor: product.vendedor,
+    local: product.local,
+    link: `/produto/${product.id}`,
+  }))
+
+  // Destaque do dia: sempre o primeiro produto real disponível
+  const destaqueDoDiaProdutos = produtosNormalizados.slice(0, 2)
+
+  // Buscar do backend o que for possível para garantir consistência com o banco
+  useEffect(() => {
+    let mounted = true
+
+    const carregar = async () => {
+      try {
+        const [prodResp, catResp] = await Promise.all([produtoAPI.listarTodos(), categoriaAPI.listar()])
+        if (!mounted) return
+        setRemoteProducts(prodResp.data ?? [])
+        setRemoteCategories(catResp.data ?? [])
+      } catch (err) {
+        console.warn('Falha ao carregar produtos/categorias do backend, usando mock:', err)
+      }
+    }
+
+    carregar()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const destaquesFiltrados = destaques.filter((item) => {
     if (!termoBusca) {
@@ -171,27 +181,54 @@ export function HomePage() {
             <div className="relative flex h-full flex-col justify-between rounded-[1.75rem] border border-white/20 bg-white/10 p-6 backdrop-blur-xl lg:min-h-[520px]">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-50/80">Destaque do dia</p>
-                <div className="mt-4 rounded-[1.5rem] bg-white p-4 text-slate-900 shadow-2xl shadow-black/10">
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    <span>Produto mais visitado</span>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Disponível</span>
-                  </div>
-                  <div className="mt-4 rounded-[1.25rem] bg-gradient-to-br from-slate-100 to-slate-200 p-6 text-center text-slate-500">
-                    Imagem principal do marketplace
-                  </div>
-                  <div className="mt-4 flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-lg font-bold">Livro de lógica de programação</p>
-                      <p className="text-sm text-slate-500">Caio Ramos • UFBA • Camaçari</p>
+
+                {/* Se existirem produtos no mock, exibir o primeiro como destaque (fallback) */}
+                {destaqueDoDiaProdutos.length > 0 ? (
+                  // Tornar o card clicavel apontando para a pagina de detalhe do produto
+                  <Link to={`/produto/${destaqueDoDiaProdutos[0].id}`} className="mt-4 block rounded-[1.5rem] bg-white p-4 text-slate-900 shadow-2xl shadow-black/10 hover:shadow-lg">
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      <span>Produto em destaque</span>
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Disponível</span>
                     </div>
-                    <p className="text-2xl font-black text-blue-700">R$ 150</p>
+
+                    {/* Mostra a imagem/preview do primeiro produto */}
+                    <div className="mt-4 rounded-[1.25rem] bg-gradient-to-br from-slate-100 to-slate-200 p-6 text-center text-slate-500">
+                      Preview: {destaqueDoDiaProdutos[0].nome}
+                    </div>
+
+                    <div className="mt-4 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-lg font-bold">{destaqueDoDiaProdutos[0].nome}</p>
+                        <p className="text-sm text-slate-500">{destaqueDoDiaProdutos[0].vendedor} • {destaqueDoDiaProdutos[0].local}</p>
+                      </div>
+                      <p className="text-2xl font-black text-blue-700">R$ {destaqueDoDiaProdutos[0].preco}</p>
+                    </div>
+
+                    {/* Se houver um segundo produto, mostrar um resumo adicional abaixo como alternativa */}
+                    {destaqueDoDiaProdutos.length > 1 && (
+                      <div className="mt-4 rounded-lg border border-slate-100 bg-white p-3 text-sm text-slate-600">
+                        <p className="font-semibold">Outro destaque</p>
+                        <Link to={`/produto/${destaqueDoDiaProdutos[1].id}`} className="mt-1 inline-block text-slate-700 hover:text-blue-700">{destaqueDoDiaProdutos[1].nome} — R$ {destaqueDoDiaProdutos[1].preco}</Link>
+                      </div>
+                    )}
+                  </Link>
+                ) : (
+                  // Nenhum produto cadastrado: orientar o usuário a explorar ou cadastrar
+                  <div className="mt-4 rounded-[1.5rem] bg-white p-6 text-slate-700 shadow-sm">
+                    <p className="font-semibold">Nenhum produto cadastrado ainda</p>
+                    <p className="mt-2 text-sm text-slate-500">Visite a lista de produtos ou cadastre um novo item para aparecer aqui.</p>
+                    <div className="mt-4 flex gap-3">
+                      <Link to="/produtos" className="inline-block rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Ver produtos</Link>
+                      <Link to="/cadastrar-produto" className="inline-block rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cadastrar produto</Link>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="mt-6 grid grid-cols-3 gap-3">
+                <div className="mt-6 grid grid-cols-3 gap-3">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm">
-                  <p className="text-2xl font-black">12+</p>
+                  {/* Mostrar a quantidade real de categorias cadastradas (remota quando disponível) */}
+                  <p className="text-2xl font-black">{remoteCategories.length || categories.length}</p>
                   <p className="text-blue-50/80">Categorias</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm">
@@ -220,15 +257,24 @@ export function HomePage() {
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((category) => (
-            <Link key={category.id} to="/categorias" className="group rounded-[1.5rem] border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
-              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${category.color}`}>
-                {category.icon}
-              </div>
-              <p className="mt-4 font-bold text-slate-900">{category.nome}</p>
-              <p className="mt-1 text-xs text-slate-500">{category.quantidade} produtos</p>
-            </Link>
-          ))}
+          {(remoteCategories.length > 0 ? remoteCategories : categories).map((category: any) => {
+            // Calcular dinamicamente quantos produtos pertencem a essa categoria
+            // usando os produtos reais do backend
+            const nomeCategoriaBackend = category.nomeCategoria || category.nome || ''
+            const produtosNaCategoria = produtosNormalizados.filter(
+              (p) => (p.categoria || '').toLowerCase() === nomeCategoriaBackend.toLowerCase()
+            ).length
+
+            return (
+              <Link key={category.id} to="/categorias" className="group rounded-[1.5rem] border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${category.color || 'bg-slate-100'}`}>
+                  {category.icon}
+                </div>
+                <p className="mt-4 font-bold text-slate-900">{nomeCategoriaBackend}</p>
+                <p className="mt-1 text-xs text-slate-500">{produtosNaCategoria} {produtosNaCategoria === 1 ? 'produto' : 'produtos'}</p>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
