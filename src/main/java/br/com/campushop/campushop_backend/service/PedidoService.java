@@ -62,6 +62,9 @@ public class PedidoService {
             throw new RuntimeException("Adicione produtos no carrinho antes de confirmar o pedido");
         }
 
+        // A regra é validada antes de agrupar por vendedor para bloquear o pedido no ponto mais cedo do fluxo.
+        validarCarrinhoSemProdutosDoProprioComprador(itensCarrinho, comprador);
+
         Map<Integer, GrupoPedido> grupos = agruparPorVendedor(itensCarrinho);
         List<Pedido> pedidosCriados = new ArrayList<>();
 
@@ -373,6 +376,18 @@ public class PedidoService {
         }
 
         return grupos;
+    }
+
+    private void validarCarrinhoSemProdutosDoProprioComprador(List<Carrinho> itensCarrinho, Usuario comprador) {
+        for (Carrinho item : itensCarrinho) {
+            Produto produto = item.getProduto();
+            Usuario vendedor = produto != null ? produto.getUsuario() : null;
+
+            // Se o vendedor do produto for o mesmo usuário logado, a compra precisa ser barrada.
+            if (vendedor != null && vendedor.getId() != null && vendedor.getId().equals(comprador.getId())) {
+                throw new RuntimeException("Você não pode comprar este produto porque ele pertence ao seu anúncio");
+            }
+        }
     }
 
     private String gerarChaveEntrega() {

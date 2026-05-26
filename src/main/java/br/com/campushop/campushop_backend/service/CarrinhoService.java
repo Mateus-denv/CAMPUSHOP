@@ -45,6 +45,12 @@ public class CarrinhoService {
 
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
+        // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso seria uma compra inválida.
+        if (produto != null && produto.getUsuario() != null && produto.getUsuario().getId() != null
+                && produto.getUsuario().getId().equals(usuarioId)) {
+            throw new IllegalArgumentException("Você não pode comprar este produto porque ele pertence ao seu anúncio");
+        }
+
         validarEstoqueDisponivel(produto, quantidade);
 
         // Verificar se o produto já está no carrinho

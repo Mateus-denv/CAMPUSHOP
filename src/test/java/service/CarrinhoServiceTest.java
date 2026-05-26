@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Produto;
+import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.CarrinhoRepository;
 import br.com.campushop.campushop_backend.repository.UsuarioRepository;
 import br.com.campushop.campushop_backend.service.CarrinhoService;
@@ -71,6 +72,20 @@ public class CarrinhoServiceTest {
         assertTrue(service.validarEstoque(produto, 5));
     }
 
+    @Test
+    void deveBloquearCompraDoProprioProdutoAoAdicionarNoCarrinho() {
+        // O vendedor não pode reservar o próprio produto no carrinho.
+        Usuario vendedor = criarUsuario(10);
+        Produto produto = criarProduto(5, "Mochila", 80.00, 4);
+        produto.setUsuario(vendedor);
+
+        IllegalArgumentException excecao = org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> service.adicionarAoCarrinho(10, produto, 1));
+
+        assertEquals("Você não pode comprar este produto porque ele pertence ao seu anúncio", excecao.getMessage());
+    }
+
     private Produto criarProduto(Integer id, String nome, Double preco, Integer estoque) {
         Produto produto = new Produto();
         produto.setIdProduto(id);
@@ -85,5 +100,12 @@ public class CarrinhoServiceTest {
         item.setProduto(produto);
         item.setQuantidade(quantidade);
         return item;
+    }
+
+    private Usuario criarUsuario(Integer id) {
+        Usuario usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setNomeCompleto("Usuario " + id);
+        return usuario;
     }
 }
