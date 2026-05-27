@@ -1,85 +1,114 @@
-# testes e2e - detalhamento das alteracoes
+# Testes E2E - Detalhamento das Alterações
 
-este documento explica paso a paso tudo o que foi feito para que os testes e2e funcionassem no projeto campushop.
+## Visão Geral
+
+Este documento detalha todas as alterações realizadas para que os testes E2E funcionassem corretamente no projeto CAMPUSHOP.
 
 ---
 
-## 1. o que foi alterado
+## 1. Arquivos Modificados
 
-### 1.1 banco de dados (002_seed.sql)
+### 1.1 Banco de Dados / Seed
 
-**problema:** a senha do usuario de teste nao funcionava porque o hash bcrypt estava errado.
+**Arquivo:** `db/scripts/002_seed.sql`
 
-**solucao:** troquei o hash bcrypt para a senha "password".
+**Problema:** O hash BCrypt da senha do usuário de teste não correspondia à senha `"password"`.
+
+**Solução:** Atualização do hash BCrypt para ambos os usuários de teste:
 
 ```sql
--- hash antigo (nao funcionava com "password")
-'$2a$10$...hash...'
+-- Antes (hash inválido para "password"):
+'$2a$10$...hash antigo...'
 
--- hash novo (funciona com "password")
+-- Depois (hash correto para "password"):
 '$2b$10$xPUg/yywvNcMRfiC6LrAWuFhTaJ9WFKQS6tcRgi7UimoFzmURqUnu'
 ```
 
-usuarios afetados:
-- maria@campushop.com (senha: password)
-- joao@campushop.com (senha: password)
+**Trecho alterado (linhas 39 e 54):**
+```sql
+VALUES
+  (
+    'Maria Souza',
+    '202400001',
+    'maria@campushop.com',
+    'Camaçari',
+    'Maria Souza',
+    '$2b$10$xPUg/yywvNcMRfiC6LrAWuFhTaJ9WFKQS6tcRgi7UimoFzmURqUnu',  -- SENHA: password
+    NULL,
+    'comprador',
+    ...
+  )
+```
 
 ---
 
-### 1.2 driverfactory - configuracao do chromedriver
+### 1.2 DriverFactory - ChromeDriver
 
-**arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/utils/DriverFactory.java`
+**Arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/utils/DriverFactory.java`
 
-**problema:** o driver do chrome dava erro na hora de baixar ou usava cache errado.
+**Problema:** O `forceDownload()` do WebDriverManager causava problemas com cache bloqueado e download repetido de drivers.
 
-**solucao:** removi o forceDownload() e adicionei clearResolutionCache().
+**Solução:** Remoção do `forceDownload()` e adição de `clearResolutionCache()`:
 
 ```java
-// antes (dava problema)
+// Antes:
 WebDriverManager.chromedriver().forceDownload().setup();
 
-// depois (funciona direito)
+// Depois:
 WebDriverManager manager = WebDriverManager.chromedriver();
+if (chromeVersion != null && !chromeVersion.isBlank()) {
+    manager.browserVersion(chromeVersion);
+}
 manager.clearResolutionCache()
         .setup();
 ```
 
+**Trecho alterado (linhas 66-73):**
+```java
+private static WebDriver createChromeDriver() {
+    String chromeVersion = System.getenv("CHROME_VERSION");
+    WebDriverManager manager = WebDriverManager.chromedriver();
+    if (chromeVersion != null && !chromeVersion.isBlank()) {
+        manager.browserVersion(chromeVersion);
+    }
+    manager.clearResolutionCache()
+            .setup();
+    // ...
+}
+```
+
 ---
 
-### 1.3 produtospage - clicar no botao de adicionar carrinho
+### 1.3 ProdutosPage - Clique com JavaScript
 
-**arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/pages/ProdutosPage.java`
+**Arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/pages/ProdutosPage.java`
 
-**problema:** o selenium nao conseguia clicar no botao porque tinha overlay ou css dinamico por cima.
+**Problema:** O Selenium não conseguia clicar no botão "Adicionar ao Carrinho" devido a overlays CSS ou DOM dinâmico.
 
-**solucao:** usei javascript para clicar diretamente no botao.
+**Solução:** Uso de `JavascriptExecutor.click()` diretamente no teste.
 
+**Trecho relevante (ProdutosE2ETest.java, linhas 64-69):**
 ```java
-// antes (nao funcionava)
-WebElement button = wait.until(ExpectedConditions.elementToBeClickable(addButton));
-button.click();
-
-// depois (funciona)
-By addButton = By.cssSelector("[data-testid='add-to-cart-" + productId + "']");
+// Clica diretamente no botão usando JavaScript
+By addButton = By.cssSelector("[data-testid='add-to-cart-" + TestData.PRODUCT_IN_STOCK_ID + "']");
 JavascriptExecutor js = (JavascriptExecutor) driver;
+
+// Executa o clique via JavaScript para garantir que funciona
 js.executeScript("arguments[0].click();", driver.findElement(addButton));
 ```
 
 ---
 
-### 1.4 carrinhopage - ir para a pagina do carrinho
+### 1.4 CarrinhoPage - Navegação Direta via URL
 
-**arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/pages/CarrinhoPage.java`
+**Arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/pages/CarrinhoPage.java`
 
-**problema:** clicar no link do carrinho as vezes falhava porque o link nao estava pronto.
+**Problema:** Clicar no link do carrinho falhava quando o link não estava imediatamente interativo.
 
-**solucao:** ao inves de clicar no link, vou direto para a url.
+**Solução:** Uso de `driver.get()` direto para a URL do carrinho em vez de clicar no link.
 
+**Trecho em ProdutosPage (linhas 60-63):**
 ```java
-// antes (dava problema as vezes)
-driver.findElement(cartLink).click();
-
-// depois (sempre funciona)
 public void openCart() {
     driver.get(TestData.getCarrinhoUrl());
     DriverFactory.waitForPageLoad(driver);
@@ -88,163 +117,182 @@ public void openCart() {
 
 ---
 
-### 1.5 testdata - dados atualizados
+### 1.5 TestData - Dados de Teste Atualizados
 
-**arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/utils/TestData.java`
+**Arquivo:** `src/test/java/br/com/campushop/campushop_backend/e2e/utils/TestData.java`
 
-**alteracao:** atualizei ids e precos para bater com o banco real.
+**Alterações:**
+- IDs e preços atualizados para refletir os dados reais do banco
+- Produto de teste: ID 1 com preço `R$ 0.10`
 
+**Trecho relevante:**
 ```java
-// produto em estoque (id 1, preco 0.10)
+/** Produto EM ESTOQUE - com quantidade suficiente */
 public static final int PRODUCT_IN_STOCK_ID = 1;
+public static final String PRODUCT_IN_STOCK_NAME = "Arthur";
 public static final double PRODUCT_IN_STOCK_PRICE = 0.10;
 
-// produto sem estoque (id 999, estoque = 0)
+/** Produto SEM ESTOQUE - deve estar com estoque = 0 */
 public static final int PRODUCT_OUT_OF_STOCK_ID = 999;
+public static final String PRODUCT_OUT_OF_STOCK_NAME = "Produto sem estoque";
 
-// segundo produto (id 2, preco 3.00)
+/** Segundo produto para testes de múltiplos itens */
 public static final int PRODUCT_2_IN_STOCK_ID = 2;
+public static final String PRODUCT_2_IN_STOCK_NAME = "empada";
 public static final double PRODUCT_2_IN_STOCK_PRICE = 3.00;
 ```
 
 ---
 
-## 2. estrutura dos arquivos de teste
+## 2. Estrutura dos Testes E2E
 
 ```
 src/test/java/br/com/campushop/campushop_backend/e2e/
 ├── pages/
-│   ├── loginpage.java       --> testa login
-│   ├── produtospage.java   --> testa lista de produtos e adicionar ao carrinho
-│   └── carrinhopage.java    --> testa o carrinho
+│   ├── LoginPage.java       # Página de login
+│   ├── ProdutosPage.java    # Página de produtos
+│   └── CarrinhoPage.java    # Página do carrinho
 ├── utils/
-│   ├── driverfactory.java   --> cria e gerencia o navegador
-│   └── testdata.java        --> dados fixos (emails, senhas, ids, precos)
+│   ├── DriverFactory.java   # Factory do WebDriver
+│   └── TestData.java        # Centralizador de dados de teste
 └── tests/
-    └── produtose2etest.java  --> os 3 testes principais
+    └── ProdutosE2ETest.java # Testes E2E principais
 ```
 
 ---
 
-## 3. como funciona cada teste
+## 3. Seletores data-testid
 
-### teste 1: fazer login e ver produtos
+Os testes usam seletores `data-testid` para localizar elementos:
 
-```
-1. abre a pagina inicial
-2. limpa o localstorage (pra garantir que nao tem sujeira)
-3. digita email e senha
-4. clica no botao de login
-5. verifica se foi para a pagina de produtos
-6. verifica se o produto com id 1 aparece na tela
-```
-
-### teste 2: adicionar produto ao carrinho e finalizar
-
-```
-1. faz login
-2. abre pagina de produtos
-3. clica no botao "adicionar ao carrinho" (usa javascript)
-4. verifica se apareceu uma notificacao
-5. verifica o localstorage se o produto foi salvo
-6. vai direto para a pagina do carrinho
-7. verifica se o produto aparece no carrinho
-8. verifica se o total esta correto (r$ 0.10)
-9. clica em finalizar pedido (se tiver produto)
-```
-
-### teste 3: ver produto sem estoque
-
-```
-1. faz login
-2. abre pagina de produtos
-3. verifica se o produto com id 999 esta na tela
-4. verifica se o botao dele mostra "fora de estoque"
-```
+| Seletor | Descrição |
+|---------|-----------|
+| `[data-testid='login-email']` | Campo de email no login |
+| `[data-testid='login-password']` | Campo de senha no login |
+| `[data-testid='login-error']` | Mensagem de erro no login |
+| `[data-testid='cart-link']` | Link do carrinho no header |
+| `[data-testid='product-card-{id}']` | Card de produto |
+| `[data-testid='add-to-cart-{id}']` | Botão adicionar ao carrinho |
+| `[data-testid='product-notification']` | Notificação após adicionar |
+| `[data-testid='cart-item-{id}']` | Item no carrinho |
+| `[data-testid='cart-total']` | Total do carrinho |
+| `[data-testid='cart-finalize-button']` | Botão finalizar pedido |
+| `[data-testid='cart-success-message']` | Mensagem de sucesso |
+| `[data-testid='cart-empty-message']` | Mensagem carrinho vazio |
 
 ---
 
-## 4. seletores usados nos testes
+## 4. Variáveis de Ambiente
 
-sao identificadores que o selenium usa para encontrar elementos na tela:
-
-| seletor | para que serve |
-|---------|---------------|
-| `[data-testid='login-email']` | campo de email |
-| `[data-testid='login-password']` | campo de senha |
-| `[data-testid='login-error']` | mensagem de erro do login |
-| `[data-testid='cart-link']` | icone/link do carrinho no menu |
-| `[data-testid='product-card-1']` | card do produto de id 1 |
-| `[data-testid='add-to-cart-1']` | botao de adicionar produto 1 |
-| `[data-testid='product-notification']` | notificacao de produto adicionado |
-| `[data-testid='cart-item-1']` | item do produto 1 no carrinho |
-| `[data-testid='cart-total']` | valor total do carrinho |
-| `[data-testid='cart-finalize-button']` | botao de finalizar pedido |
-| `[data-testid='cart-success-message']` | mensagem de sucesso apos finalizar |
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `BROWSER` | `CHROME` | Navegador: `CHROME` ou `FIREFOX` |
+| `HEADLESS` | `false` | Modo headless: `true` ou `false` |
+| `BASE_URL` | `http://localhost:5173` | URL base da aplicação |
+| `CHROME_VERSION` | (nenhuma) | Versão específica do Chrome |
 
 ---
 
-## 5. comandos para rodar
+## 5. Comandos para Executar
 
-### 5.1 subir o backend
+### 5.1 Iniciar Backend
 
 ```powershell
-cd "c:\users\caiok\onedrive\documentos\github\campushop"
+cd "C:\Users\caiok\OneDrive\Documentos\GitHub\CAMPUSHOP"
 .\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
 ```
 
-### 5.2 subir o frontend
+### 5.2 Iniciar Frontend
 
 ```powershell
-cd "c:\users\caiok\onedrive\documentos\github\campushop\frontend"
+cd "C:\Users\caiok\OneDrive\Documentos\GitHub\CAMPUSHOP\frontend"
 npm install
 npm run dev
 ```
 
-### 5.3 rodar o teste e2e (normal)
+### 5.3 Executar Teste E2E (Normal)
 
 ```powershell
-cd "c:\users\caiok\onedrive\documentos\github\campushop"
-.\apache-maven-3.9.6\bin\mvn.cmd -dtest=produtose2etest test
+cd "C:\Users\caiok\OneDrive\Documentos\GitHub\CAMPUSHOP"
+.\apache-maven-3.9.6\bin\mvn.cmd -Dtest=ProdutosE2ETest test
 ```
 
-### 5.4 rodar o teste e2e (sem abrir navegador)
+### 5.4 Executar Teste E2E (Headless)
 
 ```powershell
-$env:headless="true"
-cd "c:\users\caiok\onedrive\documentos\github\campushop"
-.\apache-maven-3.9.6\bin\mvn.cmd -dtest=produtose2etest test
+$env:HEADLESS="true"
+cd "C:\Users\caiok\OneDrive\Documentos\GitHub\CAMPUSHOP"
+.\apache-maven-3.9.6\bin\mvn.cmd -Dtest=ProdutosE2ETest test
 ```
 
 ---
 
-## 6. variaveis de ambiente
+## 6. Fluxo dos Testes
 
-| variavel | padrao | o que faz |
-|----------|--------|-----------|
-| `browser` | `chrome` | navegador a usar (chrome ou firefox) |
-| `headless` | `false` | se true, nao abre a janela do navegador |
-| `base_url` | `http://localhost:5173` | url do frontend |
-| `chrome_version` | (uma) | verso do chrome (opcional) |
+### Teste 1: Login e Página de Produtos
+```
+1. Abre a página inicial
+2. Limpa localStorage/sessionStorage
+3. Realiza login com credenciais válidas
+4. Verifica se a página de produtos carrega
+5. Valida que o produto em estoque está visível
+```
+
+### Teste 2: Adicionar ao Carrinho e Finalizar
+```
+1. Realiza login
+2. Abre página de produtos
+3. Adiciona produto ao carrinho (via JavaScript click)
+4. Aguarda resposta da API
+5. Verifica localStorage
+6. Navega para o carrinho (via driver.get)
+7. Valida item no carrinho
+8. Valida total correto (R$ 0.10)
+9. Finaliza pedido (se houver itens)
+```
+
+### Teste 3: Produto Sem Estoque
+```
+1. Realiza login
+2. Abre página de produtos
+3. Verifica se produto sem estoque existe
+4. Valida que botão exibe "Fora de estoque"
+```
 
 ---
 
-## 7. lista de problemas e solucoes
+## 7. Problemas Resolvidos
 
-| o que acontecia | o que fiz para resolver |
-|----------------|----------------------|
-| login falhava mesmo com senha certa | troquei o hash bcrypt no banco |
-| chromedriver nao iniciava | tirei o forcedownload, usei clearresolutioncache |
-| clicar no botao nao funcionava | usei javascript executor para clicar |
-| ir para carrinho dava erro | fui direto pela url com driver.get |
-| preco e id nao batiam com banco | atualizei os valores em testdata |
+| Problema | Solução |
+|----------|--------|
+| Login falhando com credenciais corretas | Hash BCrypt corrigido no seed |
+| ChromeDriver não inicializava | Removido `forceDownload()`, adicionado `clearResolutionCache()` |
+| Clique no botão não funcionava | Usado `JavascriptExecutor.click()` |
+| Navegação para carrinho falhava | Usado `driver.get()` direto para URL |
+| Dados de teste não batiam com banco | IDs e preços atualizados em TestData.java |
 
 ---
 
-## 8. o que precisa estar pronto antes de rodar
+## 8. Dependências
 
-1. mysql rodando com o banco campushop criado
-2. script 002_seed.sql ter sido executado (cria usuarios e produtos)
-3. backend no ar em http://localhost:8080
-4. frontend no ar em http://localhost:5173 (com proxy /api指向backend)
-5. google chrome instalado (o webdrivermanager baixa o driver automaticamente)
+### Backend (pom.xml)
+- Spring Boot Test
+- Selenium WebDriver
+- WebDriverManager (bonigarcia)
+- JUnit 5 (Jupiter)
+
+### Frontend (package.json)
+- Vite (dev server)
+- React
+- Axios (para requisições API)
+- React Router DOM
+
+---
+
+## 9. Pré-requisitos
+
+1. **MySQL rodando** com banco `campushop` criado
+2. **Seed executado** (`002_seed.sql`)
+3. **Backend** em `http://localhost:8080`
+4. **Frontend** em `http://localhost:5173` (com proxy `/api` para backend)
+5. **Chrome/Chromedriver** instalado (gerenciado automaticamente pelo WebDriverManager)

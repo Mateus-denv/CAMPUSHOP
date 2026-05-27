@@ -19,4 +19,4 @@
 - docker compose up -d --build
 
 ## Ver status
-- docker compose ps
+- docker compose ps     
