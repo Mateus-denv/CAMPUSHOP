@@ -1,7 +1,6 @@
 import { apiBaseUrl } from '@/lib/api'
 
 const MAX_BYTES = 2 * 1024 * 1024
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/webp', 'image/avif'])
 
 type ImageKind = 'perfil' | 'produto'
 
@@ -23,9 +22,9 @@ const IMAGE_RULES: Record<ImageKind, ImageRule> = {
   },
   produto: {
     kind: 'produto',
-    ratio: 16 / 9,
+    ratio: 0,
     maxWidth: 1920,
-    maxHeight: 1080,
+    maxHeight: 1350,
     label: 'imagem do anúncio',
   },
 }
@@ -74,24 +73,23 @@ export async function validateImageFile(file: File, kind: ImageKind) {
   }
 
   const contentType = file.type.toLowerCase()
-  const fileName = file.name.toLowerCase()
-  const hasAllowedMime = ALLOWED_MIME_TYPES.has(contentType)
-  const hasAllowedExtension = ['.jpg', '.jpeg', '.webp', '.avif'].some((extension) => fileName.endsWith(extension))
-
-  if (!hasAllowedMime && !hasAllowedExtension) {
-    return 'Formato inválido. Use JPG, JPEG, WebP ou AVIF.'
+  if (!contentType.startsWith('image/')) {
+    return 'Selecione uma imagem válida.'
   }
 
   const dimensions = await readImageDimensions(file)
-  const ratio = dimensions.width / dimensions.height
-  const ratioDiff = Math.abs(ratio - rule.ratio)
 
   if (dimensions.width > rule.maxWidth || dimensions.height > rule.maxHeight) {
     return `A ${rule.label} deve respeitar no máximo ${rule.maxWidth}x${rule.maxHeight}px.`
   }
 
-  if (ratioDiff > 0.03) {
-    return `A ${rule.label} deve seguir o formato ${kind === 'perfil' ? '4:5' : '16:9'}.`
+  if (kind === 'perfil') {
+    const ratio = dimensions.width / dimensions.height
+    const ratioDiff = Math.abs(ratio - rule.ratio)
+
+    if (ratioDiff > 0.03) {
+      return `A ${rule.label} deve seguir o formato 4:5.`
+    }
   }
 
   return null
@@ -107,12 +105,8 @@ export async function validateImageBasics(file: File) {
   }
 
   const contentType = file.type.toLowerCase()
-  const fileName = file.name.toLowerCase()
-  const hasAllowedMime = ALLOWED_MIME_TYPES.has(contentType)
-  const hasAllowedExtension = ['.jpg', '.jpeg', '.webp', '.avif'].some((extension) => fileName.endsWith(extension))
-
-  if (!hasAllowedMime && !hasAllowedExtension) {
-    return 'Formato inválido. Use JPG, JPEG, WebP ou AVIF.'
+  if (!contentType.startsWith('image/')) {
+    return 'Selecione uma imagem válida.'
   }
 
   return null
@@ -120,12 +114,12 @@ export async function validateImageBasics(file: File) {
 
 export function getImageGuidance(kind: ImageKind) {
   return IMAGE_RULES[kind].kind === 'perfil'
-    ? 'Use imagens 4:5, até 1080x1350px, com no máximo 2 MB.'
-    : 'Use imagens 16:9, até 1920x1080px, com no máximo 2 MB.'
+    ? 'Use qualquer formato de imagem, até 1080x1350px, com no máximo 2 MB.'
+    : 'Use qualquer formato de imagem, até 1920x1350px, com no máximo 2 MB.'
 }
 
 export function getAllowedImageAccept() {
-  return 'image/jpeg,image/jpg,image/webp,image/avif'
+  return 'image/*'
 }
 
 function readImageDimensions(file: File) {

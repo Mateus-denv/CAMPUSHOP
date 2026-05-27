@@ -30,8 +30,24 @@ public class Produto {
     @Column(name = "visivel_para_comprador", nullable = false)
     private Boolean visivelParaComprador = Boolean.TRUE;
 
+    @Column(name = "tipo_produto", length = 20)
+    private String tipoProduto = "PRODUTO";
+
     private String dimensoes;
+    
     private Double peso;
+    
+    // Indica se o produto exige que dimensões separadas sejam informadas (comprimento x largura).
+    // Adicionado para compatibilidade com a API frontend que envia `usaDimensoes`.
+    @Column(name = "usa_dimensoes", nullable = false)
+    private Boolean usaDimensoes = Boolean.FALSE;
+
+    // Comprimento e largura separados — mapeados para colunas do banco caso existam.
+    @Column(name = "dimensao_comprimento")
+    private Double dimensaoComprimento;
+
+    @Column(name = "dimensao_largura")
+    private Double dimensaoLargura;
 
     @ManyToOne
     @JoinColumn(name = "id_categoria")
@@ -102,12 +118,44 @@ public class Produto {
         this.visivelParaComprador = visivelParaComprador;
     }
 
+    public String getTipoProduto() {
+        return tipoProduto;
+    }
+
+    public void setTipoProduto(String tipoProduto) {
+        this.tipoProduto = tipoProduto;
+    }
+
     public String getDimensoes() {
         return dimensoes;
     }
 
     public void setDimensoes(String dimensoes) {
         this.dimensoes = dimensoes;
+    }
+
+    public Boolean getUsaDimensoes() {
+        return usaDimensoes;
+    }
+
+    public void setUsaDimensoes(Boolean usaDimensoes) {
+        this.usaDimensoes = usaDimensoes;
+    }
+
+    public Double getDimensaoComprimento() {
+        return dimensaoComprimento;
+    }
+
+    public void setDimensaoComprimento(Double dimensaoComprimento) {
+        this.dimensaoComprimento = dimensaoComprimento;
+    }
+
+    public Double getDimensaoLargura() {
+        return dimensaoLargura;
+    }
+
+    public void setDimensaoLargura(Double dimensaoLargura) {
+        this.dimensaoLargura = dimensaoLargura;
     }
 
     public Double getPeso() {

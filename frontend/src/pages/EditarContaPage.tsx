@@ -161,7 +161,7 @@ export function EditarContaPage() {
                 <Camera className="h-4 w-4" />
                 Selecionar foto de perfil
               </span>
-              <span className="text-sm text-slate-500">JPG, JPEG, WebP ou AVIF, até 2 MB.</span>
+              <span className="text-sm text-slate-500">Qualquer formato de imagem, até 2 MB.</span>
               <input
                 type="file"
                 accept={getAllowedImageAccept()}

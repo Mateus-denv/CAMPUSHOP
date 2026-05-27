@@ -12,15 +12,6 @@ public class ProdutoValidator {
         validarEstoque(produto.getEstoque());
         validarPreco(produto.getPreco());
         validarUsuario(produto.getUsuario());
-        // Dimensoes e peso são opcionais, dependendo do tipo
-        // Assumindo que se for alimento, dimensoes não são necessárias
-        // Mas por enquanto, vamos validar apenas se fornecidos
-        if (produto.getDimensoes() != null && !produto.getDimensoes().trim().isEmpty()) {
-            validarDimensoes(produto.getDimensoes());
-        }
-        if (produto.getPeso() != null) {
-            validarPeso(produto.getPeso());
-        }
     }
 
     private void validarNome(String nome) {

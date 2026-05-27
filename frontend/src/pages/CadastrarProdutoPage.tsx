@@ -3,7 +3,7 @@ import { Button, Card, Input } from '@/components/UI'
 import { categoriaAPI, produtoAPI, type ProdutoImagemAPI } from '@/lib/api-service'
 import { buildProductImageUrl, getAllowedImageAccept, getImageGuidance, validateImageFile } from '@/lib/image-utils'
 import { AlertCircle } from 'lucide-react'
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 type Categoria = {
@@ -15,13 +15,16 @@ type Categoria = {
 type ProdutoForm = {
     nomeProduto: string
     descricao: string
+    tipoProduto: 'PRODUTO' | 'SERVICO'
     estoque: string
     preco: string
-    dimensoes: string
     peso: string
     categoriaId: string
     status: string
     visivelParaComprador: boolean
+    usaDimensoes: boolean
+    dimensaoComprimento: string
+    dimensaoLargura: string
 }
 
 export function CadastrarProdutoPage() {
@@ -31,18 +34,20 @@ export function CadastrarProdutoPage() {
     const [form, setForm] = useState<ProdutoForm>({
         nomeProduto: '',
         descricao: '',
+        tipoProduto: 'PRODUTO',
         estoque: '',
         preco: '',
-        dimensoes: '',
         peso: '',
         categoriaId: '',
         status: 'ATIVO',
         visivelParaComprador: true,
+        usaDimensoes: false,
+        dimensaoComprimento: '',
+        dimensaoLargura: '',
     })
     const [categorias, setCategorias] = useState<Categoria[]>([])
     const [erro, setErro] = useState('')
     const [carregando, setCarregando] = useState(false)
-    const [semDimensoes, setSemDimensoes] = useState(false)
     const [imagensSelecionadas, setImagensSelecionadas] = useState<File[]>([])
     const [previewImagens, setPreviewImagens] = useState<string[]>([])
     const [imagensExistentes, setImagensExistentes] = useState<ProdutoImagemAPI[]>([])
@@ -86,15 +91,17 @@ export function CadastrarProdutoPage() {
                 setForm({
                     nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
                     descricao: produto.descricao ?? '',
+                    tipoProduto: (produto.tipoProduto ?? 'PRODUTO') as 'PRODUTO' | 'SERVICO',
                     estoque: String(produto.estoque ?? ''),
                     preco: produto.preco != null ? String(produto.preco) : '',
-                    dimensoes: produto.dimensoes ?? '',
                     peso: produto.peso != null ? String(produto.peso) : '',
                     categoriaId: String(produto.categoria?.idCategoria ?? ''),
                     status: produto.status ?? 'ATIVO',
                     visivelParaComprador: produto.visivelParaComprador ?? true,
+                    usaDimensoes: Boolean(produto.usaDimensoes ?? produto.dimensoes),
+                    dimensaoComprimento: produto.dimensaoComprimento != null ? String(produto.dimensaoComprimento) : '',
+                    dimensaoLargura: produto.dimensaoLargura != null ? String(produto.dimensaoLargura) : '',
                 })
-                setSemDimensoes(!produto.dimensoes)
             } catch (err: any) {
                 setErro(err.response?.data?.message || 'Não foi possível carregar o produto para edição.')
             } finally {
@@ -125,6 +132,14 @@ export function CadastrarProdutoPage() {
         setForm((atual) => ({
             ...atual,
             [campo]: valor,
+        }))
+    }
+
+    const atualizarTipoProduto = (tipoProduto: ProdutoForm['tipoProduto']) => {
+        setForm((atual) => ({
+            ...atual,
+            tipoProduto,
+            estoque: tipoProduto === 'SERVICO' ? '0' : atual.estoque,
         }))
     }
 
@@ -178,6 +193,37 @@ export function CadastrarProdutoPage() {
         event.target.value = ''
     }
 
+    const singleFileInputRef = useRef<HTMLInputElement | null>(null)
+
+    const abrirSelecionarImagemUnica = () => {
+        singleFileInputRef.current?.click()
+    }
+
+    const adicionarImagem = async (event: ChangeEvent<HTMLInputElement>) => {
+        const arquivo = event.target.files?.[0]
+        event.target.value = ''
+
+        if (!arquivo) {
+            return
+        }
+
+        const limiteRestante = Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)
+        if (limiteRestante <= 0) {
+            setErro('Você já atingiu o limite de 3 imagens por anúncio.')
+            return
+        }
+
+        const validacao = await validateImageFile(arquivo, 'produto')
+        if (validacao) {
+            setErro(validacao)
+            return
+        }
+
+        // Adiciona sem sobrescrever as imagens já selecionadas
+        setImagensSelecionadas((atuais) => [...atuais, arquivo].slice(0, limiteRestante + atuais.length))
+        setPreviewImagens((atuais) => [...atuais, URL.createObjectURL(arquivo)])
+    }
+
     const removerPreviewImagem = (indice: number) => {
         setPreviewImagens((atuais) => {
             const removida = atuais[indice]
@@ -199,8 +245,12 @@ export function CadastrarProdutoPage() {
             setCarregando(true)
             await produtoAPI.excluirImagem(produtoIdEdicao, imagemId)
             await carregarImagensProduto(produtoIdEdicao)
-        } catch (error: any) {
-            setErro(error?.response?.data?.message || 'Não foi possível excluir a imagem.')
+        } catch (err: any) {
+            if (err?.response?.status === 403) {
+                setErro('Acesso negado. Faça login novamente para cadastrar produtos.')
+            } else {
+                setErro(err.response?.data?.message || (produtoIdEdicao ? 'Erro ao atualizar produto' : 'Erro ao cadastrar produto'))
+            }
         } finally {
             setCarregando(false)
         }
@@ -220,6 +270,18 @@ export function CadastrarProdutoPage() {
                 setErro('Descrição do produto é obrigatória')
                 return
             }
+            if (form.nomeProduto.trim().length > 40) {
+                setErro('Nome do produto deve ter no máximo 40 caracteres')
+                return
+            }
+            if (form.descricao.trim().length > 200) {
+                setErro('Descrição do produto deve ter no máximo 200 caracteres')
+                return
+            }
+            if (!form.tipoProduto) {
+                setErro('Selecione se o anúncio é de produto ou serviço')
+                return
+            }
             if (!form.estoque.trim() || Number(form.estoque) < 0 || Number.isNaN(Number(form.estoque))) {
                 setErro('Estoque deve ser um número válido e maior ou igual a zero')
                 return
@@ -228,28 +290,48 @@ export function CadastrarProdutoPage() {
                 setErro('Preço deve ser um valor positivo')
                 return
             }
+            if (form.peso.trim() && (Number(form.peso.replace(',', '.')) <= 0 || Number.isNaN(Number(form.peso.replace(',', '.'))))) {
+                setErro('Peso deve ser um valor positivo')
+                return
+            }
             if (!form.categoriaId) {
                 setErro('Categoria é obrigatória')
                 return
             }
-            if (!semDimensoes && form.dimensoes.trim() && form.dimensoes.trim().length < 3) {
-                setErro('Dimensões, se informadas, devem ser descritivas')
+            if (form.tipoProduto === 'SERVICO' && Number(form.estoque) !== 0) {
+                setErro('Serviços não usam estoque. O valor foi ajustado para 0.')
                 return
             }
-            if (form.peso.trim() && (Number(form.peso.replace(',', '.')) <= 0 || Number.isNaN(Number(form.peso.replace(',', '.'))))) {
-                setErro('Peso deve ser um valor positivo')
-                return
+
+            if (form.usaDimensoes) {
+                const comprimento = Number(form.dimensaoComprimento.replace(',', '.'))
+                const largura = Number(form.dimensaoLargura.replace(',', '.'))
+
+                if (!form.dimensaoComprimento.trim() || Number.isNaN(comprimento) || comprimento <= 0) {
+                    setErro('Comprimento deve ser um número positivo')
+                    return
+                }
+                if (!form.dimensaoLargura.trim() || Number.isNaN(largura) || largura <= 0) {
+                    setErro('Largura deve ser um número positivo')
+                    return
+                }
             }
 
             const produto = {
                 nomeProduto: form.nomeProduto.trim(),
                 descricao: form.descricao.trim(),
-                estoque: Number(form.estoque),
+                tipoProduto: form.tipoProduto,
+                estoque: form.tipoProduto === 'SERVICO' ? 0 : Number(form.estoque),
                 preco: Number(form.preco.replace(',', '.')),
+                peso: form.peso.trim() ? Number(form.peso.replace(',', '.')) : null,
                 status: form.status,
                 visivelParaComprador: form.visivelParaComprador,
-                dimensoes: semDimensoes ? null : form.dimensoes.trim() || null,
-                peso: form.peso.trim() ? Number(form.peso.replace(',', '.')) : null,
+                usaDimensoes: form.usaDimensoes,
+                dimensoes: form.usaDimensoes
+                    ? `${Number(form.dimensaoLargura.replace(',', '.'))} x ${Number(form.dimensaoComprimento.replace(',', '.'))}`
+                    : null,
+                dimensaoComprimento: form.usaDimensoes ? Number(form.dimensaoComprimento.replace(',', '.')) : null,
+                dimensaoLargura: form.usaDimensoes ? Number(form.dimensaoLargura.replace(',', '.')) : null,
                 categoria: { idCategoria: Number(form.categoriaId) }
             }
 
@@ -307,166 +389,240 @@ export function CadastrarProdutoPage() {
                             </div>
                         )}
 
-                        <form onSubmit={handleSalvar} className="grid gap-4">
-                            <Input
-                                label="Nome do produto"
-                                placeholder="Ex: Lápis, Sanduíche, Mochila"
-                                value={form.nomeProduto}
-                                onChange={(e) => atualizarCampo('nomeProduto', e.target.value)}
-                            />
-                            <Input
-                                label="Descrição"
-                                placeholder="Descreva o produto"
-                                value={form.descricao}
-                                onChange={(e) => atualizarCampo('descricao', e.target.value)}
-                            />
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <Input
-                                    label="Estoque"
-                                    placeholder="0"
-                                    type="number"
-                                    value={form.estoque}
-                                    onChange={(e) => atualizarCampo('estoque', e.target.value)}
-                                />
-                                <Input
-                                    label="Preço"
-                                    placeholder="49.90"
-                                    type="text"
-                                    value={form.preco}
-                                    onChange={(e) => atualizarCampo('preco', e.target.value)}
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
-                                    <select
-                                        value={form.categoriaId}
-                                        onChange={(e) => atualizarCampo('categoriaId', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    >
-                                        <option value="">Selecione uma categoria</option>
-                                        {categorias.map((categoria) => (
-                                            <option key={categoria.idCategoria} value={categoria.idCategoria}>
-                                                {categoria.nome_categoria}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                                <label className="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
-                                    <input
-                                        type="checkbox"
-                                        checked={semDimensoes}
-                                        onChange={(e) => setSemDimensoes(e.target.checked)}
-                                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    Dimensões não são necessárias
-                                </label>
-                            </div>
-                            {!semDimensoes && (
-                                <Input
-                                    label="Dimensões (opcional)"
-                                    placeholder="Ex: 20x2x1 cm"
-                                    value={form.dimensoes}
-                                    onChange={(e) => atualizarCampo('dimensoes', e.target.value)}
-                                />
-                            )}
-                            <Input
-                                label="Peso (opcional)"
-                                placeholder="Ex: 0.12"
-                                type="text"
-                                value={form.peso}
-                                onChange={(e) => atualizarCampo('peso', e.target.value)}
-                            />
-
+                        <form onSubmit={handleSalvar} className="grid gap-6">
                             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <h2 className="text-lg font-black tracking-tight text-slate-900">Imagens do anúncio</h2>
                                         <p className="text-sm text-slate-600">{getImageGuidance('produto')} Você pode manter até 3 imagens por anúncio.</p>
                                     </div>
-                                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">16:9</span>
+                                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">1920x1350</span>
                                 </div>
 
-                                        {produtoIdEdicao ? (
-                                            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white p-3">
-                                                <p className="mb-2 text-sm font-semibold text-slate-700">Imagens já salvas</p>
-                                                {carregandoImagens ? (
-                                                    <p className="text-sm text-slate-500">Carregando imagens...</p>
-                                                ) : imagensExistentes.length > 0 ? (
-                                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                                        {imagensExistentes.map((imagem, index) => (
-                                                            <div key={imagem.id} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-50">
-                                                                <MediaImage
-                                                                    src={imagem.url}
-                                                                    alt={imagem.nomeArquivo}
-                                                                    fallbackLabel="Sem imagem"
-                                                                    className="h-40 w-full"
-                                                                    imageClassName="h-40 w-full"
-                                                                />
-                                                                <div className="flex items-center justify-between gap-2 px-3 py-3">
-                                                                    <span className="text-xs font-semibold text-slate-500">Imagem {index + 1}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => excluirImagemExistente(imagem.id)}
-                                                                        className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
-                                                                    >
-                                                                        Excluir
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <MediaImage
-                                                        src={buildProductImageUrl(produtoIdEdicao)}
-                                                        alt={form.nomeProduto || 'Imagem do produto'}
-                                                        fallbackLabel="Sem imagem cadastrada"
-                                                        className="h-56 w-full rounded-[1.25rem]"
-                                                        imageClassName="h-56 w-full rounded-[1.25rem]"
-                                                    />
-                                                )}
-                                            </div>
-                                        ) : null}
-
-                                <label className="mt-4 flex cursor-pointer flex-col gap-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-white p-4 transition hover:border-slate-400 hover:bg-slate-50">
-                                            <span className="text-sm font-semibold text-slate-700">Selecionar imagens do anúncio</span>
-                                    <span className="text-sm text-slate-500">JPG, JPEG, WebP ou AVIF, até 2 MB por imagem.</span>
-                                            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Restam {Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)} espaço(s)</span>
-                                    <input
-                                        type="file"
-                                        accept={getAllowedImageAccept()}
-                                        multiple
-                                        onChange={atualizarImagens}
-                                                disabled={imagensExistentes.length >= 3}
-                                        className="sr-only"
-                                    />
-                                </label>
-
-                                {previewImagens.length > 0 ? (
-                                            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                        {previewImagens.map((preview, index) => (
-                                                    <div key={preview} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white">
-                                                        <div className="relative">
-                                                            <img
-                                                                src={preview}
-                                                                alt={`Pré-visualização ${index + 1}`}
-                                                                className="h-40 w-full object-cover"
-                                                            />
+                                {produtoIdEdicao ? (
+                                    <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white p-3">
+                                        <p className="mb-2 text-sm font-semibold text-slate-700">Imagens já salvas</p>
+                                        {carregandoImagens ? (
+                                            <p className="text-sm text-slate-500">Carregando imagens...</p>
+                                        ) : imagensExistentes.length > 0 ? (
+                                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                                {imagensExistentes.map((imagem, index) => (
+                                                    <div key={imagem.id} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-50">
+                                                        <MediaImage
+                                                            src={imagem.url}
+                                                            alt={imagem.nomeArquivo}
+                                                            fallbackLabel="Sem imagem"
+                                                            className="h-40 w-full"
+                                                            imageClassName="h-40 w-full"
+                                                        />
+                                                        <div className="flex items-center justify-between gap-2 px-3 py-3">
+                                                            <span className="text-xs font-semibold text-slate-500">Imagem {index + 1}</span>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => removerPreviewImagem(index)}
-                                                                className="absolute right-2 top-2 rounded-full bg-slate-900/80 p-2 text-white transition hover:bg-slate-900"
-                                                                aria-label={`Remover imagem ${index + 1}`}
+                                                                onClick={() => excluirImagemExistente(imagem.id)}
+                                                                className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
                                                             >
-                                                                ×
+                                                                Excluir
                                                             </button>
                                                         </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <MediaImage
+                                                src={buildProductImageUrl(produtoIdEdicao)}
+                                                alt={form.nomeProduto || 'Imagem do produto'}
+                                                fallbackLabel="Sem imagem cadastrada"
+                                                className="h-56 w-full rounded-[1.25rem]"
+                                                imageClassName="h-56 w-full rounded-[1.25rem]"
+                                            />
+                                        )}
+                                    </div>
+                                ) : null}
+
+                                <div className="mt-4 flex items-start gap-3">
+                                    <label className="flex-1 cursor-pointer flex-col gap-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-white p-4 transition hover:border-slate-400 hover:bg-slate-50">
+                                        <span className="text-sm font-semibold text-slate-700">Selecionar imagens do anúncio</span>
+                                        <span className="text-sm text-slate-500">Qualquer formato de imagem, até 2 MB por imagem.</span>
+                                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Restam {Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)} espaço(s)</span>
+                                        <input
+                                            type="file"
+                                            accept={getAllowedImageAccept()}
+                                            multiple
+                                            onChange={atualizarImagens}
+                                            disabled={imagensExistentes.length >= 3}
+                                            className="sr-only"
+                                        />
+                                    </label>
+
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={abrirSelecionarImagemUnica}
+                                            disabled={imagensExistentes.length + imagensSelecionadas.length >= 3}
+                                            className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                                            aria-label="Adicionar imagem"
+                                        >
+                                            +
+                                        </button>
+                                        <input
+                                            ref={singleFileInputRef}
+                                            type="file"
+                                            accept={getAllowedImageAccept()}
+                                            onChange={adicionarImagem}
+                                            className="sr-only"
+                                        />
+                                    </div>
+                                </div>
+
+                                {previewImagens.length > 0 ? (
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        {previewImagens.map((preview, index) => (
+                                            <div key={preview} className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white">
+                                                <div className="relative">
+                                                    <img
+                                                        src={preview}
+                                                        alt={`Pré-visualização ${index + 1}`}
+                                                        className="h-40 w-full object-cover"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removerPreviewImagem(index)}
+                                                        className="absolute right-2 top-2 rounded-full bg-slate-900/80 p-2 text-white transition hover:bg-slate-900"
+                                                        aria-label={`Remover imagem ${index + 1}`}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : null}
+                            </div>
+
+                            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="grid gap-4">
+                                    <Input
+                                        label="Nome do produto"
+                                        placeholder="Ex: Lápis, Sanduíche, Mochila"
+                                        value={form.nomeProduto}
+                                        onChange={(e) => atualizarCampo('nomeProduto', e.target.value)}
+                                        maxLength={40}
+                                    />
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Descrição do produto</label>
+                                        <textarea
+                                            placeholder="Descreva o produto"
+                                            value={form.descricao}
+                                            maxLength={200}
+                                            onChange={(e) => atualizarCampo('descricao', e.target.value)}
+                                            className="min-h-32 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+                                        />
+                                        <p className="text-xs text-slate-500">Limite de 200 caracteres.</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">Tipo do anúncio</label>
+                                            <select
+                                                value={form.tipoProduto}
+                                                onChange={(e) => atualizarTipoProduto(e.target.value as ProdutoForm['tipoProduto'])}
+                                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            >
+                                                <option value="PRODUTO">Produto</option>
+                                                <option value="SERVICO">Serviço</option>
+                                            </select>
+                                        </div>
+
+                                        <Input
+                                            label="Quantidade de estoque"
+                                            placeholder="0"
+                                            type="number"
+                                            min={0}
+                                            step={1}
+                                            value={form.tipoProduto === 'SERVICO' ? '0' : form.estoque}
+                                            onChange={(e) => atualizarCampo('estoque', e.target.value)}
+                                            disabled={form.tipoProduto === 'SERVICO'}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <Input
+                                            label="Preço"
+                                            placeholder="49.90"
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                            value={form.preco}
+                                            onChange={(e) => atualizarCampo('preco', e.target.value)}
+                                        />
+
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">Categoria</label>
+                                            <select
+                                                value={form.categoriaId}
+                                                onChange={(e) => atualizarCampo('categoriaId', e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            >
+                                                <option value="">Selecione uma categoria</option>
+                                                {categorias.map((categoria) => (
+                                                    <option key={categoria.idCategoria} value={categoria.idCategoria}>
+                                                        {categoria.nome_categoria}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <label className="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={form.usaDimensoes}
+                                                onChange={(e) => setForm((atual) => ({ ...atual, usaDimensoes: e.target.checked }))}
+                                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            Precisa informar dimensões?
+                                        </label>
+                                        <p className="mt-2 text-sm text-slate-500">Ative esta opção quando o produto precisar de medidas físicas.</p>
+                                    </div>
+
+                                    {form.usaDimensoes ? (
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <Input
+                                                label="Largura (cm)"
+                                                placeholder="Ex: 20"
+                                                type="number"
+                                                min={0.01}
+                                                step="0.01"
+                                                value={form.dimensaoLargura}
+                                                onChange={(e) => atualizarCampo('dimensaoLargura', e.target.value)}
+                                                required
+                                            />
+                                            <Input
+                                                label="Comprimento (cm)"
+                                                placeholder="Ex: 30"
+                                                type="number"
+                                                min={0.01}
+                                                step="0.01"
+                                                value={form.dimensaoComprimento}
+                                                onChange={(e) => atualizarCampo('dimensaoComprimento', e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                    ) : null}
+
+                                    <Input
+                                        label="Peso (opcional)"
+                                        placeholder="Ex: 0.5"
+                                        type="number"
+                                        min={0.01}
+                                        step="0.01"
+                                        value={form.peso}
+                                        onChange={(e) => atualizarCampo('peso', e.target.value)}
+                                    />
+                                </div>
                             </div>
 
                             <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
