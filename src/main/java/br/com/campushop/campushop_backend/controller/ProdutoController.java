@@ -115,6 +115,13 @@ public class ProdutoController {
     @PostMapping
     public ResponseEntity<?> salvar(@RequestBody Produto produto, Authentication authentication) {
         try {
+            // Se não houver autenticação válida, retornar 401 explicitamente.
+            // Isso evita NPEs e fornece feedback claro ao frontend quando o token estiver ausente.
+            if (authentication == null || !authentication.isAuthenticated() || authentication.getName() == null) {
+                Map<String, String> erroAuth = new HashMap<>();
+                erroAuth.put("erro", "Usuário não autenticado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erroAuth);
+            }
             // Validações
             if (produto.getNomeProduto() == null || produto.getNomeProduto().trim().isEmpty()) {
                 Map<String, String> erro = new HashMap<>();

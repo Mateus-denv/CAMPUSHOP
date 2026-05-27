@@ -16,6 +16,18 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
+  // DEBUG: logar info de autorização para diagnosticar 403 em criação/envio de imagens
+  try {
+    const url = String(config.url || '')
+    const method = String(config.method || '').toLowerCase()
+    if (url.includes('/api/produtos') && (method === 'post' || method === 'put')) {
+      // eslint-disable-next-line no-console
+      console.debug('[DEBUG][api] Enviando', method.toUpperCase(), url, 'Authorization=', config.headers.Authorization)
+    }
+  } catch (e) {
+    // ignore
+  }
+
   return config
 })
 

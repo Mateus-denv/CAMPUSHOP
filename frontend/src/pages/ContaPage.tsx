@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { MediaImage } from "@/components/MediaImage";
 import { contaAPI, pedidosAPI, produtoAPI, usuarioAPI, type ContaMetricasAPI, type PedidoAPI } from "@/lib/api-service";
 import { buildUserPhotoUrl } from "@/lib/image-utils";
-import { getFavoriteProducts } from "@/lib/shop-storage";
+import { getFavoriteProducts, toggleFavorite } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -179,6 +179,32 @@ export function ContaPage() {
 
   const abrirEdicaoProduto = (produtoId: number) => {
     navigate(`/cadastrar-produto?produtoId=${produtoId}`);
+  };
+
+  // Remove um produto dos favoritos usando a função compartilhada de toggle
+  // A lógica reutiliza `toggleFavorite` que já trata de adicionar/remover
+  // do storage local; após a operação atualizamos o estado local.
+  const removerFavorito = (produtoId: number) => {
+    try {
+      // Encontramos o snapshot do produto nos favoritos atuais
+      const produtoSnapshot = favoritos.find((f) => f.id === produtoId);
+      if (!produtoSnapshot) return;
+
+      // toggleFavorite retorna false quando removeu, true quando adicionou
+      toggleFavorite({
+        id: produtoSnapshot.id,
+        nome: produtoSnapshot.nome,
+        descricao: produtoSnapshot.descricao,
+        preco: produtoSnapshot.preco,
+        estoque: produtoSnapshot.estoque,
+        categoria: produtoSnapshot.categoria,
+      });
+
+      // Recarrega os favoritos do storage para manter consistência
+      setFavoritos(getFavoriteProducts());
+    } catch (err) {
+      console.error('Erro ao remover favorito:', err);
+    }
   };
 
   const alternarStatusProduto = async (produto: UsuarioProduto) => {
@@ -786,6 +812,23 @@ export function ContaPage() {
                         <p className="text-sm text-slate-500">
                           Estoque: {produto.estoque}
                         </p>
+
+                        {/* Botões de ação para cada favorito: ver produto e remover dos favoritos */}
+                        <div className="mt-4 flex gap-2">
+                          <Link
+                            to={`/produto/${produto.id}`}
+                            className="rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            Ver produto
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => removerFavorito(produto.id)}
+                            className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-100"
+                          >
+                            Remover
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
