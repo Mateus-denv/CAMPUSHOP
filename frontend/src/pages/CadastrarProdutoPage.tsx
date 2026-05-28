@@ -6,10 +6,19 @@ import { AlertCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
+const LIMITE_IMAGENS_PRODUTO = 4
+
 type Categoria = {
     idCategoria: number
     nome_categoria: string
     descricao: string
+}
+
+type VariacaoForm = {
+    id: string
+    nomeProduto: string
+    estoque: string
+    preco: string
 }
 
 type ProdutoForm = {
@@ -22,9 +31,20 @@ type ProdutoForm = {
     categoriaId: string
     status: string
     visivelParaComprador: boolean
+    possuiVariantes: boolean
     usaDimensoes: boolean
     dimensaoComprimento: string
     dimensaoLargura: string
+    variantes: VariacaoForm[]
+}
+
+function criarVariacaoVazia(): VariacaoForm {
+    return {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        nomeProduto: '',
+        estoque: '',
+        preco: '',
+    }
 }
 
 export function CadastrarProdutoPage() {
@@ -41,9 +61,11 @@ export function CadastrarProdutoPage() {
         categoriaId: '',
         status: 'ATIVO',
         visivelParaComprador: true,
+        possuiVariantes: false,
         usaDimensoes: false,
         dimensaoComprimento: '',
         dimensaoLargura: '',
+        variantes: [],
     })
     const [categorias, setCategorias] = useState<Categoria[]>([])
     const [erro, setErro] = useState('')
@@ -52,6 +74,9 @@ export function CadastrarProdutoPage() {
     const [previewImagens, setPreviewImagens] = useState<string[]>([])
     const [imagensExistentes, setImagensExistentes] = useState<ProdutoImagemAPI[]>([])
     const [carregandoImagens, setCarregandoImagens] = useState(false)
+    // Arquivo selecionado por variante (mesma ordem do array `form.variantes` filtrado)
+    const [variantesArquivos, setVariantesArquivos] = useState<(File | null)[]>([])
+    const [variantesPreview, setVariantesPreview] = useState<string[]>([])
 
     useEffect(() => {
         const carregarCategorias = async () => {
@@ -98,10 +123,21 @@ export function CadastrarProdutoPage() {
                     categoriaId: String(produto.categoria?.idCategoria ?? ''),
                     status: produto.status ?? 'ATIVO',
                     visivelParaComprador: produto.visivelParaComprador ?? true,
+                    possuiVariantes: Boolean(produto.possuiVariantes),
                     usaDimensoes: Boolean(produto.usaDimensoes ?? produto.dimensoes),
                     dimensaoComprimento: produto.dimensaoComprimento != null ? String(produto.dimensaoComprimento) : '',
                     dimensaoLargura: produto.dimensaoLargura != null ? String(produto.dimensaoLargura) : '',
+                    variantes: (produto.variantes ?? []).map((variante: any) => ({
+                        id: `${variante.idProduto ?? variante.id ?? Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                        nomeProduto: variante.nomeProduto ?? '',
+                        estoque: String(variante.estoque ?? ''),
+                        preco: variante.preco != null ? String(variante.preco) : '',
+                    })),
                 })
+                // Inicializa arrays de imagens das variantes (sem arquivos por enquanto)
+                const qtdVar = (produto.variantes ?? []).length
+                setVariantesArquivos(Array(qtdVar).fill(null))
+                setVariantesPreview(Array(qtdVar).fill(''))
             } catch (err: any) {
                 setErro(err.response?.data?.message || 'Não foi possível carregar o produto para edição.')
             } finally {
@@ -143,6 +179,94 @@ export function CadastrarProdutoPage() {
         }))
     }
 
+    const limiteImagensPermitidas = form.possuiVariantes ? 1 : LIMITE_IMAGENS_PRODUTO
+
+    const atualizarPossuiVariantes = (possuiVariantes: boolean) => {
+        setForm((atual) => ({
+            ...atual,
+            possuiVariantes,
+            variantes: possuiVariantes && atual.variantes.length === 0 ? [criarVariacaoVazia()] : atual.variantes,
+        }))
+        if (possuiVariantes && variantesArquivos.length === 0) {
+            setVariantesArquivos([null])
+            setVariantesPreview([''])
+        }
+    }
+
+    const adicionarVariacao = () => {
+        setForm((atual) => ({
+            ...atual,
+            variantes: [...atual.variantes, criarVariacaoVazia()],
+        }))
+        setVariantesArquivos((atuais) => [...atuais, null])
+        setVariantesPreview((atuais) => [...atuais, ''])
+    }
+
+    const atualizarVariacao = (indice: number, campo: keyof Omit<VariacaoForm, 'id'>, valor: string) => {
+        setForm((atual) => ({
+            ...atual,
+            variantes: atual.variantes.map((variante, posicao) => (posicao === indice ? { ...variante, [campo]: valor } : variante)),
+        }))
+    }
+
+    const removerVariacao = (indice: number) => {
+        setForm((atual) => ({
+            ...atual,
+            variantes: atual.variantes.filter((_, posicao) => posicao !== indice),
+        }))
+        setVariantesArquivos((atuais) => {
+            const copia = atuais.slice()
+            copia.splice(indice, 1)
+            return copia
+        })
+        setVariantesPreview((atuais) => {
+            const copia = atuais.slice()
+            const removed = copia.splice(indice, 1)
+            if (removed[0]) URL.revokeObjectURL(removed[0])
+            return copia
+        })
+    }
+
+    // Atualiza estado de arquivo e preview associado a uma variante
+    const atualizarImagemVariacao = async (indice: number, event: ChangeEvent<HTMLInputElement>) => {
+        const arquivo = event.target.files?.[0] ?? null
+        if (!arquivo) return
+
+        const validacao = await validateImageFile(arquivo, 'produto')
+        if (validacao) {
+            setErro(validacao)
+            return
+        }
+
+        setVariantesArquivos((atuais) => {
+            const copia = [...atuais]
+            copia[indice] = arquivo
+            return copia
+        })
+
+        setVariantesPreview((atuais) => {
+            const copia = [...atuais]
+            // cria URL de preview e libera antiga
+            if (copia[indice]) URL.revokeObjectURL(copia[indice])
+            copia[indice] = URL.createObjectURL(arquivo)
+            return copia
+        })
+    }
+
+    const removerImagemVariacao = (indice: number) => {
+        setVariantesArquivos((atuais) => {
+            const copia = [...atuais]
+            copia[indice] = null
+            return copia
+        })
+        setVariantesPreview((atuais) => {
+            const copia = [...atuais]
+            if (copia[indice]) URL.revokeObjectURL(copia[indice])
+            copia[indice] = ''
+            return copia
+        })
+    }
+
     const carregarImagensProduto = async (produtoId: number) => {
         try {
             setCarregandoImagens(true)
@@ -160,7 +284,7 @@ export function CadastrarProdutoPage() {
         const arquivos = Array.from(event.target.files ?? [])
         setErro('')
 
-        const limiteRestante = Math.max(0, 3 - imagensExistentes.length)
+        const limiteRestante = Math.max(0, limiteImagensPermitidas - imagensExistentes.length)
 
         if (!arquivos.length) {
             setImagensSelecionadas([])
@@ -207,9 +331,9 @@ export function CadastrarProdutoPage() {
             return
         }
 
-        const limiteRestante = Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)
+        const limiteRestante = Math.max(0, limiteImagensPermitidas - imagensExistentes.length - imagensSelecionadas.length)
         if (limiteRestante <= 0) {
-            setErro('Você já atingiu o limite de 3 imagens por anúncio.')
+            setErro(`Você já atingiu o limite de ${LIMITE_IMAGENS_PRODUTO} imagens por anúncio.`)
             return
         }
 
@@ -286,9 +410,13 @@ export function CadastrarProdutoPage() {
                 setErro('Estoque deve ser um número válido e maior ou igual a zero')
                 return
             }
-            if (!form.preco.trim() || Number(form.preco.replace(',', '.')) <= 0 || Number.isNaN(Number(form.preco.replace(',', '.')))) {
-                setErro('Preço deve ser um valor positivo')
-                return
+            // Quando o anúncio possui variantes, o preço do anúncio principal
+            // é calculado pelas variantes — não validar o campo `form.preco` aqui.
+            if (!form.possuiVariantes) {
+                if (!form.preco.trim() || Number(form.preco.replace(',', '.')) <= 0 || Number.isNaN(Number(form.preco.replace(',', '.')))) {
+                    setErro('Preço deve ser um valor positivo')
+                    return
+                }
             }
             if (form.peso.trim() && (Number(form.peso.replace(',', '.')) <= 0 || Number.isNaN(Number(form.peso.replace(',', '.'))))) {
                 setErro('Peso deve ser um valor positivo')
@@ -301,6 +429,33 @@ export function CadastrarProdutoPage() {
             if (form.tipoProduto === 'SERVICO' && Number(form.estoque) !== 0) {
                 setErro('Serviços não usam estoque. O valor foi ajustado para 0.')
                 return
+            }
+
+            if (form.possuiVariantes) {
+                const variantesValidas = form.variantes.filter((variante) => variante.nomeProduto.trim())
+
+                if (!variantesValidas.length) {
+                    setErro('Informe ao menos uma variante para este anúncio')
+                    return
+                }
+
+                for (const variante of variantesValidas) {
+                    const estoqueVariante = Number(variante.estoque)
+                    const precoVariante = Number(variante.preco.replace(',', '.'))
+
+                    if (!variante.nomeProduto.trim()) {
+                        setErro('Cada variante precisa ter um nome')
+                        return
+                    }
+                    if (Number.isNaN(estoqueVariante) || estoqueVariante < 0) {
+                        setErro('O estoque de cada variante deve ser um número válido')
+                        return
+                    }
+                    if (Number.isNaN(precoVariante) || precoVariante <= 0) {
+                        setErro('O preço de cada variante deve ser um valor positivo')
+                        return
+                    }
+                }
             }
 
             if (form.usaDimensoes) {
@@ -317,21 +472,44 @@ export function CadastrarProdutoPage() {
                 }
             }
 
+                const variantesPayload = form.possuiVariantes
+                    ? form.variantes
+                        .filter((variante) => variante.nomeProduto.trim())
+                        .map((variante) => ({
+                            nomeProduto: variante.nomeProduto.trim(),
+                            estoque: Number(variante.estoque),
+                            preco: Number(variante.preco.replace(',', '.')),
+                            status: 'ATIVO',
+                            visivelParaComprador: true,
+                            tipoProduto: form.tipoProduto,
+                        }))
+                    : []
+
+                const estoqueCalculado = form.possuiVariantes
+                    ? variantesPayload.reduce((total, variante) => total + Number(variante.estoque ?? 0), 0)
+                    : (form.tipoProduto === 'SERVICO' ? 0 : Number(form.estoque))
+
+                const precoCalculado = form.possuiVariantes
+                    ? variantesPayload.reduce((menor, variante) => Math.min(menor, Number(variante.preco ?? 0)), variantesPayload[0]?.preco ?? 0)
+                    : Number(form.preco.replace(',', '.'))
+
             const produto = {
                 nomeProduto: form.nomeProduto.trim(),
                 descricao: form.descricao.trim(),
                 tipoProduto: form.tipoProduto,
-                estoque: form.tipoProduto === 'SERVICO' ? 0 : Number(form.estoque),
-                preco: Number(form.preco.replace(',', '.')),
+                    estoque: estoqueCalculado,
+                    preco: precoCalculado,
                 peso: form.peso.trim() ? Number(form.peso.replace(',', '.')) : null,
                 status: form.status,
                 visivelParaComprador: form.visivelParaComprador,
+                    possuiVariantes: form.possuiVariantes,
                 usaDimensoes: form.usaDimensoes,
                 dimensoes: form.usaDimensoes
                     ? `${Number(form.dimensaoLargura.replace(',', '.'))} x ${Number(form.dimensaoComprimento.replace(',', '.'))}`
                     : null,
                 dimensaoComprimento: form.usaDimensoes ? Number(form.dimensaoComprimento.replace(',', '.')) : null,
                 dimensaoLargura: form.usaDimensoes ? Number(form.dimensaoLargura.replace(',', '.')) : null,
+                    variantes: variantesPayload,
                 categoria: { idCategoria: Number(form.categoriaId) }
             }
 
@@ -346,6 +524,26 @@ export function CadastrarProdutoPage() {
                 if (idProdutoFinal) {
                     setProdutoIdEdicao(idProdutoFinal)
                 }
+                // Se houver variantes e arquivos associados a elas, enviar as imagens
+                // após a criação. O backend retorna a lista de variantes criadas
+                // dentro de `produtoCriado.variantes` na mesma ordem do payload.
+                if (produto.possuiVariantes && produtoCriado.variantes && Array.isArray(produtoCriado.variantes)) {
+                    const variantesCriadas = produtoCriado.variantes as any[]
+                    // Envia arquivo correspondente à variante, se houver
+                    for (let i = 0; i < variantesCriadas.length; i++) {
+                        const variante = variantesCriadas[i]
+                        const arquivo = variantesArquivos[i]
+                        if (arquivo && variante && (variante.idProduto || variante.id)) {
+                            const variantId = Number(variante.idProduto ?? variante.id)
+                            try {
+                                await produtoAPI.enviarImagens(variantId, [arquivo])
+                            } catch (uploadErr: any) {
+                                // Não interrompe o fluxo principal, mas avisa o usuário
+                                console.warn('Não foi possível enviar imagem da variante', variantId, uploadErr)
+                            }
+                        }
+                    }
+                }
             }
 
             if (imagensSelecionadas.length && idProdutoFinal) {
@@ -354,6 +552,30 @@ export function CadastrarProdutoPage() {
                 } catch (uploadErr: any) {
                     setErro(uploadErr?.response?.data?.message || 'Produto salvo, mas não foi possível enviar as imagens.')
                     return
+                }
+            }
+            // Caso o produto já estivesse em edição, também pode haver imagens locais
+            // associadas às variantes — enviá-las aqui ao backend correspondente.
+            if (produtoIdEdicao && form.possuiVariantes && variantesArquivos.length) {
+                // Obter variantes atuais do backend para mapear IDs
+                try {
+                    const resp = await produtoAPI.obterPorId(produtoIdEdicao!)
+                    const produtoAtualizado = resp.data ?? {}
+                    const variantesBack = produtoAtualizado.variantes ?? []
+                    for (let i = 0; i < variantesBack.length; i++) {
+                        const varBack = variantesBack[i]
+                        const arquivo = variantesArquivos[i]
+                        if (arquivo && varBack && (varBack.idProduto || varBack.id)) {
+                            const variantId = Number(varBack.idProduto ?? varBack.id)
+                            try {
+                                await produtoAPI.enviarImagens(variantId, [arquivo])
+                            } catch (uploadErr: any) {
+                                console.warn('Falha ao enviar imagem da variante (edição)', variantId, uploadErr)
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Não foi possível recuperar variantes para envio de imagens na edição', err)
                 }
             }
             navigate('/conta')
@@ -394,7 +616,7 @@ export function CadastrarProdutoPage() {
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <h2 className="text-lg font-black tracking-tight text-slate-900">Imagens do anúncio</h2>
-                                        <p className="text-sm text-slate-600">{getImageGuidance('produto')} Você pode manter até 3 imagens por anúncio.</p>
+                                        <p className="text-sm text-slate-600">{getImageGuidance('produto')} {form.possuiVariantes ? 'Anúncios com variantes usam apenas 1 imagem no anúncio principal.' : `Você pode manter até ${LIMITE_IMAGENS_PRODUTO} imagens por anúncio.`}</p>
                                     </div>
                                     <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">1920x1350</span>
                                 </div>
@@ -444,13 +666,13 @@ export function CadastrarProdutoPage() {
                                     <label className="flex-1 cursor-pointer flex-col gap-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-white p-4 transition hover:border-slate-400 hover:bg-slate-50">
                                         <span className="text-sm font-semibold text-slate-700">Selecionar imagens do anúncio</span>
                                         <span className="text-sm text-slate-500">Qualquer formato de imagem, até 2 MB por imagem.</span>
-                                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Restam {Math.max(0, 3 - imagensExistentes.length - imagensSelecionadas.length)} espaço(s)</span>
+                                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Restam {Math.max(0, limiteImagensPermitidas - imagensExistentes.length - imagensSelecionadas.length)} espaço(s)</span>
                                         <input
                                             type="file"
                                             accept={getAllowedImageAccept()}
                                             multiple
                                             onChange={atualizarImagens}
-                                            disabled={imagensExistentes.length >= 3}
+                                            disabled={imagensExistentes.length >= limiteImagensPermitidas}
                                             className="sr-only"
                                         />
                                     </label>
@@ -459,7 +681,7 @@ export function CadastrarProdutoPage() {
                                         <button
                                             type="button"
                                             onClick={abrirSelecionarImagemUnica}
-                                            disabled={imagensExistentes.length + imagensSelecionadas.length >= 3}
+                                            disabled={imagensExistentes.length + imagensSelecionadas.length >= limiteImagensPermitidas}
                                             className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50"
                                             aria-label="Adicionar imagem"
                                         >
@@ -535,28 +757,42 @@ export function CadastrarProdutoPage() {
                                             </select>
                                         </div>
 
-                                        <Input
-                                            label="Quantidade de estoque"
-                                            placeholder="0"
-                                            type="number"
-                                            min={0}
-                                            step={1}
-                                            value={form.tipoProduto === 'SERVICO' ? '0' : form.estoque}
-                                            onChange={(e) => atualizarCampo('estoque', e.target.value)}
-                                            disabled={form.tipoProduto === 'SERVICO'}
-                                        />
+                                        {form.possuiVariantes ? (
+                                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                                                <p className="font-semibold text-slate-900">Estoque do anúncio principal</p>
+                                                <p className="mt-1">Será calculado automaticamente pela soma das variantes cadastradas.</p>
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                label="Quantidade de estoque"
+                                                placeholder="0"
+                                                type="number"
+                                                min={0}
+                                                step={1}
+                                                value={form.tipoProduto === 'SERVICO' ? '0' : form.estoque}
+                                                onChange={(e) => atualizarCampo('estoque', e.target.value)}
+                                                disabled={form.tipoProduto === 'SERVICO'}
+                                            />
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <Input
-                                            label="Preço"
-                                            placeholder="49.90"
-                                            type="number"
-                                            min={0}
-                                            step="0.01"
-                                            value={form.preco}
-                                            onChange={(e) => atualizarCampo('preco', e.target.value)}
-                                        />
+                                        {form.possuiVariantes ? (
+                                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                                                <p className="font-semibold text-slate-900">Preço do anúncio principal</p>
+                                                <p className="mt-1">Será calculado pelo menor preço entre as variantes.</p>
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                label="Preço"
+                                                placeholder="49.90"
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                value={form.preco}
+                                                onChange={(e) => atualizarCampo('preco', e.target.value)}
+                                            />
+                                        )}
 
                                         <div>
                                             <label className="mb-2 block text-sm font-semibold text-slate-700">Categoria</label>
@@ -587,6 +823,106 @@ export function CadastrarProdutoPage() {
                                         </label>
                                         <p className="mt-2 text-sm text-slate-500">Ative esta opção quando o produto precisar de medidas físicas.</p>
                                     </div>
+
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <label className="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={form.possuiVariantes}
+                                                onChange={(e) => atualizarPossuiVariantes(e.target.checked)}
+                                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            Este anúncio tem variantes
+                                        </label>
+                                        <p className="mt-2 text-sm text-slate-500">Use isso para roupas, sabores, tamanhos ou qualquer anúncio com escolha de opção antes da compra.</p>
+                                    </div>
+
+                                    {form.possuiVariantes ? (
+                                        <div className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-4">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <h3 className="text-lg font-black tracking-tight text-slate-900">Variantes do produto</h3>
+                                                    <p className="text-sm text-slate-600">Cada variante vira um item comprável dentro do anúncio principal.</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={adicionarVariacao}
+                                                    className="inline-flex items-center rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95"
+                                                >
+                                                    Adicionar variante
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 space-y-3">
+                                                {form.variantes.map((variante, indice) => (
+                                                    <div key={variante.id} className="rounded-[1.25rem] border border-slate-200 bg-white p-4">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <p className="text-sm font-semibold text-slate-700">Variante {indice + 1}</p>
+                                                                <p className="text-xs text-slate-500">Nome, preço e estoque desta opção</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removerVariacao(indice)}
+                                                                className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+                                                            >
+                                                                Remover
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="mt-4 grid gap-4 md:grid-cols-3">
+                                                            <Input
+                                                                label="Nome da variante"
+                                                                placeholder="Ex: Tamanho M, Sabor Chocolate"
+                                                                value={variante.nomeProduto}
+                                                                onChange={(e) => atualizarVariacao(indice, 'nomeProduto', e.target.value)}
+                                                            />
+                                                            <Input
+                                                                label="Estoque da variante"
+                                                                placeholder="0"
+                                                                type="number"
+                                                                min={0}
+                                                                step={1}
+                                                                value={variante.estoque}
+                                                                onChange={(e) => atualizarVariacao(indice, 'estoque', e.target.value)}
+                                                            />
+                                                            <Input
+                                                                label="Preço da variante"
+                                                                placeholder="49.90"
+                                                                type="number"
+                                                                min={0}
+                                                                step="0.01"
+                                                                value={variante.preco}
+                                                                onChange={(e) => atualizarVariacao(indice, 'preco', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="mt-3">
+                                                            <label className="text-sm font-semibold text-slate-700">Imagem da variante (opcional)</label>
+                                                            <div className="mt-2 flex items-center gap-3">
+                                                                <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                                                                    Selecionar imagem
+                                                                    <input
+                                                                        type="file"
+                                                                        accept={getAllowedImageAccept()}
+                                                                        onChange={(e) => atualizarImagemVariacao(indice, e)}
+                                                                        className="sr-only"
+                                                                    />
+                                                                </label>
+                                                                {variantesPreview[indice] ? (
+                                                                    <div className="relative">
+                                                                        <img src={variantesPreview[indice]} alt={`Preview variante ${indice + 1}`} className="h-20 w-28 object-cover rounded" />
+                                                                        <button type="button" onClick={() => removerImagemVariacao(indice)} className="absolute right-0 top-0 rounded-full bg-white p-1 text-sm">×</button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-sm text-slate-500">Nenhuma imagem</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : null}
 
                                     {form.usaDimensoes ? (
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -1,10 +1,10 @@
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
-import { carrinhoAPI, produtoAPI } from '@/lib/api-service'
+import { carrinhoAPI, produtoAPI, type ProdutoAPI } from '@/lib/api-service'
 import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 type Produto = {
   idProduto: number
@@ -14,6 +14,7 @@ type Produto = {
   estoque: number
   status?: string
   visivelParaComprador?: boolean
+  possuiVariantes?: boolean
   vendedor_id?: number
   vendedorNome?: string
   categoriaId?: number
@@ -21,6 +22,7 @@ type Produto = {
 }
 
 export function ProdutosPage() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -49,7 +51,7 @@ export function ProdutosPage() {
       setCarregando(true)
       const response = await produtoAPI.listarTodos()
       // Captura o nome do vendedor para exibir somente o anunciante real.
-      const produtosNormalizados: Produto[] = (response.data ?? []).map((produto: any) => ({
+      const produtosNormalizados: Produto[] = (response.data ?? []).map((produto: ProdutoAPI) => ({
         idProduto: Number(produto.idProduto ?? produto.id),
         nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
         descricao: produto.descricao ?? '',
@@ -57,6 +59,7 @@ export function ProdutosPage() {
         estoque: Number(produto.estoque ?? 0),
         status: produto.status,
         visivelParaComprador: produto.visivelParaComprador,
+        possuiVariantes: Boolean(produto.possuiVariantes),
         vendedor_id: produto.vendedor_id,
         vendedorNome:
           produto.nomeVendedor ??
@@ -109,6 +112,10 @@ export function ProdutosPage() {
   const adicionarAoCarrinho = async (produtoId: number) => {
     const produto = produtos.find((item) => item.idProduto === produtoId)
     if (!produto) {
+      return
+    }
+
+    if (produto.possuiVariantes) {
       return
     }
 
@@ -255,7 +262,7 @@ export function ProdutosPage() {
                   R$ {produto.preco.toFixed(2)}
                 </span>
                 <div className="text-right text-sm text-slate-500">
-                  <span>{produto.estoque} em estoque</span>
+                  <span>{produto.possuiVariantes ? 'Escolha uma variante' : `${produto.estoque} em estoque`}</span>
                   {produto.estoque > 0 && produto.estoque <= 10 && (
                     <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
                       {produto.estoque === 1 ? 'Alerta: há somente essa unidade' : `Alerta: há somente ${produto.estoque} restantes`}
@@ -268,12 +275,16 @@ export function ProdutosPage() {
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
+                    if (produto.possuiVariantes) {
+                      navigate(`/produto/${produto.idProduto}`)
+                      return
+                    }
                   adicionarAoCarrinho(produto.idProduto)
                 }}
-                disabled={produto.estoque === 0}
+                disabled={produto.possuiVariantes ? false : produto.estoque === 0}
                 className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {produto.estoque === 0 ? 'Fora de estoque' : 'Adicionar ao carrinho'}
+                {produto.possuiVariantes ? 'Escolher variante' : produto.estoque === 0 ? 'Fora de estoque' : 'Adicionar ao carrinho'}
               </button>
             </Link>
           ))}

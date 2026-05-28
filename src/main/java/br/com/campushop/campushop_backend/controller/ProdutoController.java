@@ -37,6 +37,31 @@ public class ProdutoController {
     private ImagemService imagemService;
 
     // DTO pequeno para devolver exatamente os campos usados pela tela de produtos/carrinho.
+    public record VarianteResponse(
+            Integer idProduto,
+            String nomeProduto,
+            Integer estoque,
+            Double preco,
+            String status,
+            Boolean visivelParaComprador,
+            Boolean ehVariacao,
+            Integer produtoPaiId,
+            String produtoPaiNome) {
+
+        public static VarianteResponse fromEntity(Produto produto) {
+            return new VarianteResponse(
+                    produto.getIdProduto(),
+                    produto.getNomeProduto(),
+                    produto.getEstoque(),
+                    produto.getPreco(),
+                    produto.getStatus(),
+                    produto.getVisivelParaComprador(),
+                    produto.getEhVariacao(),
+                    produto.getProdutoPaiId(),
+                    produto.getProdutoPaiNome());
+        }
+    }
+
     public record ProdutoResponse(
             Integer idProduto,
             String nomeProduto,
@@ -45,12 +70,17 @@ public class ProdutoController {
             Double preco,
             String status,
             Boolean visivelParaComprador,
+            Boolean possuiVariantes,
+            Boolean ehVariacao,
+            Integer produtoPaiId,
+            String produtoPaiNome,
             Integer vendedor_id,
             String nomeVendedor,
             Integer categoriaId,
-            String categoriaNome) {
+            String categoriaNome,
+            List<VarianteResponse> variantes) {
 
-        public static ProdutoResponse fromEntity(Produto produto) {
+        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes) {
             // Resolve o nome do anunciante direto do usuário associado ao produto.
             Usuario usuario = produto.getUsuario();
             var categoria = produto.getCategoria();
@@ -62,10 +92,19 @@ public class ProdutoController {
                     produto.getPreco(),
                     produto.getStatus(),
                     produto.getVisivelParaComprador(),
+                    produto.getPossuiVariantes(),
+                    produto.getEhVariacao(),
+                    produto.getProdutoPaiId(),
+                    produto.getProdutoPaiNome(),
                     usuario != null ? usuario.getId() : null,
                     usuario != null ? usuario.getNomeCompleto() : null,
                     categoria != null ? categoria.getIdCategoria() : null,
-                    categoria != null ? categoria.getNome_categoria() : null);
+                    categoria != null ? categoria.getNome_categoria() : null,
+                    variantes != null ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList()) : List.of());
+        }
+
+        public static ProdutoResponse fromEntity(Produto produto) {
+            return fromEntity(produto, List.of());
         }
     }
 
@@ -80,7 +119,7 @@ public class ProdutoController {
     public List<ProdutoResponse> listarTodos() {
         // Retorna um payload estável para o frontend não depender da serialização da entidade.
         return produtoService.listarTodos().stream()
-                .map(ProdutoResponse::fromEntity)
+                .map(produto -> ProdutoResponse.fromEntity(produto, List.of()))
                 .collect(Collectors.toList());
     }
 
@@ -90,7 +129,7 @@ public class ProdutoController {
         String email = authentication.getName();
         // Mantém a mesma estrutura de resposta da listagem pública.
         return produtoService.listarPorUsuario(email).stream()
-                .map(ProdutoResponse::fromEntity)
+            .map(produto -> ProdutoResponse.fromEntity(produto, List.of()))
                 .collect(Collectors.toList());
     }
 
@@ -107,7 +146,12 @@ public class ProdutoController {
                     return produtoService.estaDisponivelParaComprador(produto);
                 })
                 // Expõe o mesmo formato da listagem para simplificar o consumo no frontend.
-                .map(produto -> ResponseEntity.ok(ProdutoResponse.fromEntity(produto)))
+                    .map(produto -> {
+                        List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
+                                ? produtoService.listarVariantes(produto.getIdProduto())
+                                : List.of();
+                        return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes));
+                    })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -159,7 +203,10 @@ public class ProdutoController {
 
             produto.setUsuario(usuarioOpt.get());
             Produto produtoSalvo = produtoService.salvar(produto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(produtoSalvo);
+            List<Produto> variantes = Boolean.TRUE.equals(produtoSalvo.getPossuiVariantes())
+                    ? produtoService.listarVariantes(produtoSalvo.getIdProduto())
+                    : List.of();
+            return ResponseEntity.status(HttpStatus.CREATED).body(ProdutoResponse.fromEntity(produtoSalvo, variantes));
         } catch (RuntimeException e) {
             Map<String, String> erro = new HashMap<>();
             erro.put("erro", e.getMessage());
@@ -173,11 +220,14 @@ public class ProdutoController {
 
     // 4. Atualizar produto existente (Update) - NOVO!
     @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizar(@PathVariable Integer id,
+    public ResponseEntity<ProdutoResponse> atualizar(@PathVariable Integer id,
             @RequestBody Produto produtoAtualizado) {
         try {
             Produto produto = produtoService.atualizar(id, produtoAtualizado);
-            return ResponseEntity.ok(produto);
+            List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
+                    ? produtoService.listarVariantes(produto.getIdProduto())
+                    : List.of();
+            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -259,7 +309,7 @@ public class ProdutoController {
             @RequestBody AtualizarStatusProdutoRequest request) {
         try {
             Produto produto = produtoService.atualizarStatus(id, request.status());
-            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto));
+            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -270,7 +320,7 @@ public class ProdutoController {
             @RequestBody AtualizarVisibilidadeProdutoRequest request) {
         try {
             Produto produto = produtoService.atualizarVisibilidade(id, request.visivelParaComprador());
-            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto));
+            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }

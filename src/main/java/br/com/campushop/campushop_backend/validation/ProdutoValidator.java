@@ -12,6 +12,11 @@ public class ProdutoValidator {
         validarEstoque(produto.getEstoque());
         validarPreco(produto.getPreco());
         validarUsuario(produto.getUsuario());
+
+        // A variante precisa estar ligada ao produto pai para o carrinho conseguir resolver o item correto.
+        if (Boolean.TRUE.equals(produto.getEhVariacao()) && produto.getProdutoPai() == null) {
+            throw new RuntimeException("Variante deve estar vinculada a um produto pai");
+        }
     }
 
     private void validarNome(String nome) {

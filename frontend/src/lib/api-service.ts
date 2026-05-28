@@ -16,8 +16,68 @@ export type CarrinhoBackendProduto = {
   estoque: number
   status?: string
   visivelParaComprador?: boolean
+  possuiVariantes?: boolean
+  ehVariacao?: boolean
+  produtoPaiId?: number | null
+  produtoPaiNome?: string | null
   vendedor_id?: number
   nomeVendedor?: string
+}
+
+export type ProdutoVarianteAPI = {
+  idProduto: number
+  nomeProduto: string
+  estoque: number
+  preco: number
+  status?: string
+  visivelParaComprador?: boolean
+  ehVariacao?: boolean
+  produtoPaiId?: number | null
+  produtoPaiNome?: string | null
+}
+
+export type ProdutoAPI = {
+  idProduto: number
+  id?: number
+  nomeProduto: string
+  nome?: string
+  descricao: string
+  preco: number
+  estoque: number
+  status?: string
+  visivelParaComprador?: boolean
+  tipoProduto?: 'PRODUTO' | 'SERVICO'
+  peso?: number | null
+  usaDimensoes?: boolean
+  dimensoes?: string | null
+  dimensaoComprimento?: number | null
+  dimensaoLargura?: number | null
+  possuiVariantes?: boolean
+  ehVariacao?: boolean
+  produtoPaiId?: number | null
+  produtoPaiNome?: string | null
+  vendedor_id?: number
+  vendedorId?: number
+  nomeVendedor?: string
+  categoriaId?: number
+  nomeCategoria?: string
+  categoria?: {
+    idCategoria?: number
+    id?: number
+    nome_categoria?: string
+    nome?: string
+    descricao?: string
+  }
+  usuario?: {
+    id?: number
+    nomeCompleto?: string
+    nomeCliente?: string
+    instituicao?: string
+    cidade?: string
+  }
+  instituicao?: string
+  cidade?: string
+  variantes?: ProdutoVarianteAPI[]
 }
 
 export type CarrinhoBackendItem = {
@@ -160,7 +220,7 @@ export const authAPI = {
 export const produtoAPI = {
   listarTodos: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
   listar: () => api.get('/api/produtos'), // Mantém a função de listar produtos para uso geral, como na página inicial.
-  obterPorId: (id: number) => api.get(`/api/produtos/${id}`), // Busca o produto exato da rota de detalhe para evitar dados mockados.
+  obterPorId: (id: number) => api.get<ProdutoAPI>(`/api/produtos/${id}`), // Busca o produto exato da rota de detalhe para evitar dados mockados.
   salvar: (produto: any) => api.post('/api/produtos', produto), // Centraliza chamada da criação de produto no backend.
   listarMeus: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
   obterPorUsuario: () => api.get('/api/produtos/usuario'), // Centraliza chamada da listagem de produtos do usuário autenticado no backend.
