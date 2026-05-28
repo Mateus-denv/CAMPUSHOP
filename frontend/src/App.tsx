@@ -13,11 +13,14 @@ import { PedidosPage } from '@/pages/PedidosPage'
 import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+
+const ROTAS_PROTEGIDAS = ['/carrinho', '/pedidos', '/conta', '/conta/editar', '/chat', '/cadastrar-produto']
 
 function App() {
   const { usuario, setUsuario } = useAuthStore()
   const [loading, setLoading] = useState(true)
+  const location = useLocation()
 
   useEffect(() => {
     const verificarAutenticacao = () => {
@@ -74,6 +77,16 @@ function App() {
 
     return () => unsubscribe()
   }, [setUsuario])
+
+  useEffect(() => {
+    if (loading || usuario) {
+      return
+    }
+
+    if (ROTAS_PROTEGIDAS.some((rota) => location.pathname === rota || location.pathname.startsWith(`${rota}/`))) {
+      window.location.replace('/login')
+    }
+  }, [loading, location.pathname, usuario])
 
   if (loading) {
     return (
