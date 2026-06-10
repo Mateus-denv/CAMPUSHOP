@@ -2,7 +2,7 @@ import { pedidosAPI } from '@/lib/api-service'
 import { clearAuth } from '@/lib/auth-listener'
 import { countCartItems } from '@/lib/shop-storage'
 import { useAuthStore } from '@/store'
-import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, User } from 'lucide-react'
+import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, BookOpen, User } from 'lucide-react'
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Logo } from './Logo'
@@ -45,7 +45,8 @@ export function Layout({ children }: LayoutProps) {
   const handleLogout = () => {
     setUsuario(null)
     clearAuth()
-    navigate('/login', { replace: true })
+    // Redireciona para a home padrão ao sair, evitando retornos incorretos para páginas de produto
+    navigate('/home', { replace: true })
   }
 
   return (
@@ -53,7 +54,7 @@ export function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/home" className="flex items-center gap-3 font-black tracking-tight text-slate-900">
-            <Logo />
+            <Logo variant="home" />
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
@@ -143,11 +144,11 @@ export function Layout({ children }: LayoutProps) {
       <footer className="border-t border-slate-200/80 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="max-w-md">
-              <div className="flex items-center gap-3">
-                <Logo />
+            <div className="max-w-sm">
+              <div className="flex items-start gap-4">
+                <Logo variant="completa" className="h-6 w-auto sm:h-8" />
                 <div>
-                  <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampusShop</p>
+                  <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampuShop</p>
                   <p className="text-sm text-slate-500">Marketplace estudantil para compra, venda e troca no campus.</p>
                 </div>
               </div>
@@ -185,10 +186,14 @@ export function Layout({ children }: LayoutProps) {
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Suporte</p>
                 <div className="mt-3 space-y-2 text-sm">
-                  <a href="/ajuda" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
+                  <Link to="/ajuda" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
                     <ShieldQuestion className="h-4 w-4" />
                     Central de ajuda
-                  </a>
+                  </Link>
+                  <Link to="/manual-usuario" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
+                    <BookOpen className="h-4 w-4" />
+                    Manual do usuário
+                  </Link>
                   <a href="https://wa.me/550000000000" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
                     <MessageCircle className="h-4 w-4" />
                     WhatsApp
@@ -207,11 +212,11 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 CampusShop. Todos os direitos reservados.</p>
+            <p>© 2026 CampuShop. Todos os direitos reservados.</p>
             <div className="flex flex-wrap gap-4">
-              <a href="/privacidade" className="transition hover:text-slate-600">Privacidade</a>
-              <a href="/termos" className="transition hover:text-slate-600">Termos</a>
-              <a href="/anunciar" className="transition hover:text-slate-600">Anunciar</a>
+              <Link to="/privacidade" className="transition hover:text-slate-600">Privacidade</Link>
+              <Link to="/termos" className="transition hover:text-slate-600">Termos</Link>
+              <Link to="/anunciar" className="transition hover:text-slate-600">Anunciar</Link>
             </div>
           </div>
         </div>

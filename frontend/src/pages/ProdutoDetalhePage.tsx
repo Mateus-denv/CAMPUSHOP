@@ -118,6 +118,36 @@ export function ProdutoDetalhePage() {
     }
   }, [imagens, indiceImagemAtual])
 
+  // Carrega imagens da variante selecionada. Faz fallback para as imagens do produto pai se a variante não
+  // tiver imagens cadastradas. Isso garante que ao selecionar uma variante a galeria mostre a foto correta.
+  useEffect(() => {
+    const carregarImagensDaVariante = async () => {
+      if (!produto) return
+
+      const alvoId = varianteSelecionadaId ?? produto.idProduto
+      try {
+        const resp = await produtoAPI.listarImagens(alvoId)
+        setImagens(resp.data ?? [])
+        setIndiceImagemAtual(0)
+      } catch (err) {
+        // Se não houver imagens para a variante, tenta carregar as do anúncio pai
+        if (alvoId !== produto.idProduto) {
+          try {
+            const resp2 = await produtoAPI.listarImagens(produto.idProduto)
+            setImagens(resp2.data ?? [])
+            setIndiceImagemAtual(0)
+          } catch (err2) {
+            setImagens([])
+          }
+        } else {
+          setImagens([])
+        }
+      }
+    }
+
+    carregarImagensDaVariante()
+  }, [varianteSelecionadaId, produto])
+
   const temGaleria = imagens.length > 0
   const imagemAtual = temGaleria ? imagens[indiceImagemAtual] : null
 
@@ -300,10 +330,14 @@ export function ProdutoDetalhePage() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="font-bold text-slate-900">{variante.nomeProduto}</p>
-                            <p className="mt-1 text-sm text-slate-500">{variante.estoque} em estoque</p>
+                              <p className="font-bold text-slate-900">{variante.nomeProduto}</p>
+                              {variante.descricaoVariacao ? (
+                                <p className="mt-1 text-sm text-slate-500">{variante.descricaoVariacao}</p>
+                              ) : (
+                                <p className="mt-1 text-sm text-slate-500">{variante.estoque} em estoque</p>
+                              )}
                           </div>
-                          <span className="text-lg font-black text-blue-700">R$ {Number(variante.preco).toFixed(2)}</span>
+                              <span className="text-lg font-black text-blue-700">R$ {Number(variante.preco).toFixed(2)}</span>
                         </div>
                         {variante.estoque === 0 ? (
                           <span className="mt-3 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">Indisponível</span>

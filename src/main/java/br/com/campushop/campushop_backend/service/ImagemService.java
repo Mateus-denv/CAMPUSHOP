@@ -83,6 +83,16 @@ public class ImagemService {
         return imagemAnexoRepository.findByProduto_IdProdutoAndTipoOrderByDataUploadDesc(produtoId, TIPO_PRODUTO);
     }
 
+    // Exclui em lote todas as imagens associadas aos produtos listados.
+    @Transactional
+    public void excluirImagensPorProdutoIds(java.util.List<Integer> produtoIds) {
+        if (produtoIds == null || produtoIds.isEmpty()) {
+            return;
+        }
+
+        imagemAnexoRepository.deleteByProduto_IdProdutoIn(produtoIds);
+    }
+
     public Optional<ImagemAnexo> buscarImagemProdutoPorId(Integer produtoId, Integer imagemId) {
         return imagemAnexoRepository.findByIdAndProduto_IdProduto(imagemId, produtoId);
     }

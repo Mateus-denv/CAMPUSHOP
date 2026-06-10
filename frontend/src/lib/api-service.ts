@@ -29,6 +29,7 @@ export type ProdutoVarianteAPI = {
   nomeProduto: string
   estoque: number
   preco: number
+  descricaoVariacao?: string
   status?: string
   visivelParaComprador?: boolean
   ehVariacao?: boolean

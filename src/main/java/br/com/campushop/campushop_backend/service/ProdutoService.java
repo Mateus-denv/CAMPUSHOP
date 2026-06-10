@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,13 +28,15 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final CategoriaRepository categoriaRepository;
     private final ProdutoValidator produtoValidator;
+    private final br.com.campushop.campushop_backend.service.ImagemService imagemService;
 
     @Autowired
     public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository,
-            ProdutoValidator produtoValidator) {
+            ProdutoValidator produtoValidator, br.com.campushop.campushop_backend.service.ImagemService imagemService) {
         this.produtoRepository = produtoRepository;
         this.categoriaRepository = categoriaRepository;
         this.produtoValidator = produtoValidator;
+        this.imagemService = imagemService; // injetando serviço de imagens para remoção em lote
     }
 
     public Produto salvar(Produto produto) {
@@ -99,13 +102,18 @@ public class ProdutoService {
         return produtoRepository.findByIdComUsuario(id).stream().findFirst();
     }
 
-    public Produto atualizar(Integer id, Produto produtoAtualizado) {
+    @Transactional
+    public Produto atualizar(Integer id, Produto produtoAtualizado, String requesterEmail) {
         Optional<Produto> produtoOpt = produtoRepository.findById(id);
         if (produtoOpt.isPresent()) {
             Produto produtoExistente = produtoOpt.get();
 
+            // Se for uma variante (filha), permitir edição somente para o proprietário
             if (produtoExistente.getProdutoPai() != null) {
-                throw new RuntimeException("Não é permitido editar uma variante diretamente");
+                if (produtoExistente.getUsuario() == null || requesterEmail == null ||
+                        !requesterEmail.equalsIgnoreCase(produtoExistente.getUsuario().getEmail())) {
+                    throw new RuntimeException("Não é permitido editar esta variante");
+                }
             }
 
             // Atualiza só os campos enviados para não apagar conteúdo quando a edição vier parcial.
@@ -157,7 +165,22 @@ public class ProdutoService {
             Produto salvo = produtoRepository.save(produtoExistente);
 
             if (Boolean.TRUE.equals(salvo.getPossuiVariantes()) && produtoAtualizado.getVariantes() != null && !produtoAtualizado.getVariantes().isEmpty()) {
-                // Remove as variantes filhas antes de excluir o anúncio principal.
+                // Antes de remover as variantes filhas, excluir quaisquer imagens vinculadas a essas variantes
+                // para evitar violação de chave estrangeira (imagem_anexo.id_produto -> produto.id_produto).
+                java.util.List<Produto> variantesAtuais = listarVariantes(salvo.getIdProduto());
+                java.util.List<Integer> idsVariantes = new java.util.ArrayList<>();
+                for (Produto v : variantesAtuais) {
+                    if (v != null && v.getIdProduto() != null) {
+                        idsVariantes.add(v.getIdProduto());
+                    }
+                }
+
+                // Remove imagens associadas às variantes (se houver) antes de apagar os registros de variantes.
+                if (!idsVariantes.isEmpty()) {
+                    imagemService.excluirImagensPorProdutoIds(idsVariantes);
+                }
+
+                // Agora é seguro remover as variantes do banco e recriá-las conforme payload enviado.
                 produtoRepository.deleteByProdutoPai_IdProduto(salvo.getIdProduto());
                 salvarVariantes(salvo, produtoAtualizado.getVariantes());
                 recalcularResumoDoPai(salvo);
@@ -266,6 +289,9 @@ public class ProdutoService {
             if (variante.getPreco() == null || variante.getPreco() <= 0) {
                 throw new RuntimeException("O preço de cada variante deve ser um valor positivo");
             }
+            if (variante.getDescricaoVariacao() != null && variante.getDescricaoVariacao().length() > 100) {
+                throw new RuntimeException("A descrição da variante deve ter no máximo 100 caracteres");
+            }
         }
     }
 
@@ -297,6 +323,7 @@ public class ProdutoService {
                 variante.setUsaDimensoes(produtoPai.getUsaDimensoes());
             }
 
+            // Validar o produto variante com regras gerais e deixar a descrição específica intacta.
             produtoValidator.validarProduto(variante);
             variantesSalvas.add(produtoRepository.save(variante));
         }

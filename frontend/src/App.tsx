@@ -11,6 +11,11 @@ import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PedidosPage } from '@/pages/PedidosPage'
 import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
+import { AjudaPage } from '@/pages/AjudaPage'
+import { ManualUsuarioPage } from '@/pages/ManualUsuarioPage'
+import { PrivacidadePage } from '@/pages/PrivacidadePage'
+import { TermosPage } from '@/pages/TermosPage'
+import { AnunciarPage } from '@/pages/AnunciarPage'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
@@ -94,6 +99,11 @@ function App() {
       <Route path="/produtos" element={<CategoriasPage />} />
       <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
       <Route path="/cadastrar-produto" element={usuario ? <CadastrarProdutoPage /> : <Navigate to="/login" replace />} />
+      <Route path="/ajuda" element={<AjudaPage />} />
+      <Route path="/manual-usuario" element={<ManualUsuarioPage />} />
+      <Route path="/privacidade" element={<PrivacidadePage />} />
+      <Route path="/termos" element={<TermosPage />} />
+      <Route path="/anunciar" element={<AnunciarPage />} />
 
       <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
       <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />

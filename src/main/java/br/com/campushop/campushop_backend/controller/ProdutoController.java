@@ -42,6 +42,7 @@ public class ProdutoController {
             String nomeProduto,
             Integer estoque,
             Double preco,
+            String descricaoVariacao,
             String status,
             Boolean visivelParaComprador,
             Boolean ehVariacao,
@@ -54,6 +55,7 @@ public class ProdutoController {
                     produto.getNomeProduto(),
                     produto.getEstoque(),
                     produto.getPreco(),
+                    produto.getDescricaoVariacao(),
                     produto.getStatus(),
                     produto.getVisivelParaComprador(),
                     produto.getEhVariacao(),
@@ -219,17 +221,24 @@ public class ProdutoController {
     }
 
     // 4. Atualizar produto existente (Update) - NOVO!
-    @PutMapping("/{id}")
-    public ResponseEntity<ProdutoResponse> atualizar(@PathVariable Integer id,
-            @RequestBody Produto produtoAtualizado) {
+        @PutMapping("/{id}")
+        public ResponseEntity<?> atualizar(@PathVariable Integer id,
+            @RequestBody Produto produtoAtualizado, Authentication authentication) {
         try {
-            Produto produto = produtoService.atualizar(id, produtoAtualizado);
+            String requester = authentication != null ? authentication.getName() : null;
+            Produto produto = produtoService.atualizar(id, produtoAtualizado, requester);
             List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
                     ? produtoService.listarVariantes(produto.getIdProduto())
                     : List.of();
             return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> erro = new HashMap<>();
+            erro.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        } catch (Exception e) {
+            Map<String, String> erro = new HashMap<>();
+            erro.put("message", "Erro ao atualizar produto: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
         }
     }
 

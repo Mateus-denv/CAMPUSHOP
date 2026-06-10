@@ -142,7 +142,7 @@ export function CadastroPage() {
             </div>
             <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Crie sua conta e negocie com segurança</h1>
             <p className="mt-4 max-w-md text-sm text-blue-50/90">
-              Cadastre-se para anunciar, comprar, conversar em tempo real e acompanhar tudo no CampusShop.
+              Cadastre-se para anunciar, comprar, conversar em tempo real e acompanhar tudo no CampuShop.
             </p>
           </div>
 
@@ -161,7 +161,7 @@ export function CadastroPage() {
         <Card className="border-0 shadow-none rounded-none bg-white">
           <div className="p-8 sm:p-10">
             <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Criar conta</h1>
-            <p className="text-sm text-slate-600 mb-6">Preencha os dados para entrar no CampusShop</p>
+            <p className="text-sm text-slate-600 mb-6">Preencha os dados para entrar no CampuShop</p>
 
             {erro && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex gap-3">

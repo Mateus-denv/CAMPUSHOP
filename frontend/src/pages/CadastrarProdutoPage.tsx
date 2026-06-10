@@ -19,6 +19,7 @@ type VariacaoForm = {
     nomeProduto: string
     estoque: string
     preco: string
+    descricaoVariacao?: string
 }
 
 type ProdutoForm = {
@@ -44,6 +45,7 @@ function criarVariacaoVazia(): VariacaoForm {
         nomeProduto: '',
         estoque: '',
         preco: '',
+        descricaoVariacao: '',
     }
 }
 
@@ -132,6 +134,7 @@ export function CadastrarProdutoPage() {
                         nomeProduto: variante.nomeProduto ?? '',
                         estoque: String(variante.estoque ?? ''),
                         preco: variante.preco != null ? String(variante.preco) : '',
+                        descricaoVariacao: variante.descricaoVariacao ?? variante.descricao ?? '',
                     })),
                 })
                 // Inicializa arrays de imagens das variantes (sem arquivos por enquanto)
@@ -406,9 +409,15 @@ export function CadastrarProdutoPage() {
                 setErro('Selecione se o anúncio é de produto ou serviço')
                 return
             }
-            if (!form.estoque.trim() || Number(form.estoque) < 0 || Number.isNaN(Number(form.estoque))) {
-                setErro('Estoque deve ser um número válido e maior ou igual a zero')
-                return
+            // Se o anúncio possui variantes, o estoque do produto principal
+            // é calculado a partir das variantes — não validar o campo
+            // `form.estoque` nesse caso para evitar falso-positivo.
+            if (!form.possuiVariantes) {
+                // Validação apenas para anúncios sem variantes (produto único)
+                if (!form.estoque.trim() || Number(form.estoque) < 0 || Number.isNaN(Number(form.estoque))) {
+                    setErro('Estoque deve ser um número válido e maior ou igual a zero')
+                    return
+                }
             }
             // Quando o anúncio possui variantes, o preço do anúncio principal
             // é calculado pelas variantes — não validar o campo `form.preco` aqui.
@@ -455,6 +464,10 @@ export function CadastrarProdutoPage() {
                         setErro('O preço de cada variante deve ser um valor positivo')
                         return
                     }
+                    if (variante.descricaoVariacao && variante.descricaoVariacao.trim().length > 100) {
+                        setErro('A descrição da variante deve ter no máximo 100 caracteres')
+                        return
+                    }
                 }
             }
 
@@ -479,6 +492,7 @@ export function CadastrarProdutoPage() {
                             nomeProduto: variante.nomeProduto.trim(),
                             estoque: Number(variante.estoque),
                             preco: Number(variante.preco.replace(',', '.')),
+                            descricaoVariacao: (variante.descricaoVariacao ?? '').trim(),
                             status: 'ATIVO',
                             visivelParaComprador: true,
                             tipoProduto: form.tipoProduto,
@@ -594,7 +608,7 @@ export function CadastrarProdutoPage() {
                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h1 className="text-3xl font-black tracking-tight text-slate-900">{produtoIdEdicao ? 'Editar produto' : 'Cadastrar produto'}</h1>
-                                <p className="mt-2 text-sm text-slate-600">{produtoIdEdicao ? 'Ajuste os dados do produto e salve a atualização.' : 'Preencha os dados do produto e anuncie no CampusShop.'}</p>
+                                <p className="mt-2 text-sm text-slate-600">{produtoIdEdicao ? 'Ajuste os dados do produto e salve a atualização.' : 'Preencha os dados do produto e anuncie no CampuShop.'}</p>
                             </div>
                             <Link
                                 to="/conta"
@@ -877,6 +891,18 @@ export function CadastrarProdutoPage() {
                                                                 value={variante.nomeProduto}
                                                                 onChange={(e) => atualizarVariacao(indice, 'nomeProduto', e.target.value)}
                                                             />
+                                                            <div>
+                                                                <label className="mb-2 block text-sm font-semibold text-slate-700">Descrição da variante (opcional)</label>
+                                                                <input
+                                                                    type="text"
+                                                                    maxLength={100}
+                                                                    placeholder="Breve descrição (até 100 caracteres)"
+                                                                    value={variante.descricaoVariacao ?? ''}
+                                                                    onChange={(e) => atualizarVariacao(indice, 'descricaoVariacao', e.target.value)}
+                                                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                                                                />
+                                                                <p className="text-xs text-slate-500 mt-1">Limite de 100 caracteres.</p>
+                                                            </div>
                                                             <Input
                                                                 label="Estoque da variante"
                                                                 placeholder="0"

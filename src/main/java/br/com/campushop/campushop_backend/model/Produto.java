@@ -21,6 +21,10 @@ public class Produto {
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
+    // Descrição curta específica para variantes — visível na listagem da variante.
+    @Column(name = "descricao_variacao", length = 100)
+    private String descricaoVariacao;
+
     @Column(nullable = false)
     private Integer estoque;
 
@@ -104,6 +108,14 @@ public class Produto {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public String getDescricaoVariacao() {
+        return descricaoVariacao;
+    }
+
+    public void setDescricaoVariacao(String descricaoVariacao) {
+        this.descricaoVariacao = descricaoVariacao;
     }
 
     public Integer getEstoque() {

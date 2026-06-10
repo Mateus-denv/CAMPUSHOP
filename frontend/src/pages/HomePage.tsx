@@ -423,7 +423,7 @@ export function HomePage() {
       <section className="mt-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Destaques do CampusShop</h2>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Destaques do CampuShop</h2>
             <p className="mt-2 text-sm text-slate-500 sm:text-base">Carrossel com produtos reais em destaque na plataforma</p>
           </div>
         </div>

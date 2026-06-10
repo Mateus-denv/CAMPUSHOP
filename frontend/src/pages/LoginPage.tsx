@@ -52,7 +52,7 @@ export function LoginPage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
               <Store className="h-7 w-7" />
             </div>
-            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Entre no CampusShop e encontre tudo em um só lugar</h1>
+            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Entre no CampuShop e encontre tudo em um só lugar</h1>
             <p className="mt-4 max-w-md text-sm text-blue-50/90">
               Login rápido para comprar, vender, conversar e acompanhar seus pedidos sem sair da plataforma.
             </p>
@@ -76,7 +76,7 @@ export function LoginPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
                 <span className="text-3xl font-bold">📦</span>
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">CampusShop</h1>
+              <h1 className="text-3xl font-black tracking-tight text-slate-900">CampuShop</h1>
               <p className="mt-2 text-slate-600">Bem-vindo de volta!</p>
             </div>
 
