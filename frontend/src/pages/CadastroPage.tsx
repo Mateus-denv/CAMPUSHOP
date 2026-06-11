@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card } from '@/components/UI'
 import { authAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
 import { AlertCircle, CheckCircle2, ShieldCheck, UserPlus } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export function CadastroPage() {
   const navigate = useNavigate()

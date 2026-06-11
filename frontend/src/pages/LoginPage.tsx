@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuthStore } from '@/store'
 import { Button, Card } from '@/components/UI'
-import { Mail, Lock, AlertCircle, ShieldCheck, Store } from 'lucide-react'
 import { authAPI } from '@/lib/api-service'
+import { useAuthStore } from '@/store'
+import { AlertCircle, Lock, Mail, ShieldCheck, Store } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export function LoginPage() {
   const navigate = useNavigate()

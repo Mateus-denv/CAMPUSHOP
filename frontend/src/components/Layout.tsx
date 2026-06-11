@@ -2,7 +2,7 @@ import { pedidosAPI } from '@/lib/api-service'
 import { clearAuth } from '@/lib/auth-listener'
 import { countCartItems } from '@/lib/shop-storage'
 import { useAuthStore } from '@/store'
-import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, BookOpen, User } from 'lucide-react'
+import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, User } from 'lucide-react'
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Logo } from './Logo'
@@ -146,7 +146,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="max-w-sm">
               <div className="flex items-start gap-4">
-                <Logo variant="completa" className="h-6 w-auto sm:h-8" />
+                <Logo variant="completa" className="h-8 w-auto sm:h-10" />
                 <div>
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampuShop</p>
                   <p className="text-sm text-slate-500">Marketplace estudantil para compra, venda e troca no campus.</p>
@@ -186,14 +186,10 @@ export function Layout({ children }: LayoutProps) {
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Suporte</p>
                 <div className="mt-3 space-y-2 text-sm">
-                  <Link to="/ajuda" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
+                  <a href="/ajuda" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
                     <ShieldQuestion className="h-4 w-4" />
                     Central de ajuda
-                  </Link>
-                  <Link to="/manual-usuario" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
-                    <BookOpen className="h-4 w-4" />
-                    Manual do usuário
-                  </Link>
+                  </a>
                   <a href="https://wa.me/550000000000" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-slate-600 transition hover:text-slate-900">
                     <MessageCircle className="h-4 w-4" />
                     WhatsApp
@@ -214,9 +210,9 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
             <p>© 2026 CampuShop. Todos os direitos reservados.</p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/privacidade" className="transition hover:text-slate-600">Privacidade</Link>
-              <Link to="/termos" className="transition hover:text-slate-600">Termos</Link>
-              <Link to="/anunciar" className="transition hover:text-slate-600">Anunciar</Link>
+              <a href="/privacidade" className="transition hover:text-slate-600">Privacidade</a>
+              <a href="/termos" className="transition hover:text-slate-600">Termos</a>
+              <a href="/anunciar" className="transition hover:text-slate-600">Anunciar</a>
             </div>
           </div>
         </div>
