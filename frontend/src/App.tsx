@@ -1,5 +1,7 @@
 import { authAPI } from '@/lib/api-service'
 import { addAuthListener, hasAuthToken } from '@/lib/auth-listener'
+import { AjudaPage } from '@/pages/AjudaPage'
+import { AnunciarPage } from '@/pages/AnunciarPage'
 import { CadastrarProdutoPage } from '@/pages/CadastrarProdutoPage'
 import { CadastroPage } from '@/pages/CadastroPage'
 import { CarrinhoPage } from '@/pages/CarrinhoPage'
@@ -9,8 +11,11 @@ import { ContaPage } from '@/pages/ContaPage'
 import { EditarContaPage } from '@/pages/EditarContaPage'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
+import { ManualUsuarioPage } from '@/pages/ManualUsuarioPage'
 import { PedidosPage } from '@/pages/PedidosPage'
+import { PrivacidadePage } from '@/pages/PrivacidadePage'
 import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
+import { TermosPage } from '@/pages/TermosPage'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
@@ -107,6 +112,11 @@ function App() {
       <Route path="/produtos" element={<CategoriasPage />} />
       <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
       <Route path="/cadastrar-produto" element={usuario ? <CadastrarProdutoPage /> : <Navigate to="/login" replace />} />
+      <Route path="/ajuda" element={<AjudaPage />} />
+      <Route path="/manual-usuario" element={<ManualUsuarioPage />} />
+      <Route path="/privacidade" element={<PrivacidadePage />} />
+      <Route path="/termos" element={<TermosPage />} />
+      <Route path="/anunciar" element={<AnunciarPage />} />
 
       <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
       <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />

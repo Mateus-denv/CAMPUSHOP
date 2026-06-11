@@ -171,7 +171,7 @@ export function CategoriasPage() {
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="text-center">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Produtos</h1>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base">Busque produtos e use os filtros para encontrar o que procura no CampusShop</p>
+          <p className="mt-2 text-sm text-slate-500 sm:text-base">Busque produtos e use os filtros para encontrar o que procura no CampuShop</p>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm md:flex-row md:items-center">

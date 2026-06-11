@@ -64,6 +64,7 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/index.html",
+                                                                "/manual-usuario.html",
                                                                 "/favicon.ico",
                                                                 "/assets/**",
                                                                 "/css/**",
@@ -79,6 +80,11 @@ public class SecurityConfig {
                                                                 "/pedidos",
                                                                 "/conta",
                                                                 "/chat",
+                                                                "/ajuda",
+                                                                "/manual-usuario",
+                                                                "/privacidade",
+                                                                "/termos",
+                                                                "/anunciar",
                                                                 "/actuator/health",
                                                                 "/error",
                                                                 "/produtos",
@@ -98,6 +104,7 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .formLogin(form -> form.disable())
                                 .httpBasic(httpBasic -> httpBasic.disable())
+                                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                                 .logout(logout -> logout.disable())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

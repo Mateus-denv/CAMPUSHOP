@@ -32,13 +32,17 @@ CREATE TABLE IF NOT EXISTS produto (
   preco DOUBLE NOT NULL,
   status VARCHAR(20),
   visivel_para_comprador TINYINT(1) NOT NULL DEFAULT 1,
+  possui_variantes TINYINT(1) NOT NULL DEFAULT 0,
+  eh_variacao TINYINT(1) NOT NULL DEFAULT 0,
   dimensoes VARCHAR(255),
   peso DOUBLE,
   -- Guarda o dono (vendedor) do produto para permitir derivar id_vendedor no pedido.
   id_usuario INT NOT NULL,
   id_categoria INT,
+  id_produto_pai INT NULL,
   CONSTRAINT fk_produto_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
-  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+  CONSTRAINT fk_produto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+  CONSTRAINT fk_produto_pai FOREIGN KEY (id_produto_pai) REFERENCES produto(id_produto) ON DELETE CASCADE
 );
 
 -- Armazena fotos de perfil e imagens dos anúncios em banco para evitar arquivos soltos no disco.

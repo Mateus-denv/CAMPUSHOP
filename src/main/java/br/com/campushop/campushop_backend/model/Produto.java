@@ -2,6 +2,9 @@ package br.com.campushop.campushop_backend.model;
 
 import jakarta.persistence.*; // Importando as anotações JPA para mapear a classe como entidade e definir as colunas
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.List;
 
 @Entity
 @Table(name = "produto")
@@ -18,6 +21,10 @@ public class Produto {
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
+    // Descrição curta específica para variantes — visível na listagem da variante.
+    @Column(name = "descricao_variacao", length = 100)
+    private String descricaoVariacao;
+
     @Column(nullable = false)
     private Integer estoque;
 
@@ -29,6 +36,14 @@ public class Produto {
 
     @Column(name = "visivel_para_comprador", nullable = false)
     private Boolean visivelParaComprador = Boolean.TRUE;
+
+    // Indica se o anúncio principal foi cadastrado com variações selecionáveis.
+    @Column(name = "possui_variantes", nullable = false)
+    private Boolean possuiVariantes = Boolean.FALSE;
+
+    // Marca quando este registro é uma variante filha de outro produto.
+    @Column(name = "eh_variacao", nullable = false)
+    private Boolean ehVariacao = Boolean.FALSE;
 
     @Column(name = "tipo_produto", length = 20)
     private String tipoProduto = "PRODUTO";
@@ -59,6 +74,15 @@ public class Produto {
     @JoinColumn(name = "id_usuario")
     private Usuario usuario; // Usuário que criou o produto
 
+    // Guarda o produto pai quando este registro representa uma variante.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_produto_pai")
+    private Produto produtoPai;
+
+    // Lista de variantes enviada no cadastro do anúncio principal.
+    @Transient
+    private List<Produto> variantes;
+
     // --- GETTERS E SETTERS ---
     // Eles permitem que o Spring leia e grave os dados nos campos privados
 
@@ -84,6 +108,14 @@ public class Produto {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public String getDescricaoVariacao() {
+        return descricaoVariacao;
+    }
+
+    public void setDescricaoVariacao(String descricaoVariacao) {
+        this.descricaoVariacao = descricaoVariacao;
     }
 
     public Integer getEstoque() {
@@ -116,6 +148,22 @@ public class Produto {
 
     public void setVisivelParaComprador(Boolean visivelParaComprador) {
         this.visivelParaComprador = visivelParaComprador;
+    }
+
+    public Boolean getPossuiVariantes() {
+        return possuiVariantes;
+    }
+
+    public void setPossuiVariantes(Boolean possuiVariantes) {
+        this.possuiVariantes = possuiVariantes;
+    }
+
+    public Boolean getEhVariacao() {
+        return ehVariacao;
+    }
+
+    public void setEhVariacao(Boolean ehVariacao) {
+        this.ehVariacao = ehVariacao;
     }
 
     public String getTipoProduto() {
@@ -182,6 +230,23 @@ public class Produto {
         this.usuario = usuario;
     }
 
+    @JsonIgnore
+    public Produto getProdutoPai() {
+        return produtoPai;
+    }
+
+    public void setProdutoPai(Produto produtoPai) {
+        this.produtoPai = produtoPai;
+    }
+
+    public List<Produto> getVariantes() {
+        return variantes;
+    }
+
+    public void setVariantes(List<Produto> variantes) {
+        this.variantes = variantes;
+    }
+
     // Expõe o id do vendedor no payload sem duplicar dado na tabela de produto.
     @JsonProperty("vendedor_id")
     public Integer getVendedorId() {
@@ -192,5 +257,17 @@ public class Produto {
     @JsonProperty("nomeVendedor")
     public String getNomeVendedor() {
         return usuario != null ? usuario.getNomeCompleto() : null;
+    }
+
+    // Expõe o id do produto pai para as variantes sem serializar a entidade inteira.
+    @JsonProperty("produtoPaiId")
+    public Integer getProdutoPaiId() {
+        return produtoPai != null ? produtoPai.getIdProduto() : null;
+    }
+
+    // Expõe o nome do produto pai para a UI mostrar contexto da variante.
+    @JsonProperty("produtoPaiNome")
+    public String getProdutoPaiNome() {
+        return produtoPai != null ? produtoPai.getNomeProduto() : null;
     }
 }
