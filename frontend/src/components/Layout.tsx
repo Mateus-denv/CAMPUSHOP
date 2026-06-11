@@ -4,7 +4,7 @@ import { countCartItems } from '@/lib/shop-storage'
 import { useAuthStore } from '@/store'
 import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, User } from 'lucide-react'
 import { ReactNode, useEffect, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { Logo } from './Logo'
 
 type LayoutProps = {
@@ -21,7 +21,6 @@ const navItems = [
 ]
 
 export function Layout({ children }: LayoutProps) {
-  const navigate = useNavigate()
   const { usuario, setUsuario } = useAuthStore()
   const carrinhoCount = countCartItems()
   const [pedidosPendentes, setPedidosPendentes] = useState(0)
