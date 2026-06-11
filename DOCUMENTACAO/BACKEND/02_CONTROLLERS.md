@@ -41,151 +41,101 @@ Registra um novo usuário na plataforma.
   "dataNascimento": "2000-05-15",
   "instituicao": "UFABC",
   "cidade": "Santo André",
-  "perfil": "CLIENTE"
-}
-```
 
-**Validações:**
+#### 1. **GET /api/produtos**
 
-- Email deve ser único
-- RA deve ser único
-- Todos os campos obrigatórios devem ser preenchidos
-- Email deve ter formato válido
+Lista todos os produtos (retorno padronizado para o frontend).
 
-**Retorno (Sucesso - 201 Created):**
+**Query Parameters (opcional):** `categoria`, `pagina`, `tamanho`, `busca`
 
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "email": "joao@example.com",
-    "nomeCompleto": "João Silva",
-    "tipoConta": "CLIENTE"
-  }
-}
-```
-
-**Retorno (Erro - 400 Bad Request):**
-
-```json
-{
-  "message": "Email já cadastrado"
-}
-```
-
-**Lógica Interna:**
-
-1. Normaliza email (lowercase) e RA (trim)
-2. Valida se email/RA já existem
-3. Cria novo Usuario
-4. Criptografa senha com BCrypt
-5. Salva no BD
-6. Gera JWT token
-7. Retorna token + dados do usuário
+**Retorno (Sucesso - 200 OK):** lista de objetos no formato `ProdutoResponse` (veja abaixo).
 
 ---
 
-#### 2. **POST /api/auth/login**
+#### 1.1 **GET /api/produtos/usuario**
 
-Autentica um usuário existente.
-
-**Entrada (JSON):**
-
-```json
-{
-  "email": "joao@example.com",
-  "senha": "minhasenha123"
-}
-```
-
-**Validações:**
-
-- Email é obrigatório
-- Senha é obrigatória
-- Credenciais devem estar corretas
-
-**Retorno (Sucesso - 200 OK):**
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "email": "joao@example.com",
-    "nomeCompleto": "João Silva",
-    "tipoConta": "CLIENTE"
-  }
-}
-```
-
-**Retorno (Erro - 401 Unauthorized):**
-
-```json
-{
-  "message": "Email ou senha inválidos"
-}
-```
-
-**Lógica Interna:**
-
-1. Valida campos obrigatórios
-2. Busca usuário por email
-3. Compara senha fornecida com senha criptografada
-4. Se válido, gera JWT token
-5. Retorna token + dados
+Lista os produtos do usuário autenticado (mesmo formato de `GET /api/produtos`).
 
 ---
 
-#### 3. **GET /api/auth/me**
+#### 2. **GET /api/produtos/{id}**
 
-Retorna dados do usuário autenticado (requer token JWT).
+Retorna detalhes de um produto específico no formato `ProdutoResponse`.
 
-**Headers Necessários:**
+**Parâmetros:** `id` (Path)
 
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Retorno (Sucesso - 200 OK):**
-
-```json
-{
-  "id": 1,
-  "email": "joao@example.com",
-  "nomeCompleto": "João Silva",
-  "tipoConta": "CLIENTE",
-  "dataCadastro": "2026-04-17"
-}
-```
-
-**Retorno (Erro - 401 Unauthorized):**
-
-```json
-{
-  "message": "Token inválido ou expirado"
-}
-```
+**Observação:** Exposição de dados depende da autenticação — o dono pode ver campos adicionais; compradores só veem produtos visíveis.
 
 ---
 
-## 👤 UsuarioController
+#### 3. **POST /api/produtos**
 
-**Arquivo:** `UsuarioController.java`
+Cria um novo produto. Requer autenticação. Validações do servidor garantem campos obrigatórios (nome, descrição, categoria, preço>0, estoque>=0).
 
-**Rota Base:** `/api/usuarios`
+**Entrada (JSON):** objeto `Produto` simplificado com campos essenciais (`nomeProduto`, `descricao`, `preco`, `estoque`, `categoria`)
 
-**Descrição:** Gerencia informações de usuários.
+**Retorno (Sucesso - 201 Created):** objeto `Produto` salvo (com `idProduto`).
 
-### Métodos
+---
 
-#### 1. **GET /api/usuarios/{id}**
+#### 4. **PUT /api/produtos/{id}**
 
-Retorna dados de um usuário específico.
+Atualiza um produto existente. Apenas o criador pode atualizar.
 
-**Parâmetros:**
+**Entrada (JSON):** campos do produto a serem atualizados.
 
-- `id` (Path): ID do usuário
+**Retorno (Sucesso - 200 OK):** objeto `Produto` atualizado.
+
+---
+
+#### 5. **Imagens do Produto**
+
+Endpoints para upload, listagem e recuperação de imagens associadas a um produto:
+
+- `POST /api/produtos/{id}/imagens` — upload de múltiplas imagens (multipart/form-data, campo `imagens`)
+- `GET /api/produtos/{id}/imagens` — lista metadados das imagens
+- `GET /api/produtos/{id}/imagens/principal` — obtém a imagem principal (bytes)
+- `GET /api/produtos/{id}/imagens/{imagemId}` — obtém imagem específica (bytes)
+- `DELETE /api/produtos/{id}/imagens/{imagemId}` — exclui imagem (apenas proprietário)
+
+**Retornos:** metadados JSON para listagem; endpoints de imagem retornam bytes com `Content-Type` apropriado.
+
+---
+
+#### 6. **Status e Visibilidade**
+
+- `PUT /api/produtos/{id}/status` — atualiza `status` do produto (ex.: `ATIVO`, `INATIVO`)
+- `PUT /api/produtos/{id}/visibilidade` — atualiza campo `visivelParaComprador` (boolean)
+
+**Retorno (Sucesso - 200 OK):** `ProdutoResponse` atualizado.
+
+---
+
+#### 7. **Flags de inatividade / estoque**
+
+- `DELETE /api/produtos/{id}/inativo` — marca produto como inativo (soft)
+- `DELETE /api/produtos/{id}/fora-estoque` — marca produto como fora de estoque
+
+Ambos retornam `204 No Content` em sucesso.
+
+---
+
+#### 8. **DELETE /api/produtos/{id}` (hard delete)
+
+Remove permanentemente o produto (requer permissões do proprietário/admin). Retorna `204 No Content`.
+
+---
+
+#### Formato `ProdutoResponse` (resumo)
+
+O controller expõe um DTO `ProdutoResponse` que contém, entre outros, os campos:
+
+- `idProduto`, `nomeProduto`, `descricao`, `estoque`, `preco`, `status`
+- `visivelParaComprador` (boolean)
+- `vendedor_id`, `nomeVendedor`
+- `categoriaId`, `categoriaNome`
+
+Esse formato é usado nas listagens e visualização para manter payload estável ao frontend.
 
 **Retorno (Sucesso - 200 OK):**
 
@@ -501,38 +451,45 @@ Adiciona um produto ao carrinho.
 
 ---
 
-#### 3. **DELETE /api/carrinho/remover/{idProduto}**
 
-Remove um produto do carrinho.
+#### 3. **DELETE /api/carrinho/{id}**
 
-**Parâmetros:**
+Remove um item do carrinho pelo ID do item (não pelo id do produto).
 
-- `idProduto` (Path): ID do produto a remover
+**Parâmetros:** `id` (Path) — ID do item do carrinho
 
-**Retorno (Sucesso - 200 OK):**
-
-```json
-{
-  "idCarrinho": 1,
-  "itens": [...],
-  "precoTotal": 5000.00
-}
-```
+**Retorno (Sucesso - 204 No Content):** sem corpo
 
 ---
 
-#### 4. **POST /api/carrinho/limpar**
+#### 4. **PUT /api/carrinho/{id}**
 
-Esvazia o carrinho completamente.
+Atualiza a quantidade de um item do carrinho.
 
-**Retorno (Sucesso - 200 OK):**
+**Entrada (JSON):**
 
 ```json
-{
-  "idCarrinho": 1,
-  "itens": [],
-  "precoTotal": 0.0
-}
+{ "quantidade": 3 }
+```
+
+**Retorno (Sucesso - 200 OK):** objeto `Carrinho` atualizado
+
+---
+
+#### 5. **DELETE /api/carrinho**
+
+Esvazia o carrinho completamente (limpa todos os itens).
+
+**Retorno (Sucesso - 204 No Content):** sem corpo
+
+---
+
+#### 6. **GET /api/carrinho/total**
+
+Retorna o total do carrinho (soma dos preços) como JSON:
+
+```json
+{ "total": 1234.56 }
 ```
 
 ---
@@ -737,9 +694,10 @@ Retorna pedidos que o usuário recebeufoi como vendedor.
 
 ---
 
-#### 4. **PUT /api/pedidos/{id}**
 
-Atualiza o status de um pedido (vendedor aceitando/rejeitando).
+#### 4. **PUT /api/pedidos/{id}/status**
+
+Atualiza o status de um pedido (vendedor aceitando/rejeitando). Recebe um payload com o novo status.
 
 **Entrada (JSON):**
 
@@ -772,6 +730,18 @@ Atualiza o status de um pedido (vendedor aceitando/rejeitando).
   "chaveEntrega": "A1B2C345",
   "dataAtualizacao": "2026-05-23T15:00:00"
 }
+```
+
+---
+
+#### 5. **GET /api/pedidos/recebidos/pendentes/contagem**
+
+Retorna a contagem de pedidos pendentes para o vendedor autenticado.
+
+**Retorno (Sucesso - 200 OK):**
+
+```json
+{ "total": 3 }
 ```
 
 **Retorno (Erro - 403 Forbidden):**

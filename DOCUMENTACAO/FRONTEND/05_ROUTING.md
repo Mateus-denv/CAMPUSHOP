@@ -61,11 +61,11 @@ export function App() {
   return (
     <Routes>
       {/* Rotas Públicas */}
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
       <Route path="/produtos" element={<ProdutosPage />} />
-      <Route path="/produtos/:id" element={<ProdutoDetalhePage />} />
+      <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
       <Route path="/categorias" element={<CategoriasPage />} />
 
       {/* Rotas Protegidas */}
@@ -119,11 +119,12 @@ export function App() {
 
 | Rota                 | Componente           | Autenticação   | Descrição                |
 | -------------------- | -------------------- | -------------- | ------------------------ |
-| `/`                  | HomePage             | Pública        | Página inicial           |
+| `/`                  | Redirect → `/home`   | Pública        | Redireciona para `/home` |
+| `/home`              | HomePage             | Pública        | Página inicial           |
 | `/login`             | LoginPage            | Pública        | Fazer login              |
 | `/cadastro`          | CadastroPage         | Pública        | Registrar nova conta     |
 | `/produtos`          | ProdutosPage         | Pública        | Listar todos os produtos |
-| `/produtos/:id`      | ProdutoDetalhePage   | Pública        | Detalhes de um produto   |
+| `/produto/:id`      | ProdutoDetalhePage   | Pública        | Detalhes de um produto   |
 | `/categorias`        | CategoriasPage       | Pública        | Listar categorias        |
 | `/carrinho`          | CarrinhoPage         | ✅ Obrigatória | Carrinho de compras      |
 | `/pedidos`           | PedidosPage          | ✅ Obrigatória | Meus pedidos             |

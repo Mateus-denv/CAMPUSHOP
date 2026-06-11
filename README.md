@@ -4,13 +4,13 @@
 
 # CampuShop - Seu Marketplace Estudantil
 
-O **CampuShop** conecta estudantes que querem comprar e vender produtos de forma simples e segura dentro da comunidade acadêmica.
+O **CampuShop** conecta estudantes para comprar e vender produtos dentro da comunidade acadêmica de forma simples, segura e organizada.
 
-Em vez de procurar em vários grupos e chats, a ideia é ter tudo em um só lugar: cadastro, vitrine de produtos, carrinho, pedidos, chat, avaliações e autenticação.
+O sistema reúne registro de usuários, cadastro de anúncios, vitrine por categoria, carrinho de compras, pedidos, atendimento via chat e autenticação segura com JWT.
 
 ## 🛠️ Tecnologias
 
-- **Backend:** Java 17, Spring Boot 3, Spring Security, Spring Data JPA
+- **Backend:** Java 17, Spring Boot 3.1.5, Spring Security, Spring Data JPA
 - **Frontend:** React 18, TypeScript, Vite, Tailwind CSS
 - **Banco de Dados:** MySQL 8
 - **Ferramentas de Deploy:** Docker, Docker Compose
@@ -26,6 +26,17 @@ Pense no sistema como uma feira universitária organizada:
 - **Itens** = detalhamento de cada produto dentro do carrinho/pedido
 
 Assim, o banco de dados funciona como o "caderno oficial" da feira: guarda quem vende, quem compra, o que foi anunciado e o que foi comprado.
+
+## ✨ Funcionalidades principais
+
+- Cadastro e login de usuários com autenticação JWT.
+- Anúncio de produtos com categoria, estoque, preço, imagens e status de visibilidade.
+- Exploração da vitrine por categoria e página de detalhes de produto.
+- Carrinho para adicionar, atualizar e remover itens de forma prática.
+- Finalização de pedidos com controle de status e histórico de compras e vendas.
+- Gestão de conta do usuário, edição de perfil e upload de foto.
+- Interface de chat para negociação entre comprador e vendedor.
+- Rotas protegidas para ações que exigem autenticação.
 
 ## 🏗️ Arquitetura do Sistema
 
@@ -59,33 +70,26 @@ flowchart LR
 
 ## 🗄️ Banco de Dados
 
-Esta seção descreve o modelo ER enviado no diagrama, de forma simples e direta.
+Esta seção descreve o modelo ER atual do projeto de forma simples e direta.
 
 ### Entidades principais
 
-- `USUARIO`: guarda os dados do cliente/vendedor com `id`, `email`, `cidade`, `nomeCliente`, `senha`, `telefone`, `tipo_conta`, `tipo_cliente`, `cpf_cnpj`, `instituicao_ensino`, `localizacao_gps`, `ativado` e `data_cadastro`.
-- `PRODUTO`: armazena os anúncios com `idProduto`, `nome_produto`, `nome_amigavel`, `descricao`, `estoque`, `preco`, `dimensoes`, `imagem_blob`, `status`, `idCategoria` e `idVendedor`.
-- `CATEGORIA`: classifica os produtos por `nome_categoria` e `descricao`.
-- `VARIANTEPRODUTO`: representa variações do produto, com `nome_variante`, `preco_adicional` e `estoque_variante`.
-- `CARRINHO`: registra itens adicionados ao carrinho com `id`, `idUsuario`, `idProduto`, `quantidade` e `data_adicao`.
-- `PEDIDO`: registra a compra finalizada com `idPedido`, `data_pedido`, `valor_total`, `status_pedido`, `idCliente` e `idTipoPagamento`.
-- `ITEMPEDIDO`: detalha os itens do pedido, com `idPedido`, `idProduto`, `quantidade`, `preco_unitario` e `subtotal`.
-- `TIPOPAGAMENTO`: identifica a forma de pagamento, com `nome_tipo` e `descricao`.
-- `CHAT`: armazena mensagens com `id`, `idRemetente`, `idDestinatario`, `idProduto`, `mensagem`, `data_hora` e `lida`.
-- `AVALIACAO`: guarda avaliações com `id`, `idProduto`, `idUsuario`, `nota`, `comentario` e `data_avaliacao`.
+- `USUARIO`: armazena dados do comprador/vendedor com `id`, `nomeCompleto`, `ra`, `email`, `senha`, `telefone`, `tipo_conta`, `cpf_cnpj`, `instituicao_ensino`, `localizacao_gps`, `ativado`, `data_nascimento`, `data_cadastro` e `saldo_vendas`.
+- `PRODUTO`: guarda anúncios com `idProduto`, `nomeProduto`, `descricao`, `estoque`, `preco`, `status`, `visivelParaComprador`, `tipoProduto`, `dimensoes`, `peso`, `usaDimensoes`, `dimensaoComprimento`, `dimensaoLargura`, `idCategoria` e `id_usuario`.
+- `CATEGORIA`: classifica produtos com `idCategoria`, `nome_categoria` e `descricao`.
+- `CARRINHO`: registra itens no carrinho com `id`, `id_usuario`, `id_produto`, `quantidade` e `data_adicao`.
+- `PEDIDO`: salva compras com `idPedido`, `id_usuario` (comprador), `id_vendedor`, `valor_pedido`, `status_pedido`, `data_pedido`, `chave_entrega`, `data_aprovacao`, `prazo_entrega_limite`, `data_entrega` e `motivo_rejeicao`.
+- `PEDIDO_ITEM`: detalha os itens de cada pedido com `idPedidoItem`, `id_pedido`, `id_produto`, `quantidade` e `preco_unitario`.
+- `IMAGEM_ANEXO`: armazena imagens e arquivos relacionados a produtos e usuários com `id_imagem`, `tipo`, `nome_arquivo`, `content_type`, `tamanho_bytes`, `dados`, `data_upload`, `id_usuario` e `id_produto`.
 
 ### Como as tabelas se relacionam
 
-- Um `USUARIO` vende produtos em `PRODUTO` (via `idVendedor`).
-- Um `PRODUTO` pertence a uma `CATEGORIA` (via `idCategoria`).
-- Um `PRODUTO` pode possuir várias linhas em `VARIANTEPRODUTO`.
-- Um `USUARIO` adiciona produtos no `CARRINHO`.
-- Um `USUARIO` realiza `PEDIDO` (via `idCliente`).
-- Cada `PEDIDO` recebe um `TIPOPAGAMENTO` (via `idTipoPagamento`).
-- Cada `PEDIDO` contém vários registros em `ITEMPEDIDO`.
-- Cada `ITEMPEDIDO` referencia um `PRODUTO` e compõe o total do pedido.
-- `CHAT` relaciona remetente e destinatário (`USUARIO`) e pode referenciar um `PRODUTO`.
-- `AVALIACAO` liga `USUARIO` e `PRODUTO` para registrar nota e comentário.
+- Um `USUARIO` pode criar vários `PRODUTO`s como vendedor.
+- Um `PRODUTO` pertence a uma `CATEGORIA` e a um `USUARIO` vendedor.
+- Um `USUARIO` adiciona itens ao `CARRINHO` para montar seu pedido.
+- Cada `PEDIDO` associa um comprador (`id_usuario`) e um vendedor (`id_vendedor`).
+- Cada `PEDIDO` contém vários `PEDIDO_ITEM`s que apontam para os produtos comprados.
+- `IMAGEM_ANEXO` permite vincular fotos de produto ou imagens de usuário ao sistema.
 
 ### Diagrama ER (DER)
 
