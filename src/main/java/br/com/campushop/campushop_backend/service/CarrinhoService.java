@@ -11,6 +11,7 @@ import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Produto;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.CarrinhoRepository;
+import br.com.campushop.campushop_backend.repository.ProdutoRepository;
 import br.com.campushop.campushop_backend.repository.UsuarioRepository;
 
 @Service
@@ -21,6 +22,9 @@ public class CarrinhoService {
 
     @Autowired
     private UsuarioRepository usuarioRepository; // usado para buscar entidade Usuario por id
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
 
     // Listar itens do carrinho por usuário
     public List<Carrinho> listarPorUsuario(Integer usuarioId) {
@@ -45,6 +49,10 @@ public class CarrinhoService {
 
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
+        if (produto != null && produto.getProdutoPai() == null && produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0) {
+            throw new IllegalArgumentException("Selecione uma variante antes de adicionar este anúncio ao carrinho");
+        }
+
         // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso seria uma compra inválida.
         if (produto != null && produto.getUsuario() != null && produto.getUsuario().getId() != null
                 && produto.getUsuario().getId().equals(usuarioId)) {

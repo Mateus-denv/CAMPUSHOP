@@ -52,6 +52,31 @@ public class HomeController {
         return "forward:/index.html";
     }
 
+    @GetMapping("/ajuda")
+    public String ajuda() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/manual-usuario")
+    public String manualUsuario() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/privacidade")
+    public String privacidade() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/termos")
+    public String termos() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/anunciar")
+    public String anunciar() {
+        return "forward:/index.html";
+    }
+
     @GetMapping("/produto/{id}")
     public String produtoDetalhe(@PathVariable String id) {
         return "forward:/index.html";

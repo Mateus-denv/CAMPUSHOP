@@ -19,4 +19,7 @@ public interface ImagemAnexoRepository extends JpaRepository<ImagemAnexo, Intege
     Optional<ImagemAnexo> findFirstByProduto_IdProdutoAndTipoOrderByDataUploadDesc(Integer produtoId, String tipo);
 
     Optional<ImagemAnexo> findByIdAndProduto_IdProduto(Integer id, Integer produtoId);
+
+    // Remove todas as imagens dos produtos cujo id esteja na lista fornecida.
+    void deleteByProduto_IdProdutoIn(java.util.List<Integer> produtoIds);
 }

@@ -4,6 +4,7 @@ import br.com.campushop.campushop_backend.model.ImagemAnexo;
 import br.com.campushop.campushop_backend.model.Produto;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.ImagemAnexoRepository;
+import br.com.campushop.campushop_backend.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,9 +29,11 @@ public class ImagemService {
     private static final String TIPO_PRODUTO = "PRODUTO";
 
     private final ImagemAnexoRepository imagemAnexoRepository;
+    private final ProdutoRepository produtoRepository;
 
-    public ImagemService(ImagemAnexoRepository imagemAnexoRepository) {
+    public ImagemService(ImagemAnexoRepository imagemAnexoRepository, ProdutoRepository produtoRepository) {
         this.imagemAnexoRepository = imagemAnexoRepository;
+        this.produtoRepository = produtoRepository;
     }
 
     @Transactional
@@ -48,6 +51,12 @@ public class ImagemService {
     public List<ImagemAnexo> salvarImagensProduto(Produto produto, List<MultipartFile> imagens) {
         if (imagens == null || imagens.isEmpty()) {
             throw new RuntimeException("Selecione ao menos uma imagem para o anúncio");
+        }
+
+        int limiteImagens = limiteImagensParaProduto(produto);
+        int imagensExistentes = imagemAnexoRepository.findByProduto_IdProdutoAndTipoOrderByDataUploadDesc(produto.getIdProduto(), TIPO_PRODUTO).size();
+        if (imagensExistentes + imagens.size() > limiteImagens) {
+            throw new RuntimeException("Anúncios com variantes podem ter apenas 1 imagem no anúncio principal");
         }
 
         List<ImagemAnexo> imagensSalvas = new ArrayList<>();
@@ -72,6 +81,16 @@ public class ImagemService {
 
     public List<ImagemAnexo> listarImagensProduto(Integer produtoId) {
         return imagemAnexoRepository.findByProduto_IdProdutoAndTipoOrderByDataUploadDesc(produtoId, TIPO_PRODUTO);
+    }
+
+    // Exclui em lote todas as imagens associadas aos produtos listados.
+    @Transactional
+    public void excluirImagensPorProdutoIds(java.util.List<Integer> produtoIds) {
+        if (produtoIds == null || produtoIds.isEmpty()) {
+            return;
+        }
+
+        imagemAnexoRepository.deleteByProduto_IdProdutoIn(produtoIds);
     }
 
     public Optional<ImagemAnexo> buscarImagemProdutoPorId(Integer produtoId, Integer imagemId) {
@@ -117,6 +136,22 @@ public class ImagemService {
         if (!mimePermitido && !extensaoPermitida) {
             throw new RuntimeException("Formato de imagem inválido. Use JPG, JPEG, WebP ou AVIF.");
         }
+    }
+
+    private int limiteImagensParaProduto(Produto produto) {
+        if (produto == null) {
+            return 4;
+        }
+
+        boolean possuiFilhos = produto.getEhVariacao() != null && produto.getEhVariacao()
+                ? false
+                : produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0;
+
+        if (Boolean.TRUE.equals(produto.getEhVariacao()) || possuiFilhos) {
+            return 1;
+        }
+
+        return 4;
     }
 
     private String normalizarContentType(MultipartFile imagem) {

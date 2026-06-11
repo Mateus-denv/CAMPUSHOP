@@ -44,7 +44,8 @@ export function Layout({ children }: LayoutProps) {
   const handleLogout = () => {
     setUsuario(null)
     clearAuth()
-    window.location.reload()
+    // Redireciona para a home padrão ao sair, evitando retornos incorretos para páginas de produto
+    navigate('/home', { replace: true })
   }
 
   return (
@@ -52,7 +53,7 @@ export function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/home" className="flex items-center gap-3 font-black tracking-tight text-slate-900">
-            <Logo />
+            <Logo variant="home" />
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
@@ -142,11 +143,11 @@ export function Layout({ children }: LayoutProps) {
       <footer className="border-t border-slate-200/80 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="max-w-md">
-              <div className="flex items-center gap-3">
-                <Logo />
+            <div className="max-w-sm">
+              <div className="flex items-start gap-4">
+                <Logo variant="completa" className="h-8 w-auto sm:h-10" />
                 <div>
-                  <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampusShop</p>
+                  <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampuShop</p>
                   <p className="text-sm text-slate-500">Marketplace estudantil para compra, venda e troca no campus.</p>
                 </div>
               </div>
@@ -206,7 +207,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 CampusShop. Todos os direitos reservados.</p>
+            <p>© 2026 CampuShop. Todos os direitos reservados.</p>
             <div className="flex flex-wrap gap-4">
               <a href="/privacidade" className="transition hover:text-slate-600">Privacidade</a>
               <a href="/termos" className="transition hover:text-slate-600">Termos</a>
