@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.campushop.campushop_backend.exceptions.ResourceNotFoundException;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.UsuarioRepository;
+import br.com.campushop.campushop_backend.repository.VerificationTokenRepository;
 import br.com.campushop.campushop_backend.validation.UsuarioValidator;
 
 @Service
@@ -20,13 +22,19 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioValidator usuarioValidator;
+    private final VerificationTokenRepository tokenRepository;
+    private final EmailService emailService;
 
     @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-            UsuarioValidator usuarioValidator) {
+            UsuarioValidator usuarioValidator,
+            VerificationTokenRepository tokenRepository,
+            EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuarioValidator = usuarioValidator;
+        this.tokenRepository = tokenRepository;
+        this.emailService = emailService;
     }
 
     public Usuario salvar(Usuario usuario) {
@@ -132,9 +140,61 @@ public class UsuarioService {
         }
     }
 
-    // Busca usuário por ID (usado pelo frontend para exibir dados públicos do vendedor)
+    // Busca usuário por ID (usado pelo frontend para exibir dados públicos do
+    // vendedor)
     public Optional<Usuario> buscarPorId(Integer id) {
         return usuarioRepository.findById(id);
+    }
+
+    /**
+     * Solicita reset de senha - envia email com link
+     */
+    public void solicitarResetSenha(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Email não encontrado"));
+
+        // Envia e-mail com link contendo um token
+        emailService.enviarResetSenha(usuario);
+        logger.info("Reset de senha solicitado para: {}", email);
+    }
+
+    /**
+     * Verifica um token de verificação de email
+     */
+    public boolean verificarEmail(String token) {
+        return emailService.verificarEmail(token);
+    }
+
+    /**
+     * Reseta a senha do usuário (chamado após validação do token)
+     */
+    public void resetarSenha(String token, String novaSenha, String confirmacaoSenha) {
+
+        if (novaSenha == null || confirmacaoSenha == null || !novaSenha.equals(confirmacaoSenha)) {
+            throw new IllegalArgumentException("Senhas não conferem");
+        }
+
+        var vt = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token inválido"));
+
+        if (vt.getType() != br.com.campushop.campushop_backend.model.VerificationToken.TokenType.PASSWORD_RESET) {
+            throw new ResourceNotFoundException("Token inválido");
+        }
+
+
+        if (vt.isExpired()) {
+            tokenRepository.delete(vt);
+            throw new ResourceNotFoundException("Token expirado. Solicite um novo.");
+        }
+
+        Usuario usuario = vt.getUsuario();
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuarioRepository.save(usuario);
+
+        // Invalida token após o uso
+        tokenRepository.delete(vt);
+
+        logger.info("Senha resetada com sucesso para usuário: {}", usuario.getEmail());
     }
 
 }

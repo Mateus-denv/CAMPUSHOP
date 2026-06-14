@@ -9,13 +9,14 @@ import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 
+import br.com.campushop.campushop_backend.dto.ResetSenhaRequestDTO;
+import br.com.campushop.campushop_backend.exceptions.ResourceNotFoundException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,8 +119,39 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token, toUserMap(usuario)));
     }
 
+    @PostMapping("/solicitar-reset")
+    public ResponseEntity<?> solicitarReset(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email é obrigatório"));
+        }
+
+        // Não revela se o email existe (evita enumeração)
+        try {
+            usuarioService.solicitarResetSenha(email.trim().toLowerCase());
+        } catch (ResourceNotFoundException ignored) {
+            // intencional: resposta sempre OK
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Se o email existir, enviaremos as instruções de recuperação."));
+    }
+
+    @PostMapping("/resetar-senha")
+    public ResponseEntity<?> resetarSenha(@Valid @RequestBody ResetSenhaRequestDTO dto) {
+        usuarioService.resetarSenha(dto.getToken(), dto.getNovaSenha(), dto.getConfirmacaoSenha());
+        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso!"));
+    }
+
+    @GetMapping("/verificar-email")
+    public ResponseEntity<?> verificarEmail(@RequestParam String token) {
+        usuarioService.verificarEmail(token);
+        return ResponseEntity.ok(Map.of("message", "Email verificado com sucesso!"));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
+
         if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Não autenticado"));
         }

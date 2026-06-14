@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 
 import java.util.Arrays;
 import java.util.List;
@@ -79,9 +81,36 @@ public class CarrinhoServiceTest {
         Produto produto = criarProduto(5, "Mochila", 80.00, 4);
         produto.setUsuario(vendedor);
 
+        // Não stubbamos service.validarEstoque(...) aqui porque service é @InjectMocks
+        // (não é mock).
+        // Este teste só precisa da exceção do 'produto pertence ao seu anúncio', então
+        // vamos seguir apenas
+        // com o mock do usuarioRepository e, para evitar possíveis NPEs na lógica
+        // interna, ajustamos o
+        // produtoRepository via reflection abaixo.
+
+        // Como 'validarEstoque' não zera o acesso ao
+        // produtoRepository.countByProdutoPai_IdProduto,
+        // precisamos também deixar esse método retornar 0 via mock do repo.
+        // Usamos reflection para obter o campo privado 'produtoRepository' do service.
+        try {
+            java.lang.reflect.Field f = br.com.campushop.campushop_backend.service.CarrinhoService.class
+                    .getDeclaredField("produtoRepository");
+            f.setAccessible(true);
+            br.com.campushop.campushop_backend.repository.ProdutoRepository produtoRepositoryMock = org.mockito.Mockito
+                    .mock(br.com.campushop.campushop_backend.repository.ProdutoRepository.class);
+            // countByProdutoPai_IdProduto retorna long (vamos stubbear exatamente como
+            // definido no repositório)
+            // Intencionalmente sem stub: este teste valida a regra de que o produto
+            // pertence ao mesmo anunciante.
+            f.set(service, produtoRepositoryMock);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         IllegalArgumentException excecao = org.junit.jupiter.api.Assertions.assertThrows(
-            IllegalArgumentException.class,
-            () -> service.adicionarAoCarrinho(10, produto, 1));
+                IllegalArgumentException.class,
+                () -> service.adicionarAoCarrinho(10, produto, 1));
 
         assertEquals("Você não pode comprar este produto porque ele pertence ao seu anúncio", excecao.getMessage());
     }
@@ -108,4 +137,9 @@ public class CarrinhoServiceTest {
         usuario.setNomeCompleto("Usuario " + id);
         return usuario;
     }
+
+    // stubProdutoPaiCountIsZero removido: este teste não possui mock do
+    // ProdutoRepository
+    // e não deve referenciar any()/anyInt() sem import estável.
+
 }

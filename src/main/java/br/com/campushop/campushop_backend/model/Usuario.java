@@ -204,6 +204,18 @@ public class Usuario {
         this.dataNascimento = dataNascimento;
     }
 
+    // Campo para verificação de email (novo)
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado = false;
+
+    public boolean isEmailVerificado() {
+        return emailVerificado;
+    }
+
+    public void setEmailVerificado(boolean emailVerificado) {
+        this.emailVerificado = emailVerificado;
+    }
+
     @Override
     public String toString() {
         return "Usuario{" +
