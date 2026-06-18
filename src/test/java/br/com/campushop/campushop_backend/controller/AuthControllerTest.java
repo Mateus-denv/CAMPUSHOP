@@ -3,7 +3,6 @@ package br.com.campushop.campushop_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.campushop.campushop_backend.dto.CadastroRequestDTO;
 import br.com.campushop.campushop_backend.dto.LoginRequest;
-import br.com.campushop.campushop_backend.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,16 +13,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.util.Map;
 
-/**
- * Testes de integração para AuthController
- * Testa requisições HTTP reais contra a API
- * 
- * @SpringBootTest inicia todo o contexto Spring
- *                 @ActiveProfiles("test") usa application-test.properties
- */
+// IMPORTANTE: Esses imports estáticos resolvem o erro "cannot find symbol: method andExpect"
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -40,7 +37,6 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Setup: Prepara dados de teste reutilizáveis
         dtoValido = new CadastroRequestDTO();
         dtoValido.setNomeCompleto("João Silva");
         dtoValido.setEmail("joao@university.edu");
@@ -58,7 +54,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve retornar 400 quando email está vazio no cadastro")
     void cadastrar_emailVazio_retorna400() throws Exception {
-        dtoValido.setEmail(""); // Email inválido
+        dtoValido.setEmail("");
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -70,7 +66,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve retornar 400 quando email tem formato inválido")
     void cadastrar_emailInvalido_retorna400() throws Exception {
-        dtoValido.setEmail("email_sem_arroba"); // Sem @
+        dtoValido.setEmail("email_sem_arroba");
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -81,7 +77,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve retornar 400 quando senha é muito fraca")
     void cadastrar_senhaFraca_retorna400() throws Exception {
-        dtoValido.setSenha("123"); // Muito fraca
+        dtoValido.setSenha("123");
         dtoValido.setConfirmacaoSenha("123");
 
         mockMvc.perform(post("/api/auth/register")
@@ -93,7 +89,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve retornar 400 quando RA tem formato inválido")
     void cadastrar_raInvalido_retorna400() throws Exception {
-        dtoValido.setRa("ABC"); // Deve ser números
+        dtoValido.setRa("ABC");
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -127,17 +123,17 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve retornar erro quando senhas não conferem no reset")
     void resetSenha_senhasNaoConferem_retornaErro() throws Exception {
-        String jsonRequest = """
-                {
-                    "token": "token_invalido",
-                    "novaSenha": "NovaSenha@123",
-                    "confirmacaoSenha": "OutraSenha@123"
-                }
-                """;
+        // CORREÇÃO: Removido o Text Block (""") que estava quebrando o código.
+        // Agora usa um Map para gerar o JSON com segurança através do ObjectMapper.
+        Map<String, String> resetRequest = Map.of(
+                "token", "token_invalido",
+                "novaSenha", "NovaSenha@123",
+                "confirmacaoSenha", "OutraSenha@123"
+        );
 
         mockMvc.perform(post("/api/auth/resetar-senha")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
+                .content(objectMapper.writeValueAsString(resetRequest)))
                 .andExpect(status().isBadRequest());
     }
 }

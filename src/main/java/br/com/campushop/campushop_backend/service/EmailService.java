@@ -15,17 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-/**
- * Serviço de email para CampuShop
- * Envia emails de verificação e recuperação de senha
- * 
- * IMPORTANTE: Configurar em application.properties:
- * - spring.mail.host
- * - spring.mail.port
- * - spring.mail.username
- * - spring.mail.password
- * - app.frontend.url
- */
 @Service
 public class EmailService {
 
@@ -40,27 +29,21 @@ public class EmailService {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    /**
-     * Envia email de verificação de email (em background)
-     * 
-     * @Async faz com que o email seja enviado em thread separada
-     */
     @Async
     public void enviarVerificacao(Usuario usuario) {
         try {
-            // Gera um token único
             String token = UUID.randomUUID().toString();
 
-            // Salva token no banco (válido por 24 horas)
-            VerificationToken verificationToken = new VerificationToken(token, usuario,
-                    VerificationToken.TokenType.EMAIL_VERIFICATION, 24 * 60);
+            VerificationToken verificationToken = new VerificationToken(
+                    token,
+                    usuario,
+                    VerificationToken.TokenType.EMAIL_VERIFICATION,
+                    24 * 60);
 
             tokenRepository.save(verificationToken);
 
-            // Constrói link de verificação
             String link = frontendUrl + "/verificar-email?token=" + token;
 
-            // Prepara email
             SimpleMailMessage email = new SimpleMailMessage();
             email.setTo(usuario.getEmail());
             email.setSubject("CampuShop - Confirme seu email 📧");
@@ -79,22 +62,19 @@ public class EmailService {
                     Equipe CampuShop
                     """.formatted(usuario.getNomeCompleto(), link));
 
-            // Envia email de forma assíncrona
             mailSender.send(email);
             logger.info("Email de verificação enviado para: {}", usuario.getEmail());
-
         } catch (Exception e) {
             logger.error("Erro ao enviar email de verificação: {}", e.getMessage(), e);
-            // Não relança exceção para não interromper o cadastro
         }
     }
 
-    /**
-     * Verifica um token de email
-     * Se válido, marca como verificado
-     */
     public boolean verificarEmail(String token) {
-        logger.info("Tentando verificar email com token: {}", token.substring(0, 8) + "...");
+        String tokenPreview = (token == null)
+                ? "null"
+                : (token.length() <= 8 ? token : token.substring(0, 8) + "...");
+
+        logger.info("Tentando verificar email com token: {}", tokenPreview);
 
         VerificationToken vt = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Token de verificação inválido"));
@@ -103,40 +83,34 @@ public class EmailService {
             throw new ResourceNotFoundException("Token de verificação inválido");
         }
 
-        // Verifica se token expirou
         if (vt.isExpired()) {
             tokenRepository.delete(vt);
             throw new ResourceNotFoundException("Token de verificação expirado. Solicite um novo.");
         }
 
-        // Marca como verificado
         vt.setVerified(true);
-        vt.getUsuario().setAtivado(true); // Ativa a conta do usuário
+        vt.getUsuario().setAtivado(true);
         tokenRepository.save(vt);
 
         logger.info("Email verificado com sucesso para: {}", vt.getUsuario().getEmail());
         return true;
     }
 
-    /**
-     * Envia email de recuperação de senha
-     */
     @Async
     public void enviarResetSenha(Usuario usuario) {
         try {
-            // Gera um token único
             String token = UUID.randomUUID().toString();
 
-            // Salva token no banco (válido por 30 minutos)
-            VerificationToken resetToken = new VerificationToken(token, usuario,
-                    VerificationToken.TokenType.PASSWORD_RESET, 30);
+            VerificationToken resetToken = new VerificationToken(
+                    token,
+                    usuario,
+                    VerificationToken.TokenType.PASSWORD_RESET,
+                    30);
 
             tokenRepository.save(resetToken);
 
-            // Constrói link para resetar senha
             String link = frontendUrl + "/resetar-senha?token=" + token;
 
-            // Prepara email
             SimpleMailMessage email = new SimpleMailMessage();
             email.setTo(usuario.getEmail());
             email.setSubject("CampuShop - Recuperação de senha 🔐");
@@ -155,10 +129,8 @@ public class EmailService {
                     Equipe CampuShop
                     """.formatted(usuario.getNomeCompleto(), link));
 
-            // Envia email de forma assíncrona
             mailSender.send(email);
             logger.info("Email de reset de senha enviado para: {}", usuario.getEmail());
-
         } catch (Exception e) {
             logger.error("Erro ao enviar email de reset: {}", e.getMessage(), e);
         }

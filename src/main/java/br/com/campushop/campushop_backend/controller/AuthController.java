@@ -90,16 +90,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
         String senha = request.getSenha();
-
-        if (email.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email é obrigatório"));
-        }
-        if (senha == null || senha.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Senha é obrigatória"));
-        }
 
         var usuarioOpt = usuarioService.buscarPorEmail(email);
         if (usuarioOpt.isEmpty()) {

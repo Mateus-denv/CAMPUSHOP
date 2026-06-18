@@ -27,8 +27,10 @@ INSERT INTO usuario (
   instituicao_ensino,
   localizacao_gps,
   ativado,
-  data_cadastro
+  data_cadastro,
+  email_verificado
 )
+
 VALUES
   (
     'Maria Souza',

@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS usuario (
   instituicao_ensino VARCHAR(100),
   localizacao_gps VARCHAR(50),
   ativado TINYINT(1) NOT NULL DEFAULT 1,
-  data_cadastro DATE NOT NULL
+  data_cadastro DATE NOT NULL,
+  email_verificado TINYINT(1) NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS categoria (

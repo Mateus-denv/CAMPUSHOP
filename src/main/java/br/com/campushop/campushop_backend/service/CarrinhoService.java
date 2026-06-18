@@ -49,11 +49,13 @@ public class CarrinhoService {
 
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
-        if (produto != null && produto.getProdutoPai() == null && produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0) {
+        if (produto != null && produto.getProdutoPai() == null
+                && produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0) {
             throw new IllegalArgumentException("Selecione uma variante antes de adicionar este anúncio ao carrinho");
         }
 
-        // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso seria uma compra inválida.
+        // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso
+        // seria uma compra inválida.
         if (produto != null && produto.getUsuario() != null && produto.getUsuario().getId() != null
                 && produto.getUsuario().getId().equals(usuarioId)) {
             throw new IllegalArgumentException("Você não pode comprar este produto porque ele pertence ao seu anúncio");
@@ -87,7 +89,8 @@ public class CarrinhoService {
         // Sem essa associação, o campo id_usuario na tabela ficava nulo, causando
         // SQLIntegrityConstraintViolationException (coluna não-nula).
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ao adicionar ao carrinho"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado ao adicionar ao carrinho"));
+
         novoItem.setUsuario(usuario);
 
         return carrinhoRepository.save(novoItem);
@@ -136,9 +139,9 @@ public class CarrinhoService {
                 .sum();
     }
 
-    // Valida se há estoque suficiente para o item  
+    // Valida se há estoque suficiente para o item
     public boolean validarEstoque(Produto produto, Integer quantidade) {
         return quantidade != null && quantidade > 0 && produto.getEstoque() >= quantidade;
     }
-    
+
 }

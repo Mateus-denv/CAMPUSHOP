@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 🔐 Filtro de Rate Limiting para proteger a API
@@ -30,6 +31,7 @@ public class RateLimitFilter implements Filter {
     private static final int LIMITE_NORMAL = 100; // 100 req/min para outros endpoints
 
     private final RateLimitCache rateLimitCache;
+    private final AtomicLong requestCounter = new AtomicLong(0);
 
     public RateLimitFilter(RateLimitCache rateLimitCache) {
         this.rateLimitCache = rateLimitCache;
@@ -54,6 +56,12 @@ public class RateLimitFilter implements Filter {
 
         // Incrementa contador para este IP
         int contador = rateLimitCache.incrementAndGet(clientIP);
+
+        // Cleanup periódico para evitar crescimento de memória (sem scheduler)
+        long total = requestCounter.incrementAndGet();
+        if (total % 1000 == 0) {
+            rateLimitCache.cleanup();
+        }
 
         logger.debug("IP: {} | Requisição em {}: {}/{}", clientIP, path, contador, limite);
 

@@ -118,22 +118,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Trata exceções customizadas de negócio (RuntimeException genérica)
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(RuntimeException ex) {
-        logger.error("Erro de negócio: {}", ex.getMessage(), ex);
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(
-                        LocalDateTime.now(),
-                        400,
-                        "Erro no processamento",
-                        ex.getMessage()));
-    }
-
-    /**
      * Fallback para qualquer outra exceção não tratada
      * Evita que erros inesperados exponham informações sensíveis
      */
