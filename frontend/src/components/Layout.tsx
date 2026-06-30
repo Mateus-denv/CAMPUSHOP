@@ -212,6 +212,7 @@ export function Layout({ children }: LayoutProps) {
               <a href="/privacidade" className="transition hover:text-slate-600">Privacidade</a>
               <a href="/termos" className="transition hover:text-slate-600">Termos</a>
               <a href="/anunciar" className="transition hover:text-slate-600">Anunciar</a>
+              <a href="/manual-usuario.html" className="transition hover:text-slate-600">Manual do Usuário</a>
             </div>
           </div>
         </div>
