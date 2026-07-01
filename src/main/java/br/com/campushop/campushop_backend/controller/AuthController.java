@@ -2,10 +2,13 @@ package br.com.campushop.campushop_backend.controller;
 
 import br.com.campushop.campushop_backend.dto.AuthResponse;
 import br.com.campushop.campushop_backend.dto.LoginRequest;
+import br.com.campushop.campushop_backend.dto.PasswordResetRequest;
+import br.com.campushop.campushop_backend.dto.RedefinirSenhaRequest;
 import br.com.campushop.campushop_backend.dto.RegisterRequest;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.security.JwtTokenProvider;
 import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
+import br.com.campushop.campushop_backend.service.PasswordResetService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 
@@ -31,13 +34,16 @@ public class AuthController {
     private final UsuarioService usuarioService;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(UsuarioService usuarioService,
             CustomUserDetailsService customUserDetailsService,
-            JwtTokenProvider jwtTokenProvider) {
+            JwtTokenProvider jwtTokenProvider,
+            PasswordResetService passwordResetService) {
         this.usuarioService = usuarioService;
         this.customUserDetailsService = customUserDetailsService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -116,6 +122,34 @@ public class AuthController {
         String token = jwtTokenProvider.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponse(token, toUserMap(usuario)));
+    }
+
+    @PostMapping("/esqueci-senha")
+    public ResponseEntity<?> esqueciSenha(@RequestBody PasswordResetRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email é obrigatório"));
+        }
+
+        passwordResetService.solicitarRedefinicao(request.getEmail());
+        return ResponseEntity
+                .ok(Map.of("message", "Se existir uma conta com esse e-mail, enviaremos um link para redefinição."));
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<?> redefinirSenha(@RequestBody RedefinirSenhaRequest request) {
+        if (request == null || request.getToken() == null || request.getToken().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Token é obrigatório"));
+        }
+        if (request.getNovaSenha() == null || request.getNovaSenha().length() < 8) {
+            return ResponseEntity.badRequest().body(Map.of("message", "A senha deve ter no mínimo 8 caracteres"));
+        }
+
+        try {
+            passwordResetService.redefinirSenha(request.getToken(), request.getNovaSenha());
+            return ResponseEntity.ok(Map.of("message", "Senha redefinida com sucesso"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping("/me")

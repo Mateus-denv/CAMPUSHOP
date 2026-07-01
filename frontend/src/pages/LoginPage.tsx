@@ -126,6 +126,12 @@ export function LoginPage() {
               </Button>
             </form>
 
+            <div className="mt-4 text-right">
+              <Link to="/esqueci-senha" className="text-sm font-semibold text-blue-700 hover:text-blue-800">
+                Esqueci minha senha
+              </Link>
+            </div>
+
             <div className="my-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-slate-200" />
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">ou</span>

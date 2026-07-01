@@ -9,9 +9,11 @@ import { CategoriasPage } from '@/pages/CategoriasPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { ContaPage } from '@/pages/ContaPage'
 import { EditarContaPage } from '@/pages/EditarContaPage'
+import { EsqueciSenhaPage } from '@/pages/EsqueciSenhaPage'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { ManualUsuarioPage } from '@/pages/ManualUsuarioPage'
+import { RedefinirSenhaPage } from '@/pages/RedefinirSenhaPage'
 import { PedidosPage } from '@/pages/PedidosPage'
 import { PrivacidadePage } from '@/pages/PrivacidadePage'
 import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
@@ -80,7 +82,9 @@ function App() {
       }
     })
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribe()
+    }
   }, [setUsuario])
 
   useEffect(() => {
@@ -120,6 +124,8 @@ function App() {
 
       <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
       <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />
+      <Route path="/esqueci-senha" element={usuario ? <Navigate to="/produtos" replace /> : <EsqueciSenhaPage />} />
+      <Route path="/redefinir-senha" element={usuario ? <Navigate to="/produtos" replace /> : <RedefinirSenhaPage />} />
 
       <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
       <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />

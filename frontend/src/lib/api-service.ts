@@ -182,6 +182,15 @@ export const authAPI = {
       email,
       senha,
     }),
+  esqueciSenha: (email: string) =>
+    api.post('/api/auth/esqueci-senha', {
+      email,
+    }),
+  redefinirSenha: (token: string, novaSenha: string) =>
+    api.post('/api/auth/redefinir-senha', {
+      token,
+      novaSenha,
+    }),
   cadastro: (
     nomeCompleto: string,
     email: string,
