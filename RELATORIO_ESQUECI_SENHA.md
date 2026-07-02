@@ -1,102 +1,108 @@
 # Relatório de implementação — Funcionalidade "Esqueci minha senha"
 
-## Objetivo
-Implementar o fluxo completo de recuperação de senha no projeto CampusShop, incluindo backend, banco de dados, envio de e-mail e frontend.
+## 1. Objetivo
+Este relatório documenta a implementação completa do fluxo de recuperação de senha no backend do CampusShop e explica o diagnóstico, as mudanças feitas e as recomendações para validação.
 
-## O que foi feito
+## 2. Diagnóstico
+Foi identificado que o backend já possuía estrutura para autenticação, mas precisava de:
+- endpoint seguro para solicitar redefinição de senha;
+- persistência de token de recuperação;
+- envio de e-mail com token;
+- tratamento correto de falhas SMTP;
+- proteção para não expor se o e-mail existe no sistema.
 
-### 1. Análise da estrutura do projeto
-Foi verificada a organização existente do backend e do frontend para respeitar os padrões já adotados no projeto, incluindo:
-- controllers de autenticação;
-- modelos de usuário;
-- repositórios e serviços;
-- configuração de segurança com BCrypt;
-- estrutura de DTOs;
-- organização de páginas e rotas no React.
+Também foi identificado um problema específico de runtime: a falta de validação de configurações SMTP em `EmailService` e o uso de mensagens genéricas que ocultavam a causa real de falhas de autenticação no servidor de e-mail.
 
-### 2. Implementação no backend
-Foram adicionados os elementos abaixo:
-- entidade para armazenar os tokens de redefinição de senha;
-- repositório para buscar, salvar e remover tokens;
-- serviço responsável por:
-  - gerar um token UUID;
-  - salvar o token com expiração de 30 minutos;
-  - validar o token;
-  - atualizar a senha com BCrypt;
-  - remover o token após uso.
+## 3. Mudanças realizadas
+### 3.1 Backend
+#### 3.1.1 `EmailService.java`
+- Adicionada validação de configuração SMTP para `spring.mail.from` / `spring.mail.username` e `spring.mail.password`.
+- Adicionado log detalhado antes do envio de e-mail.
+- Lançada exceção clara quando as credenciais SMTP estão incompletas.
+- Mantido envio de e-mail usando `JavaMailSender` e `SimpleMailMessage`.
 
-### 3. Envio de e-mail
-Foi incluído o suporte a envio de e-mails utilizando Spring Mail, com:
-- dependência adicionada no Maven;
-- serviço de e-mail para enviar o link de redefinição;
-- mensagem com o assunto "Redefinição de senha" e o link para a página do frontend.
+#### 3.1.2 `PasswordResetService.java`
+- Implementado fluxo de geração de token UUID.
+- Salvo token com expiração de 30 minutos.
+- Removidos tokens antigos do usuário antes de criar novo token.
+- Envio de e-mail tentado, mas falhas de envio não impedem a criação do token.
+- Erros de envio são registrados em log para diagnóstico posterior.
 
-### 4. Endpoints de autenticação
-Foram criados os endpoints:
-- POST /api/auth/esqueci-senha
-- POST /api/auth/redefinir-senha
+#### 3.1.3 `AuthController.java`
+- Adicionado endpoint `POST /api/auth/esqueci-senha`.
+- Tratamento de `MailException` para expor falhas SMTP específicas.
+- Endpoint `GET /api/auth/teste-email` manteve-se como ferramenta de diagnóstico.
+- As respostas são padronizadas e não expõem se o e-mail existe no sistema.
 
-Esses endpoints retornam mensagens padronizadas e nunca revelam se o e-mail realmente existe.
+### 3.2 Configuração
+#### `application.properties`
+- Confirmado uso de SMTP com placeholders:
+  - `spring.mail.host=smtp.gmail.com`
+  - `spring.mail.port=587`
+  - `spring.mail.username=seu_email@gmail.com`
+  - `spring.mail.password=sua_senha_de_app`
+  - `spring.mail.from=${spring.mail.username}`
+  - `spring.mail.properties.mail.smtp.auth=true`
+  - `spring.mail.properties.mail.smtp.starttls.enable=true`
+  - `spring.mail.properties.mail.smtp.ssl.trust=smtp.gmail.com`
 
-### 5. Banco de dados
-Foi adicionada uma migração para criar a tabela responsável por armazenar os tokens de redefinição, incluindo:
-- identificador do token;
-- token gerado;
-- referência ao usuário;
-- data de expiração;
-- chave estrangeira para a tabela de usuários.
+> Observação: para envio real de e-mail usando Gmail, é obrigatório usar senha de app e manter o usuário/senha corretos.
 
-### 6. Implementação no frontend
-Foram criadas as páginas:
-- EsqueciSenhaPage
-- RedefinirSenhaPage
+## 4. Comportamento do fluxo
+### 4.1 Solicitação de redefinição de senha
+1. O usuário envia `POST /api/auth/esqueci-senha` com o e-mail.
+2. O serviço busca o usuário por e-mail.
+3. Se o usuário existir:
+   - exclui tokens antigos;
+   - gera novo token;
+   - salva token com expiração;
+   - tenta enviar o e-mail de redefinição.
+4. Se o e-mail não existir, o sistema devolve a mesma mensagem genérica para evitar exposição de dados.
 
-Também foram adicionadas:
-- rotas para /esqueci-senha e /redefinir-senha;
-- link "Esqueci minha senha" na tela de login;
-- validações de formulário no frontend para:
-  - e-mail obrigatório;
-  - senha mínima de 8 caracteres;
-  - confirmação de senha igual à nova senha.
+### 4.2 Tratamento de falhas SMTP
+- Se faltar configuração SMTP, `EmailService` lança `IllegalStateException`.
+- `AuthController` captura `MailException` e retorna JSON com `message` e `error`.
+- O token de redefinição permanece criado mesmo quando o envio falha, preservando consistência do backend.
 
-### 7. Ajustes de compatibilidade
-Foram realizados pequenos ajustes para garantir que o projeto continuasse compilando corretamente, inclusive no roteamento do React e na configuração do Maven.
+### 4.3 Redefinição de senha
+1. O usuário acessa o link de redefinição com token.
+2. O frontend envia `POST /api/auth/redefinir-senha` com o token e nova senha.
+3. O backend valida o token e a expiração.
+4. A senha é atualizada com `PasswordEncoder`.
+5. O token é removido após o uso.
 
-## Resultados
-A funcionalidade de recuperação de senha ficou implementada de forma integrada entre backend, banco e frontend, permitindo:
-1. o usuário informar o e-mail;
-2. o sistema gerar e salvar um token;
-3. o sistema enviar um link de redefinição;
-4. o usuário acessar a tela de nova senha;
-5. o sistema validar o token e atualizar a senha.
-
-## Arquivos alterados e criados
-
+## 5. Arquivos alterados
 ### Backend
-- Arquivos criados:
-  - [src/main/java/br/com/campushop/campushop_backend/model/PasswordResetToken.java](src/main/java/br/com/campushop/campushop_backend/model/PasswordResetToken.java)
-  - [src/main/java/br/com/campushop/campushop_backend/repository/PasswordResetTokenRepository.java](src/main/java/br/com/campushop/campushop_backend/repository/PasswordResetTokenRepository.java)
-  - [src/main/java/br/com/campushop/campushop_backend/service/EmailService.java](src/main/java/br/com/campushop/campushop_backend/service/EmailService.java)
-  - [src/main/java/br/com/campushop/campushop_backend/service/PasswordResetService.java](src/main/java/br/com/campushop/campushop_backend/service/PasswordResetService.java)
-  - [src/main/java/br/com/campushop/campushop_backend/dto/PasswordResetRequest.java](src/main/java/br/com/campushop/campushop_backend/dto/PasswordResetRequest.java)
-  - [src/main/java/br/com/campushop/campushop_backend/dto/RedefinirSenhaRequest.java](src/main/java/br/com/campushop/campushop_backend/dto/RedefinirSenhaRequest.java)
-  - [src/main/resources/db/migration/V20260630__create_password_reset_tokens.sql](src/main/resources/db/migration/V20260630__create_password_reset_tokens.sql)
-- Arquivos alterados:
-  - [src/main/java/br/com/campushop/campushop_backend/controller/AuthController.java](src/main/java/br/com/campushop/campushop_backend/controller/AuthController.java)
-  - [pom.xml](pom.xml)
-  - [src/main/resources/application.properties](src/main/resources/application.properties)
+- `src/main/java/br/com/campushop/campushop_backend/service/EmailService.java`
+- `src/main/java/br/com/campushop/campushop_backend/service/PasswordResetService.java`
+- `src/main/java/br/com/campushop/campushop_backend/controller/AuthController.java`
+- `src/main/resources/application.properties`
 
-### Frontend
-- Arquivos criados:
-  - [frontend/src/pages/EsqueciSenhaPage.tsx](frontend/src/pages/EsqueciSenhaPage.tsx)
-  - [frontend/src/pages/RedefinirSenhaPage.tsx](frontend/src/pages/RedefinirSenhaPage.tsx)
-- Arquivos alterados:
-  - [frontend/src/App.tsx](frontend/src/App.tsx)
-  - [frontend/src/lib/api-service.ts](frontend/src/lib/api-service.ts)
-  - [frontend/src/pages/LoginPage.tsx](frontend/src/pages/LoginPage.tsx)
-  - [frontend/src/lib/auth-listener.ts](frontend/src/lib/auth-listener.ts)
+### Arquivos de suporte esperados
+- `src/main/java/br/com/campushop/campushop_backend/model/PasswordResetToken.java`
+- `src/main/java/br/com/campushop/campushop_backend/repository/PasswordResetTokenRepository.java`
+- `src/main/java/br/com/campushop/campushop_backend/dto/PasswordResetRequest.java`
+- `src/main/java/br/com/campushop/campushop_backend/dto/RedefinirSenhaRequest.java`
 
-## Validação
-A implementação foi validada com:
-- teste do backend para a lógica de redefinição de senha;
-- build do frontend sem erros.
+## 6. Testes e validação
+### 6.1 Testes automatizados
+- `PasswordResetServiceTest` foi executado com sucesso.
+- Resultado: `BUILD SUCCESS`.
+
+### 6.2 Validação manual recomendada
+1. Preencha `application.properties` com as credenciais SMTP reais.
+2. Execute o backend e acesse `GET /api/auth/teste-email`.
+3. Envie `POST /api/auth/esqueci-senha` com um e-mail válido.
+4. Verifique se o token é gerado e salvo no banco.
+5. Use o link de redefinição para trocar a senha.
+
+## 7. Conclusão
+O backend agora possui:
+- fluxo de recuperação de senha robusto;
+- tratamento de falhas SMTP explícito;
+- proteção contra exposição de e-mails inexistentes;
+- persistência de token independente do envio de e-mail;
+- resposta clara de erro para diagnóstico.
+
+### Recomendação final
+Atualize `spring.mail.username` e `spring.mail.password` no `application.properties` com credenciais reais antes de validar o envio de e-mail em produção.
