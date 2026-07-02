@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,17 +46,33 @@ public class PasswordResetService {
         }
 
         Usuario usuario = usuarioOpt.get();
+        logger.info("Usuário encontrado {}", usuario.getEmail());
+
         passwordResetTokenRepository.deleteByUsuario(usuario);
+        logger.info("Tokens antigos excluídos para o usuário {}", usuario.getEmail());
 
         String token = UUID.randomUUID().toString();
+        logger.info("Token gerado {}", token);
+
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
         resetToken.setUsuario(usuario);
         resetToken.setExpiration(LocalDateTime.now().plusMinutes(EXPIRACAO_MINUTOS));
 
+        logger.info("Salvando token de redefinição na base de dados");
         passwordResetTokenRepository.save(resetToken);
-        emailService.enviarEmailRedefinicaoSenha(usuario.getEmail(), token);
-        logger.info("Token de redefinição criado para o usuário {}", usuario.getEmail());
+        logger.info("Token salvo com sucesso para {}", usuario.getEmail());
+
+        logger.info("Chamando EmailService para enviar e-mail de redefinição");
+        try {
+            emailService.enviarEmailRedefinicaoSenha(usuario.getEmail(), token);
+            logger.info("Email de redefinição enviado com sucesso para {}", usuario.getEmail());
+        } catch (Exception e) {
+            logger.error("Falha ao enviar e-mail de redefinição para {}", usuario.getEmail(), e);
+            // Mantém a criação do token mesmo se o envio de email falhar.
+        }
+
+        logger.info("Fluxo de recuperação concluído para o usuário {}", usuario.getEmail());
     }
 
     @Transactional

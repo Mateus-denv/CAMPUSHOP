@@ -8,12 +8,14 @@ import br.com.campushop.campushop_backend.dto.RegisterRequest;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.security.JwtTokenProvider;
 import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
+import br.com.campushop.campushop_backend.service.EmailService;
 import br.com.campushop.campushop_backend.service.PasswordResetService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -35,15 +37,18 @@ public class AuthController {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
 
     public AuthController(UsuarioService usuarioService,
             CustomUserDetailsService customUserDetailsService,
             JwtTokenProvider jwtTokenProvider,
-            PasswordResetService passwordResetService) {
+            PasswordResetService passwordResetService,
+            EmailService emailService) {
         this.usuarioService = usuarioService;
         this.customUserDetailsService = customUserDetailsService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordResetService = passwordResetService;
+        this.emailService = emailService;
     }
 
     @PostMapping("/register")
@@ -130,9 +135,34 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("message", "Email é obrigatório"));
         }
 
-        passwordResetService.solicitarRedefinicao(request.getEmail());
-        return ResponseEntity
-                .ok(Map.of("message", "Se existir uma conta com esse e-mail, enviaremos um link para redefinição."));
+        logger.info("Chamada recebida em /api/auth/esqueci-senha para {}", request.getEmail());
+        try {
+            passwordResetService.solicitarRedefinicao(request.getEmail());
+            return ResponseEntity
+                    .ok(Map.of("message",
+                            "Se existir uma conta com esse e-mail, enviaremos um link para redefinição."));
+        } catch (MailException e) {
+            logger.error("Falha SMTP ao solicitar redefinição para {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao enviar e-mail de redefinição", "error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erro interno no endpoint /api/auth/esqueci-senha para {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro interno ao processar solicitação", "error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/teste-email")
+    public ResponseEntity<?> testeEmail() {
+        logger.info("GET /api/auth/teste-email acionado");
+        try {
+            emailService.enviarEmailRedefinicaoSenha("meuemail@gmail.com", "TOKEN123");
+            return ResponseEntity.ok(Map.of("message", "Email de teste enviado"));
+        } catch (Exception e) {
+            logger.error("Erro completo ao enviar email de teste", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Falha ao enviar email de teste", "error", e.getMessage()));
+        }
     }
 
     @PostMapping("/redefinir-senha")
