@@ -1,11 +1,12 @@
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
 import api from '@/lib/api'
-import { carrinhoAPI, produtoAPI, type ProdutoAPI, type ProdutoVarianteAPI } from '@/lib/api-service'
+import { avaliacaoAPI, carrinhoAPI, produtoAPI, type AvaliacaoAPI, type ProdutoAPI, type ProdutoVarianteAPI } from '@/lib/api-service'
 import { saveCart } from '@/lib/shop-storage'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useAuthStore } from '@/store'
 
 type ProdutoDetalhe = {
   idProduto: number
@@ -42,6 +43,16 @@ export function ProdutoDetalhePage() {
   const [imagens, setImagens] = useState<ImagemProduto[]>([])
   const [indiceImagemAtual, setIndiceImagemAtual] = useState(0)
   const [varianteSelecionadaId, setVarianteSelecionadaId] = useState<number | null>(null)
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoAPI[]>([])
+  const [notaMedia, setNotaMedia] = useState<number | null>(null)
+  const [totalAvaliacoes, setTotalAvaliacoes] = useState<number>(0)
+  const [notaSelecionada, setNotaSelecionada] = useState<number>(10)
+  const [feedback, setFeedback] = useState('')
+  const [avaliacaoEnviando, setAvaliacaoEnviando] = useState(false)
+  const [erroAvaliacao, setErroAvaliacao] = useState('')
+  const [podeAvaliar, setPodeAvaliar] = useState(false)
+  const [motivoNaoAvaliar, setMotivoNaoAvaliar] = useState('')
+  const { usuario } = useAuthStore()
 
   useEffect(() => {
     const carregarProduto = async () => {
@@ -111,6 +122,53 @@ export function ProdutoDetalhePage() {
 
     carregarProduto()
   }, [id])
+
+  useEffect(() => {
+    const carregarAvaliacoes = async () => {
+      const produtoId = Number(id)
+      if (!produtoId) {
+        return
+      }
+
+      try {
+        const [avaliacoesResp, mediaResp] = await Promise.all([
+          avaliacaoAPI.listarPorProduto(produtoId),
+          avaliacaoAPI.media(produtoId),
+        ])
+
+        setAvaliacoes(avaliacoesResp.data ?? [])
+        setNotaMedia(mediaResp.data?.notaMedia ?? 0)
+        setTotalAvaliacoes(mediaResp.data?.totalAvaliacoes ?? 0)
+      } catch (err) {
+        console.error('Erro ao carregar avaliações:', err)
+      }
+    }
+
+    carregarAvaliacoes()
+  }, [id, produto])
+
+  useEffect(() => {
+    const verificarPermissaoAvaliacao = async () => {
+      const produtoId = Number(id)
+      if (!produtoId || !usuario) {
+        setPodeAvaliar(false)
+        setMotivoNaoAvaliar('Faça login para avaliar este produto depois da compra.')
+        return
+      }
+
+      try {
+        const response = await avaliacaoAPI.podeAvaliar(produtoId)
+        setPodeAvaliar(response.data.podeAvaliar)
+        setMotivoNaoAvaliar(response.data.motivo ?? '')
+      } catch (err) {
+        console.error('Erro ao verificar permissão de avaliação:', err)
+        setPodeAvaliar(false)
+        setMotivoNaoAvaliar('Não foi possível verificar se você pode avaliar este produto.')
+      }
+    }
+
+    verificarPermissaoAvaliacao()
+  }, [id, usuario])
 
   useEffect(() => {
     if (indiceImagemAtual >= imagens.length) {
@@ -312,6 +370,13 @@ export function ProdutoDetalhePage() {
                 {produto.possuiVariantes ? `${produto.variantes?.length ?? 0} variante(s)` : `${produto.estoque} em estoque`}
               </p>
             </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                <Star className="h-4 w-4 text-yellow-500" />
+                {notaMedia !== null ? notaMedia.toFixed(1) : '-'} / 10
+              </span>
+              <span className="text-slate-500">{totalAvaliacoes} avaliação{totalAvaliacoes === 1 ? '' : 'es'}</span>
+            </div>
 
             {produto.possuiVariantes && produto.variantes?.length ? (
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
@@ -381,6 +446,111 @@ export function ProdutoDetalhePage() {
 
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
               Entrega e retirada devem ser combinadas diretamente com o vendedor.
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6">
+              <h3 className="text-lg font-black text-slate-900">Avaliações</h3>
+              <p className="mt-2 text-sm text-slate-600">Compartilhe sua experiência ou veja o que outros compradores disseram.</p>
+
+              {usuario ? (
+                podeAvaliar ? (
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Deixe sua avaliação</h4>
+                    <div className="mt-4 flex gap-2 text-yellow-500">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((valor) => (
+                        <button
+                          key={valor}
+                          type="button"
+                          className={`rounded-full p-2 text-sm font-bold transition ${notaSelecionada >= valor ? 'bg-yellow-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                          onClick={() => setNotaSelecionada(valor)}
+                        >
+                          {valor}
+                        </button>
+                      ))}
+                    </div>
+
+                    <label className="mt-5 block text-sm font-semibold text-slate-700">Feedback</label>
+                    <textarea
+                      value={feedback}
+                      onChange={(event) => setFeedback(event.target.value)}
+                      maxLength={500}
+                      rows={4}
+                      className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      placeholder="Conte sua experiência com o produto (máx 500 caracteres)"
+                    />
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                      <span>{feedback.length}/500</span>
+                      {erroAvaliacao ? <span className="text-red-600">{erroAvaliacao}</span> : null}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!produto) return
+                        setErroAvaliacao('')
+                        setAvaliacaoEnviando(true)
+
+                        try {
+                          await avaliacaoAPI.criar(produto.idProduto, notaSelecionada, feedback)
+                          const [avaliacoesResp, mediaResp, permissaoResp] = await Promise.all([
+                            avaliacaoAPI.listarPorProduto(produto.idProduto),
+                            avaliacaoAPI.media(produto.idProduto),
+                            avaliacaoAPI.podeAvaliar(produto.idProduto),
+                          ])
+                          setAvaliacoes(avaliacoesResp.data ?? [])
+                          setNotaMedia(mediaResp.data?.notaMedia ?? 0)
+                          setTotalAvaliacoes(mediaResp.data?.totalAvaliacoes ?? 0)
+                          setPodeAvaliar(permissaoResp.data.podeAvaliar)
+                          setMotivoNaoAvaliar(permissaoResp.data.motivo ?? '')
+                          setFeedback('')
+                          setMensagemAcao('Avaliação enviada com sucesso.')
+                        } catch (err: unknown) {
+                          console.error('Erro ao enviar avaliação:', err)
+                          setErroAvaliacao('Não foi possível enviar a avaliação. Verifique se já avaliou este produto e tente novamente.')
+                        } finally {
+                          setAvaliacaoEnviando(false)
+                        }
+                      }}
+                      disabled={avaliacaoEnviando}
+                      className="mt-5 inline-flex items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/10 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {avaliacaoEnviando ? 'Enviando...' : 'Enviar avaliação'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+                    <p className="font-semibold text-slate-900">Avaliação só disponível após entrega</p>
+                    <p className="mt-2 text-slate-600">{motivoNaoAvaliar || 'Você pode avaliar este produto depois que o pedido for entregue.'}</p>
+                    <Link to="/pedidos" className="mt-4 inline-flex rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                      Ir para meus pedidos
+                    </Link>
+                  </div>
+                )
+              ) : (
+                <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+                  Faça login para enviar sua avaliação.
+                </div>
+              )}
+
+              <div className="mt-6 space-y-4">
+                {avaliacoes.length === 0 ? (
+                  <p className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">Nenhuma avaliação registrada para este produto.</p>
+                ) : (
+                  avaliacoes.map((avaliacao) => (
+                    <article key={avaliacao.idAvaliacao} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between gap-3 text-sm text-slate-600">
+                        <span className="font-semibold text-slate-900">{avaliacao.nomeUsuario}</span>
+                        <span className="inline-flex items-center gap-1 text-yellow-500">
+                          <Star className="h-4 w-4" />
+                          {avaliacao.nota}/10
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-slate-700">{avaliacao.feedback || 'Sem comentário adicional.'}</p>
+                      <p className="mt-3 text-xs text-slate-500">{new Date(avaliacao.dataAvaliacao).toLocaleDateString()}</p>
+                    </article>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="mt-4 rounded-[1.5rem] border border-slate-200 p-5">

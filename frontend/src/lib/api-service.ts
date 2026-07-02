@@ -78,6 +78,8 @@ export type ProdutoAPI = {
   }
   instituicao?: string
   cidade?: string
+  notaMedia?: number
+  totalAvaliacoes?: number
   variantes?: ProdutoVarianteAPI[]
 }
 
@@ -119,8 +121,43 @@ export type PedidoAPI = {
   total: number
 }
 
+export type AvaliacaoAPI = {
+  idAvaliacao: number
+  idProduto: number
+  nomeProduto: string
+  idUsuario: number
+  nomeUsuario: string
+  nota: number
+  feedback: string
+  dataAvaliacao: string
+  status: string
+}
+
+export type AvaliacaoMediaAPI = {
+  idProduto: number
+  notaMedia: number
+  totalAvaliacoes: number
+}
+
+export type AvaliacaoPermissaoAPI = {
+  podeAvaliar: boolean
+  motivo?: string
+}
+
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
+}
+
+export const avaliacaoAPI = {
+  listarPorProduto: (idProduto: number) => api.get<AvaliacaoAPI[]>(`/api/avaliacoes/produto/${idProduto}`),
+  criar: (idProduto: number, nota: number, feedback: string) =>
+    api.post('/api/avaliacoes', {
+      idProduto,
+      nota,
+      feedback,
+    }),
+  media: (idProduto: number) => api.get<AvaliacaoMediaAPI>(`/api/avaliacoes/produto/${idProduto}/media`),
+  podeAvaliar: (idProduto: number) => api.get<AvaliacaoPermissaoAPI>(`/api/avaliacoes/produto/${idProduto}/autorizada`),
 }
 
 export const carrinhoAPI = {

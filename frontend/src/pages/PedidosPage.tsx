@@ -152,11 +152,19 @@ export function PedidosPage() {
               <div className="mt-4 space-y-2">
                 {pedido.itens.map((item) => {
                   return (
-                    <div key={`${pedido.id}-${item.productId}`} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
-                      <span className="font-medium text-slate-700">{item.productName}</span>
-                      <span className="text-slate-600">
-                        {item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}
-                      </span>
+                    <div key={`${pedido.id}-${item.productId}`} className="flex flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-medium text-slate-700">{item.productName}</p>
+                        <p className="text-slate-500">{item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}</p>
+                      </div>
+                      {pedido.status === 'entregue' ? (
+                        <Link
+                          to={`/produto/${item.productId}`}
+                          className="inline-flex rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 transition hover:bg-blue-100"
+                        >
+                          Avaliar produto
+                        </Link>
+                      ) : null}
                     </div>
                   )
                 })}

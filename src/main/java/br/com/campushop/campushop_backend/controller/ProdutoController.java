@@ -6,6 +6,7 @@ import br.com.campushop.campushop_backend.model.Usuario; // Importando a classe 
 import br.com.campushop.campushop_backend.service.ProdutoService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import br.com.campushop.campushop_backend.service.ImagemService;
+import br.com.campushop.campushop_backend.service.AvaliacaoService;
 import org.springframework.beans.factory.annotation.Autowired; // Importando a anotação @Autowired para injetar o ProdutoRepository
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
@@ -29,6 +30,9 @@ public class ProdutoController {
 
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @Autowired
     private UsuarioService usuarioService;
@@ -80,9 +84,11 @@ public class ProdutoController {
             String nomeVendedor,
             Integer categoriaId,
             String categoriaNome,
+            Double notaMedia,
+            Long totalAvaliacoes,
             List<VarianteResponse> variantes) {
 
-        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes) {
+        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes, Double notaMedia, Long totalAvaliacoes) {
             // Resolve o nome do anunciante direto do usuário associado ao produto.
             Usuario usuario = produto.getUsuario();
             var categoria = produto.getCategoria();
@@ -102,7 +108,13 @@ public class ProdutoController {
                     usuario != null ? usuario.getNomeCompleto() : null,
                     categoria != null ? categoria.getIdCategoria() : null,
                     categoria != null ? categoria.getNome_categoria() : null,
+                    notaMedia,
+                    totalAvaliacoes,
                     variantes != null ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList()) : List.of());
+        }
+
+        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes) {
+            return fromEntity(produto, variantes, 0.0, 0L);
         }
 
         public static ProdutoResponse fromEntity(Produto produto) {
@@ -121,7 +133,7 @@ public class ProdutoController {
     public List<ProdutoResponse> listarTodos() {
         // Retorna um payload estável para o frontend não depender da serialização da entidade.
         return produtoService.listarTodos().stream()
-                .map(produto -> ProdutoResponse.fromEntity(produto, List.of()))
+                .map(produto -> toProdutoResponse(produto, List.of()))
                 .collect(Collectors.toList());
     }
 
@@ -131,7 +143,7 @@ public class ProdutoController {
         String email = authentication.getName();
         // Mantém a mesma estrutura de resposta da listagem pública.
         return produtoService.listarPorUsuario(email).stream()
-            .map(produto -> ProdutoResponse.fromEntity(produto, List.of()))
+                .map(produto -> toProdutoResponse(produto, List.of()))
                 .collect(Collectors.toList());
     }
 
@@ -152,9 +164,15 @@ public class ProdutoController {
                         List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
                                 ? produtoService.listarVariantes(produto.getIdProduto())
                                 : List.of();
-                        return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes));
+                        return ResponseEntity.ok(toProdutoResponse(produto, variantes));
                     })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private ProdutoResponse toProdutoResponse(Produto produto, List<Produto> variantes) {
+        double notaMedia = avaliacaoService.calcularNotaMediaProduto(produto.getIdProduto());
+        long totalAvaliacoes = avaliacaoService.contarAvaliacoesAtivas(produto.getIdProduto());
+        return ProdutoResponse.fromEntity(produto, variantes, notaMedia, totalAvaliacoes);
     }
 
     // 3. Criar novo produto (Create)

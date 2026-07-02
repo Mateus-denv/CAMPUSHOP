@@ -19,6 +19,8 @@ type Produto = {
   preco: number
   estoque: number
   categoria: Categoria
+  notaMedia?: number
+  totalAvaliacoes?: number
 }
 
 export function CategoriasPage() {
@@ -76,6 +78,8 @@ export function CategoriasPage() {
         descricao: produto.descricao ?? '',
         preco: Number(produto.preco ?? 0),
         estoque: Number(produto.estoque ?? 0),
+        notaMedia: produto.notaMedia ?? 0,
+        totalAvaliacoes: produto.totalAvaliacoes ?? 0,
         categoria: {
           idCategoria: Number(
             produto.categoria?.idCategoria ??
@@ -239,7 +243,20 @@ export function CategoriasPage() {
                 <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-900 line-clamp-2">
                   {produto.nomeProduto || 'Produto sem nome'}
                 </h3>
-                <p className="mt-2 text-2xl font-black text-blue-700">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  {produto.totalAvaliacoes && produto.totalAvaliacoes > 0 ? (
+                    <>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                        <span>⭐</span>
+                        <span>{produto.notaMedia?.toFixed(1).replace('.', ',')}</span>
+                      </span>
+                      <span>({produto.totalAvaliacoes} avaliações)</span>
+                    </>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-500">Sem avaliações</span>
+                  )}
+                </div>
+                <p className="mt-3 text-2xl font-black text-blue-700">
                   R$ {produto.preco.toFixed(2).replace('.', ',')}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
