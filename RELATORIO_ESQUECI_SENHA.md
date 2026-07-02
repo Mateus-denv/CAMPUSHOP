@@ -106,3 +106,19 @@ O backend agora possui:
 
 ### Recomendação final
 Atualize `spring.mail.username` e `spring.mail.password` no `application.properties` com credenciais reais antes de validar o envio de e-mail em produção.
+
+## 8. Resumo para passagem para `main`
+Este é o resumo que pode ser usado como descrição de PR ou checklist para merge:
+
+- [x] Implementado endpoint `POST /api/auth/esqueci-senha` para iniciar o fluxo de recuperação de senha.
+- [x] Implementado endpoint `POST /api/auth/redefinir-senha` para trocar senha através do token.
+- [x] Adicionado tratamento de falhas SMTP em `EmailService` e `AuthController`.
+- [x] Garantido que o token de redefinição é salvo mesmo se o envio de e-mail falhar.
+- [x] Mantida resposta genérica para não revelar se o e-mail existe.
+- [x] Confirmado que `PasswordResetServiceTest` passa com sucesso.
+- [ ] Validar com credenciais SMTP reais no `application.properties` antes de subir para produção.
+
+### Observações para merge
+- Não há mudanças de frontend obrigatórias para a entrega desta correção de backend.
+- Se o frontend já consome os endpoints existentes, basta atualizar `main` com estas correções de backend.
+- Recomenda-se revisar o arquivo `application.properties` para não commitar credenciais reais.
