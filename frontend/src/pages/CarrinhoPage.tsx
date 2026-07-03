@@ -1,14 +1,19 @@
 import { Layout } from '@/components/Layout'
-import { carrinhoAPI, pedidosAPI, type CarrinhoBackendItem } from '@/lib/api-service'
-import { cacheProduct, saveCart } from '@/lib/shop-storage'
+import { MediaImage } from '@/components/MediaImage'
+import { carrinhoAPI, pedidosAPI, produtoAPI, type CarrinhoBackendItem, type ProdutoAPI } from '@/lib/api-service'
+import { buildProductImageUrl } from '@/lib/image-utils'
+import { cacheProduct, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
+import { Heart } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 export function CarrinhoPage() {
   const navigate = useNavigate()
   const [cart, setCart] = useState<CarrinhoBackendItem[]>([])
+  const [recomendacoes, setRecomendacoes] = useState<ProdutoAPI[]>([])
   const [modalChat, setModalChat] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const [favoritos, setFavoritos] = useState<number[]>([])
   const [carregandoCarrinho, setCarregandoCarrinho] = useState(true)
 
   // Evita inventar nome de vendedor; a tela só mostra o nome real ou um texto neutro.
@@ -43,6 +48,12 @@ export function CarrinhoPage() {
             vendedor: resolverNomeVendedor(item.produto.nomeVendedor),
           })
         })
+
+        setFavoritos(
+          itens
+            .map((item) => item.produto.idProduto)
+            .filter((id) => isFavorite(id))
+        )
       } catch {
         setCart([])
         saveCart([])
@@ -51,7 +62,17 @@ export function CarrinhoPage() {
       }
     }
 
+    const carregarRecomendacoes = async () => {
+      try {
+        const response = await produtoAPI.listarTodos()
+        setRecomendacoes(response.data ?? [])
+      } catch {
+        setRecomendacoes([])
+      }
+    }
+
     carregarCarrinho()
+    carregarRecomendacoes()
   }, [])
 
   const cartWithProducts = useMemo(
@@ -70,6 +91,7 @@ export function CarrinhoPage() {
           vendedor: resolverNomeVendedor(item.produto.nomeVendedor),
           local: 'Campus',
           estoque: item.produto.estoque,
+          imagemUrl: buildProductImageUrl(item.produto.idProduto),
         },
       })),
     [cart]
@@ -186,7 +208,15 @@ export function CarrinhoPage() {
 
             {cartWithProducts.map(({ carrinhoId, product: p, quantidade: q }) => (
               <div key={carrinhoId} className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 p-4 sm:flex-row sm:items-center">
-                <div className="flex h-24 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-2xl sm:w-24">📦</div>
+                <div className="flex h-24 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-2xl sm:w-24">
+                  <MediaImage
+                    src={p.imagemUrl}
+                    alt={p.nome}
+                    fallbackLabel="Sem imagem"
+                    className="h-24 w-24 rounded-2xl"
+                    imageClassName="h-24 w-24 rounded-2xl"
+                  />
+                </div>
                 <div className="flex-1">
                   <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">{p.condicao}</span>
                   <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{p.nome}</h3>
@@ -199,16 +229,53 @@ export function CarrinhoPage() {
                   <span className="w-8 text-center font-semibold text-slate-700">{q}</span>
                   <button onClick={() => atualizarQuantidade(carrinhoId, q + 1)} disabled={q >= p.estoque} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">+</button>
                   <button onClick={() => excluirItem(carrinhoId)} className="ml-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">Remover</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const favoritado = toggleFavorite({
+                        id: p.id,
+                        nome: p.nome,
+                        descricao: p.descricao,
+                        preco: p.preco,
+                        estoque: p.estoque,
+                        categoria: p.categoria,
+                      })
+                      setFavoritos((atual) =>
+                        favoritado
+                          ? [p.id, ...atual.filter((id) => id !== p.id)]
+                          : atual.filter((id) => id !== p.id)
+                      )
+                    }}
+                    className="ml-2 inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <Heart className={`h-4 w-4 ${favoritos.includes(p.id) ? 'fill-current text-red-600' : 'text-slate-500'}`} />
+                  </button>
                 </div>
               </div>
             ))}
 
             <h2 className="mt-8 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Você também pode gostar</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="flex h-36 items-center justify-center rounded-[1.5rem] border border-slate-200 bg-slate-50 font-semibold text-slate-400">
-                  Produto Recomendado
-                </div>
+              {recomendacoes.slice(0, 3).map((produto) => (
+                <Link
+                  key={produto.idProduto}
+                  to={`/produto/${produto.idProduto}`}
+                  className="group rounded-[1.5rem] border border-slate-200 bg-white p-4 transition hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <MediaImage
+                    src={buildProductImageUrl(produto.idProduto)}
+                    alt={produto.nomeProduto}
+                    fallbackLabel="Sem imagem"
+                    className="mb-4 h-32 w-full rounded-[1.25rem]"
+                    imageClassName="h-32 w-full rounded-[1.25rem]"
+                  />
+                  <h3 className="text-lg font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                  <p className="mt-2 text-sm text-slate-500 line-clamp-2">{produto.descricao || 'Sem descrição'}</p>
+                  <div className="mt-4 flex items-center justify-between text-sm text-slate-700">
+                    <span className="font-semibold text-blue-700">R$ {Number(produto.preco ?? 0).toFixed(2)}</span>
+                    <span>{produto.estoque > 0 ? `${produto.estoque} em estoque` : 'Indisponível'}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -225,8 +292,6 @@ export function CarrinhoPage() {
                 <strong className="text-xl text-blue-700">R$ {total.toFixed(2)}</strong>
               </div>
               <button onClick={confirmarpedido} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition-transform hover:scale-[1.01]">Confirmar pedido</button>
-              <button onClick={() => setModalChat(true)} className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Conversar com vendedor</button>
-              <button className="mt-3 w-full rounded-2xl border border-slate-200 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50">Salvar para depois</button>
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 p-4 text-center">
