@@ -41,15 +41,18 @@ public class PedidoService {
     private final ProdutoRepository produtoRepository;
     private final UsuarioService usuarioService;
     private final CarrinhoService carrinhoService;
+    private final AvaliacaoService avaliacaoService;
 
     public PedidoService(PedidoRepository pedidoRepository,
             ProdutoRepository produtoRepository,
             UsuarioService usuarioService,
-            CarrinhoService carrinhoService) {
+            CarrinhoService carrinhoService,
+            AvaliacaoService avaliacaoService) {
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioService = usuarioService;
         this.carrinhoService = carrinhoService;
+        this.avaliacaoService = avaliacaoService;
     }
 
     @Transactional
@@ -156,6 +159,11 @@ public class PedidoService {
             .filter(pedido -> STATUS_EM_ANALISE.equalsIgnoreCase(pedido.status()))
             .count();
 
+        Usuario vendedor = usuarioService.buscarPorEmail(emailUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        long avaliacoesRecebidas = avaliacaoService.contarAvaliacoesPorVendedor(vendedor.getId());
+        BigDecimal notaMediaRecebida = BigDecimal.valueOf(avaliacaoService.calcularNotaMediaPorVendedor(vendedor.getId()));
+
         List<ContaAtividadeResponse> atividadesRecentes = new ArrayList<>();
         pedidosCompras.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Compra", pedido.vendedor() != null ? pedido.vendedor().nome() : null)));
         pedidosRecebidos.forEach(pedido -> atividadesRecentes.add(toAtividade(pedido, "Venda", pedido.comprador() != null ? pedido.comprador().nome() : null)));
@@ -175,6 +183,8 @@ public class PedidoService {
             gastoCompras,
             ticketMedioVendas,
             ticketMedioCompras,
+            avaliacoesRecebidas,
+            notaMediaRecebida,
             atividadesRecentesOrdenadas);
         }
 

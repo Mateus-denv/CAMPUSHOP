@@ -1,9 +1,11 @@
 import { Layout } from "@/components/Layout";
 import { MediaImage } from "@/components/MediaImage";
-import { contaAPI, pedidosAPI, produtoAPI, usuarioAPI, type ContaMetricasAPI, type PedidoAPI } from "@/lib/api-service";
+import { PlanBadge } from "@/components/PlanBadge";
+import { contaAPI, pedidosAPI, produtoAPI, subscriptionAPI, usuarioAPI, type ContaMetricasAPI, type PedidoAPI, type SubscriptionAPI } from "@/lib/api-service";
 import { buildUserPhotoUrl } from "@/lib/image-utils";
 import { getFavoriteProducts, toggleFavorite } from "@/lib/shop-storage";
 import { useAuthStore } from "@/store";
+import { Crown, Lock, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -137,6 +139,8 @@ export function ContaPage() {
   const [produtoEmProcesso, setProdutoEmProcesso] = useState<number | null>(null);
   const [mensagemProdutos, setMensagemProdutos] = useState("");
   const [erroProdutos, setErroProdutos] = useState("");
+  const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null);
+  const [acaoPlano, setAcaoPlano] = useState(false);
 
   useEffect(() => {
     if (aba === "Meus Produtos") {
@@ -166,6 +170,25 @@ export function ContaPage() {
     };
 
     carregarPedidos();
+  }, [usuario]);
+
+  useEffect(() => {
+    const carregarAssinatura = async () => {
+      if (!usuario) {
+        setAssinatura(null);
+        return;
+      }
+
+      try {
+        const response = await subscriptionAPI.current();
+        setAssinatura(response.data ?? null);
+      } catch (error) {
+        console.error("Erro ao carregar assinatura:", error);
+        setAssinatura({ plan: 'ESSENTIAL', planName: 'Essencial', badgeText: 'ESSENCIAL' });
+      }
+    };
+
+    carregarAssinatura();
   }, [usuario]);
 
   const carregarMeusProdutos = async () => {
@@ -341,6 +364,67 @@ export function ContaPage() {
   const ticketMedioVendas = metricas?.ticketMedioVendas ?? 0;
   const ticketMedioCompras = metricas?.ticketMedioCompras ?? 0;
   const atividadesRecentes = metricas?.atividadesRecentes ?? [];
+  const planoAtual = assinatura?.plan ?? 'ESSENTIAL';
+  const ehPlusOuPremium = planoAtual === 'PLUS' || planoAtual === 'PREMIUM';
+  const ehPremium = planoAtual === 'PREMIUM';
+  const favoritosTotais = favoritos.length;
+  const avaliacoesRecebidas = metricas?.avaliacoesRecebidas ?? 0;
+  const notaMediaRecebida = metricas?.notaMediaRecebida ?? 0;
+  const avaliacoesPorPedido = vendasConcluidas > 0 ? (avaliacoesRecebidas / vendasConcluidas).toFixed(2) : '0.00';
+
+  const atualizarPlano = async (acao: 'upgrade' | 'downgrade' | 'cancel' | 'renew', plan?: SubscriptionAPI['plan']) => {
+    try {
+      setAcaoPlano(true);
+      if (acao === 'upgrade' && plan) {
+        await subscriptionAPI.upgrade(plan);
+      } else if (acao === 'downgrade') {
+        await subscriptionAPI.downgrade();
+      } else if (acao === 'cancel') {
+        await subscriptionAPI.cancel();
+      } else if (acao === 'renew') {
+        await subscriptionAPI.renew();
+      }
+
+      const response = await subscriptionAPI.current();
+      setAssinatura(response.data ?? null);
+    } catch (error: any) {
+      setMensagemConfig(error?.response?.data?.message || 'Não foi possível atualizar seu plano.');
+    } finally {
+      setAcaoPlano(false);
+    }
+  };
+
+  const MetricCard = ({
+    title,
+    value,
+    description,
+    locked = false,
+  }: {
+    title: string;
+    value: string | number;
+    description: string;
+    locked?: boolean;
+  }) => (
+    <div className={`relative overflow-hidden rounded-2xl border p-4 ${locked ? 'border-slate-200 bg-slate-100' : 'border-slate-200 bg-slate-50'}`}>
+      {locked ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/75 p-4 text-center backdrop-blur-sm">
+          <Lock className="h-6 w-6 text-slate-500" />
+          <p className="text-sm font-semibold text-slate-700">Disponível apenas no Plano Plus.</p>
+          <button
+            type="button"
+            onClick={() => atualizarPlano('upgrade', 'PLUS')}
+            className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+            disabled={acaoPlano}
+          >
+            Fazer Upgrade
+          </button>
+        </div>
+      ) : null}
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{title}</p>
+      <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{description}</p>
+    </div>
+  );
 
   return (
     <Layout>
@@ -362,8 +446,79 @@ export function ContaPage() {
             <p className="mt-2 text-center text-sm text-slate-500">{email}</p>
             <p className="text-center text-sm text-slate-500">{ra}</p>
             {/* Removemos indicadores sem regra de negócio consolidada para evitar dados fictícios no painel. */}
+            <div className="mt-3 flex justify-center">
+              <PlanBadge
+                text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'}
+                color={assinatura?.badgeColor}
+                icon={assinatura?.badgeIcon}
+              />
+            </div>
             <div className="mt-5 rounded-2xl border border-blue-100 bg-white p-4 text-sm text-slate-600">
               Os indicadores de desempenho serão exibidos quando as métricas reais estiverem disponíveis.
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Seu plano</p>
+              <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span>{assinatura?.planName || 'Essencial'}</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-500">
+                {ehPremium
+                  ? 'Você tem acesso ao painel completo e ao selo Premium.'
+                  : ehPlusOuPremium
+                    ? 'Você já liberou as métricas básicas e os destaques da busca.'
+                    : 'Faça upgrade para liberar mais métricas e aumentar sua visibilidade.'}
+              </p>
+              <div className="mt-4 flex flex-col gap-2">
+                {planoAtual === 'ESSENTIAL' ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => atualizarPlano('upgrade', 'PLUS')}
+                      className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+                      disabled={acaoPlano}
+                    >
+                      Fazer upgrade para Plus
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => atualizarPlano('upgrade', 'PREMIUM')}
+                      className="rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-70"
+                      disabled={acaoPlano}
+                    >
+                      Evoluir direto para Premium
+                    </button>
+                  </>
+                ) : null}
+                {planoAtual === 'PLUS' ? (
+                  <button
+                    type="button"
+                    onClick={() => atualizarPlano('upgrade', 'PREMIUM')}
+                    className="rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-70"
+                    disabled={acaoPlano}
+                  >
+                    Evoluir para Premium
+                  </button>
+                ) : null}
+                {planoAtual === 'PREMIUM' ? (
+                  <button
+                    type="button"
+                    onClick={() => atualizarPlano('downgrade')}
+                    className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-70"
+                    disabled={acaoPlano}
+                  >
+                    Voltar para Plus
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => atualizarPlano('cancel')}
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-70"
+                  disabled={acaoPlano || planoAtual === 'ESSENTIAL'}
+                >
+                  Cancelar assinatura
+                </button>
+              </div>
+            </div>
             </div>
             <a
               href="/cadastrar-produto"
@@ -411,47 +566,57 @@ export function ContaPage() {
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Visão geral</p>
                     <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                      Métricas essenciais da sua conta
+                      {ehPlusOuPremium ? 'Métricas da sua conta' : 'Métricas essenciais da sua conta'}
                     </h3>
                     <p className="mt-2 max-w-2xl text-sm text-slate-500">
-                      Resumo objetivo com vendas, compras, faturamento e pedidos em andamento.
+                      {ehPlusOuPremium
+                        ? 'Resumo liberado pelo seu plano com métricas do negócio e atividade recente.'
+                        : 'Mostramos apenas o que o seu plano Essencial libera no momento.'}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Produtos ativos</p>
-                    <p className="mt-2 text-3xl font-black text-slate-900">{produtosAtivos}</p>
-                    <p className="mt-1 text-sm text-slate-500">{produtosTotais} anúncios no total</p>
-                  </div>
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Vendas concluídas</p>
-                    <p className="mt-2 text-3xl font-black text-emerald-700">{vendasConcluidas}</p>
-                    <p className="mt-1 text-sm text-emerald-700/80">{formatarMoeda(faturamentoVendas)} em faturamento</p>
-                  </div>
-                  <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Compras concluídas</p>
-                    <p className="mt-2 text-3xl font-black text-blue-700">{comprasConcluidas}</p>
-                    <p className="mt-1 text-sm text-blue-700/80">{formatarMoeda(gastoCompras)} em compras</p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-700">Pedidos em análise</p>
-                    <p className="mt-2 text-3xl font-black text-orange-700">{pedidosPendentes}</p>
-                    <p className="mt-1 text-sm text-orange-700/80">Aguardando sua ação</p>
-                  </div>
+                  <MetricCard title="Produtos ativos" value={produtosAtivos} description={`${produtosTotais} anúncios no total`} />
+                  <MetricCard title="Compras concluídas" value={comprasConcluidas} description={`${favoritosTotais} favoritos salvos`} />
+                  <MetricCard title="Pedidos recebidos" value={pedidosRecebidos.length} description={`${pedidosPendentes} em andamento`} />
+                  <MetricCard title="Pedidos em andamento" value={pedidosPendentes} description="Aguardando sua ação" />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <MetricCard title="Vendas concluídas" value={vendasConcluidas} description={formatarMoeda(faturamentoVendas)} locked={!ehPlusOuPremium} />
+                  <MetricCard title="Ticket médio vendas" value={formatarMoeda(ticketMedioVendas)} description="Baseado nas vendas entregues" locked={!ehPlusOuPremium} />
+                  <MetricCard title="Média de avaliações" value={notaMediaRecebida.toFixed(1)} description="Recebidas pelos seus produtos" locked={!ehPlusOuPremium} />
+                  <MetricCard title="Avaliações recebidas" value={avaliacoesRecebidas} description={`${avaliacoesPorPedido} por pedido`} locked={!ehPlusOuPremium} />
                 </div>
 
                 <div className="grid gap-3 lg:grid-cols-2">
+                  <MetricCard title="Atividade recente" value={atividadesRecentes.length} description="Últimos pedidos e movimentações" locked={!ehPlusOuPremium} />
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ticket médio de vendas</p>
-                    <p className="mt-2 text-2xl font-black text-slate-900">{formatarMoeda(ticketMedioVendas)}</p>
-                    <p className="mt-1 text-sm text-slate-500">Baseado nas vendas entregues.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ticket médio de compras</p>
-                    <p className="mt-2 text-2xl font-black text-slate-900">{formatarMoeda(ticketMedioCompras)}</p>
-                    <p className="mt-1 text-sm text-slate-500">Baseado nas compras concluídas.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Seu acesso</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{assinatura?.planName || 'Essencial'}</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {ehPremium
+                        ? 'Selo Premium e acesso total à experiência visual.'
+                        : ehPlusOuPremium
+                          ? 'Métricas básicas e destaque na interface liberados.'
+                          : 'Cards bloqueados permanecem visíveis para incentivar o upgrade.'}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {ehPremium ? 'Premium' : ehPlusOuPremium ? 'Plus' : 'Essencial'}
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                        {assinatura?.remainingListings === -1 ? 'Anúncios ilimitados' : `${assinatura?.remainingListings ?? 0} anúncios restantes`}
+                      </span>
+                    </div>
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      <p className="font-semibold text-slate-900">Selo de vendedor</p>
+                      <p className="mt-2 text-sm text-slate-600">{avaliacoesRecebidas} avaliação{avaliacoesRecebidas === 1 ? '' : 'ões'} recebida{avaliacoesRecebidas === 1 ? '' : 's'}</p>
+                      <p className="mt-1 text-lg font-black text-slate-900">{notaMediaRecebida.toFixed(1)} / 10</p>
+                      <p className="mt-1 text-xs text-slate-500">Média geral do perfil</p>
+                    </div>
                   </div>
                 </div>
 
@@ -644,6 +809,20 @@ export function ContaPage() {
                 <p className="mt-1 text-slate-500">
                   Analise os pedidos abertos para liberar a negociação com o comprador.
                 </p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Selo do vendedor</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{notaMediaRecebida.toFixed(1)} / 10</p>
+                    <p className="mt-1 text-sm text-slate-500">{avaliacoesRecebidas} avaliação{avaliacoesRecebidas === 1 ? '' : 'ões'} recebida{avaliacoesRecebidas === 1 ? '' : 's'}</p>
+                    <p className="mt-3 text-sm text-slate-500">Média geral do perfil do vendedor.</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Avaliações por pedido</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{avaliacoesPorPedido}</p>
+                    <p className="mt-1 text-sm text-slate-500">Avaliações recebidas por pedido entregue.</p>
+                  </div>
+                </div>
 
                 {pedidosRecebidos.length === 0 ? (
                   <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-slate-500">

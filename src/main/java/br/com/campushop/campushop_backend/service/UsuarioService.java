@@ -41,6 +41,9 @@ public class UsuarioService {
                 usuario.getRa());
 
         // normalização
+        String nomeFormatado = formatNomeCompleto(usuario.getNomeCompleto());
+        usuario.setNomeCompleto(nomeFormatado);
+        usuario.setNomeCliente(nomeFormatado);
         usuario.setEmail(usuario.getEmail().trim().toLowerCase());
         usuario.setRa(usuario.getRa().trim());
 
@@ -113,8 +116,8 @@ public class UsuarioService {
 
         // Mantém nome de perfil e nomeCliente sincronizados para evitar divergência em
         // consultas futuras.
-        usuario.setNomeCompleto(nomeNormalizado);
-        usuario.setNomeCliente(nomeNormalizado);
+        usuario.setNomeCompleto(formatNomeCompleto(nomeNormalizado));
+        usuario.setNomeCliente(formatNomeCompleto(nomeNormalizado));
         usuario.setEmail(emailNormalizado);
 
         return usuarioRepository.save(usuario);
@@ -130,6 +133,31 @@ public class UsuarioService {
         } else {
             throw new RuntimeException("Usuário não encontrado");
         }
+    }
+
+    private String formatNomeCompleto(String nomeCompleto) {
+        if (nomeCompleto == null || nomeCompleto.isBlank()) {
+            return nomeCompleto;
+        }
+
+        String[] partes = nomeCompleto.trim().toLowerCase().split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+
+        for (int i = 0; i < partes.length; i++) {
+            String parte = partes[i];
+            if (parte.isEmpty()) {
+                continue;
+            }
+            resultado.append(Character.toUpperCase(parte.charAt(0)));
+            if (parte.length() > 1) {
+                resultado.append(parte.substring(1));
+            }
+            if (i < partes.length - 1) {
+                resultado.append(' ');
+            }
+        }
+
+        return resultado.toString();
     }
 
     // Busca usuário por ID (usado pelo frontend para exibir dados públicos do vendedor)

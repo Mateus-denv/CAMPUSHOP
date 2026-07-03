@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { pedidosAPI, type PedidoAPI } from '@/lib/api-service'
+import { PlanBadge } from '@/components/PlanBadge'
+import { pedidosAPI, subscriptionAPI, type PedidoAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -56,9 +57,19 @@ function montarAvisoPrazo(pedido: PedidoAPI) {
 export function PedidosPage() {
   const [pedidos, setPedidos] = useState<PedidoAPI[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
   const { usuario } = useAuthStore()
 
   useEffect(() => {
+    const carregarPlano = async () => {
+      try {
+        const response = await subscriptionAPI.current()
+        setAssinatura(response.data ?? null)
+      } catch {
+        setAssinatura(null)
+      }
+    }
+
     const carregarPedidos = async () => {
       try {
         setCarregando(true)
@@ -70,6 +81,7 @@ export function PedidosPage() {
       }
     }
 
+    carregarPlano()
     carregarPedidos()
   }, [usuario])
 
@@ -91,6 +103,7 @@ export function PedidosPage() {
             <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Meus pedidos</h1>
             <p className="mt-2 text-sm text-slate-500">Acompanhe o status das suas compras</p>
           </div>
+          <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
           <Link to="/produtos" className="inline-flex w-fit rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             Fazer nova compra
           </Link>
@@ -152,11 +165,19 @@ export function PedidosPage() {
               <div className="mt-4 space-y-2">
                 {pedido.itens.map((item) => {
                   return (
-                    <div key={`${pedido.id}-${item.productId}`} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
-                      <span className="font-medium text-slate-700">{item.productName}</span>
-                      <span className="text-slate-600">
-                        {item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}
-                      </span>
+                    <div key={`${pedido.id}-${item.productId}`} className="flex flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-medium text-slate-700">{item.productName}</p>
+                        <p className="text-slate-500">{item.quantidade}x • R$ {item.precoUnitario.toFixed(2)}</p>
+                      </div>
+                      {pedido.status === 'entregue' ? (
+                        <Link
+                          to={`/produto/${item.productId}`}
+                          className="inline-flex rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 transition hover:bg-blue-100"
+                        >
+                          Avaliar produto
+                        </Link>
+                      ) : null}
                     </div>
                   )
                 })}

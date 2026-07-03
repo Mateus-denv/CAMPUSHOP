@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
+import { PlanBadge } from '@/components/PlanBadge'
 import { carrinhoAPI, produtoAPI, type ProdutoAPI } from '@/lib/api-service'
 import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
@@ -19,6 +20,12 @@ type Produto = {
   vendedorNome?: string
   categoriaId?: number
   categoria?: string
+  notaMedia?: number
+  totalAvaliacoes?: number
+  planName?: string
+  badgeColor?: string
+  badgeText?: string
+  badgeIcon?: string
 }
 
 export function ProdutosPage() {
@@ -72,6 +79,12 @@ export function ProdutosPage() {
           produto.categoria?.nome_categoria ??
           produto.categoria?.nome ??
           (typeof produto.categoria === 'string' ? produto.categoria : ''),
+        notaMedia: produto.notaMedia ?? 0,
+        totalAvaliacoes: produto.totalAvaliacoes ?? 0,
+        planName: produto.planName,
+        badgeColor: produto.badgeColor,
+        badgeText: produto.badgeText,
+        badgeIcon: produto.badgeIcon,
       }))
       setProdutos(produtosNormalizados)
     } catch (err: any) {
@@ -238,7 +251,10 @@ export function ProdutosPage() {
                 imageClassName="h-48 w-full rounded-[1.25rem]"
               />
               <div className="mb-2 flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                  <PlanBadge text={produto.badgeText || produto.planName || 'ESSENCIAL'} color={produto.badgeColor} icon={produto.badgeIcon} />
+                </div>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -256,6 +272,20 @@ export function ProdutosPage() {
                 </button>
               </div>
               <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
+
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                {produto.totalAvaliacoes && produto.totalAvaliacoes > 0 ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                      <span>⭐</span>
+                      <span>{produto.notaMedia?.toFixed(1).replace('.', ',')}</span>
+                    </span>
+                    <span>({produto.totalAvaliacoes} avaliações)</span>
+                  </>
+                ) : (
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-500">Sem avaliações</span>
+                )}
+              </div>
 
               <div className="flex justify-between items-center mb-4">
                 <span className="text-2xl font-bold text-blue-700">
