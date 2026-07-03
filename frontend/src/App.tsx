@@ -1,54 +1,61 @@
-import { authAPI } from '@/lib/api-service'
-import { addAuthListener, hasAuthToken } from '@/lib/auth-listener'
-import { AjudaPage } from '@/pages/AjudaPage'
-import { AnunciarPage } from '@/pages/AnunciarPage'
-import { CadastrarProdutoPage } from '@/pages/CadastrarProdutoPage'
-import { CadastroPage } from '@/pages/CadastroPage'
-import { CarrinhoPage } from '@/pages/CarrinhoPage'
-import { CategoriasPage } from '@/pages/CategoriasPage'
-import { ChatPage } from '@/pages/ChatPage'
-import { ContaPage } from '@/pages/ContaPage'
-import { EditarContaPage } from '@/pages/EditarContaPage'
-import { HomePage } from '@/pages/HomePage'
-import { LoginPage } from '@/pages/LoginPage'
-import { ManualUsuarioPage } from '@/pages/ManualUsuarioPage'
-import { PedidosPage } from '@/pages/PedidosPage'
-import { PlanosPage } from '@/pages/PlanosPage'
-import { PrivacidadePage } from '@/pages/PrivacidadePage'
-import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
-import { TermosPage } from '@/pages/TermosPage'
-import { useAuthStore } from '@/store'
-import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { authAPI } from "@/lib/api-service";
+import { addAuthListener, hasAuthToken } from "@/lib/auth-listener";
+import { AjudaPage } from "@/pages/AjudaPage";
+import { AnunciarPage } from "@/pages/AnunciarPage";
+import { CadastrarProdutoPage } from "@/pages/CadastrarProdutoPage";
+import { CadastroPage } from "@/pages/CadastroPage";
+import { CarrinhoPage } from "@/pages/CarrinhoPage";
+import { CategoriasPage } from "@/pages/CategoriasPage";
+import { ChatPage } from "@/pages/ChatPage";
+import { ContaPage } from "@/pages/ContaPage";
+import { EditarContaPage } from "@/pages/EditarContaPage";
+import { HomePage } from "@/pages/HomePage";
+import { LoginPage } from "@/pages/LoginPage";
+import { ManualUsuarioPage } from "@/pages/ManualUsuarioPage";
+import { PedidosPage } from "@/pages/PedidosPage";
+import { PlanosPage } from "@/pages/PlanosPage";
+import { PrivacidadePage } from "@/pages/PrivacidadePage";
+import { ProdutoDetalhePage } from "@/pages/ProdutoDetalhePage";
+import { TermosPage } from "@/pages/TermosPage";
+import { useAuthStore } from "@/store";
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-const ROTAS_PROTEGIDAS = ['/carrinho', '/pedidos', '/conta', '/conta/editar', '/chat', '/cadastrar-produto']
+const ROTAS_PROTEGIDAS = [
+  "/carrinho",
+  "/pedidos",
+  "/conta",
+  "/conta/editar",
+  "/chat",
+  "/cadastrar-produto",
+];
 
 function App() {
-  const { usuario, setUsuario } = useAuthStore()
-  const [loading, setLoading] = useState(true)
-  const location = useLocation()
+  const { usuario, setUsuario } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const verificarAutenticacao = () => {
-      const token = localStorage.getItem('token')
-      const savedUser = localStorage.getItem('user')
+      const token = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
 
       // Se não há token, usuário está deslogado
       if (!token) {
-        setUsuario(null)
-        setLoading(false)
-        return
+        setUsuario(null);
+        setLoading(false);
+        return;
       }
 
       // Se há token e usuário salvo, restaura do localStorage
       if (savedUser) {
         try {
-          const userData = JSON.parse(savedUser)
-          setUsuario(userData)
-          setLoading(false)
-          return
+          const userData = JSON.parse(savedUser);
+          setUsuario(userData);
+          setLoading(false);
+          return;
         } catch {
-          localStorage.removeItem('user')
+          localStorage.removeItem("user");
         }
       }
 
@@ -56,43 +63,49 @@ function App() {
       authAPI
         .me()
         .then((response) => {
-          setUsuario(response.data)
-          localStorage.setItem('user', JSON.stringify(response.data))
+          setUsuario(response.data);
+          localStorage.setItem("user", JSON.stringify(response.data));
         })
         .catch(() => {
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          setUsuario(null)
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUsuario(null);
         })
         .finally(() => {
-          setLoading(false)
-        })
-    }
+          setLoading(false);
+        });
+    };
 
     // Executa na primeira carga
-    verificarAutenticacao()
+    verificarAutenticacao();
 
     // Listener para mudanças de autenticação (logout em qualquer aba)
     const unsubscribe = addAuthListener(() => {
       if (!hasAuthToken()) {
-        setUsuario(null)
+        setUsuario(null);
       } else {
-        verificarAutenticacao()
+        verificarAutenticacao();
       }
-    })
+    });
 
-    return () => unsubscribe()
-  }, [setUsuario])
+    return () => unsubscribe();
+  }, [setUsuario]);
 
   useEffect(() => {
     if (loading || usuario) {
-      return
+      return;
     }
 
-    if (ROTAS_PROTEGIDAS.some((rota) => location.pathname === rota || location.pathname.startsWith(`${rota}/`))) {
-      window.location.replace('/login')
+    if (
+      ROTAS_PROTEGIDAS.some(
+        (rota) =>
+          location.pathname === rota ||
+          location.pathname.startsWith(`${rota}/`),
+      )
+    ) {
+      window.location.replace("/login");
     }
-  }, [loading, location.pathname, usuario])
+  }, [loading, location.pathname, usuario]);
 
   if (loading) {
     return (
@@ -102,7 +115,7 @@ function App() {
           <p className="mt-4 text-slate-600">Carregando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -112,7 +125,12 @@ function App() {
       <Route path="/categorias" element={<Navigate to="/produtos" replace />} />
       <Route path="/produtos" element={<CategoriasPage />} />
       <Route path="/produto/:id" element={<ProdutoDetalhePage />} />
-      <Route path="/cadastrar-produto" element={usuario ? <CadastrarProdutoPage /> : <Navigate to="/login" replace />} />
+      <Route
+        path="/cadastrar-produto"
+        element={
+          usuario ? <CadastrarProdutoPage /> : <Navigate to="/login" replace />
+        }
+      />
       <Route path="/planos" element={<PlanosPage />} />
       <Route path="/ajuda" element={<AjudaPage />} />
       <Route path="/manual-usuario" element={<ManualUsuarioPage />} />
@@ -121,17 +139,42 @@ function App() {
       <Route path="/termos" element={<TermosPage />} />
       <Route path="/anunciar" element={<AnunciarPage />} />
 
-      <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
-      <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />
+      <Route
+        path="/login"
+        element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />}
+      />
+      <Route
+        path="/cadastro"
+        element={
+          usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />
+        }
+      />
 
-      <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
-      <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
-      <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
-      <Route path="/conta/editar" element={usuario ? <EditarContaPage /> : <Navigate to="/login" replace />} />
-      <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
+      <Route
+        path="/carrinho"
+        element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/pedidos"
+        element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/conta"
+        element={usuario ? <ContaPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/conta/editar"
+        element={
+          usuario ? <EditarContaPage /> : <Navigate to="/login" replace />
+        }
+      />
+      <Route
+        path="/chat"
+        element={usuario ? <ChatPage /> : <Navigate to="/login" replace />}
+      />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
