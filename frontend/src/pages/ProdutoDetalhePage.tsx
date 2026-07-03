@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuthStore } from '@/store'
+import { ProductMap } from '@/components/ProductMap'
 
 type ProdutoDetalhe = {
   idProduto: number
@@ -53,6 +54,9 @@ export function ProdutoDetalhePage() {
   const [podeAvaliar, setPodeAvaliar] = useState(false)
   const [motivoNaoAvaliar, setMotivoNaoAvaliar] = useState('')
   const { usuario } = useAuthStore()
+  const [distanciaKm, setDistanciaKm] = useState<number | null>(null)
+  const [cidadeVendedor, setCidadeVendedor] = useState<string | null>(null)
+  const [estadoVendedor, setEstadoVendedor] = useState<string | null>(null)
 
   useEffect(() => {
     const carregarProduto = async () => {
@@ -122,6 +126,35 @@ export function ProdutoDetalhePage() {
 
     carregarProduto()
   }, [id])
+
+  // Tenta obter distância do vendedor quando o produto está carregado e o navegador fornece localização.
+  useEffect(() => {
+    if (!produto) return
+
+    try {
+      if (navigator && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          try {
+            const resp = await produtoAPI.proximos(pos.coords.latitude, pos.coords.longitude, 100, undefined, undefined, Number(id))
+            if (resp.status === 200) {
+              const info = resp.data
+              // Quando produtoId for enviado, o backend retorna um objeto único
+              const item = Array.isArray(info) ? info[0] : info
+              if (item) {
+                setDistanciaKm(item.distanciaKm ?? null)
+                setCidadeVendedor(item.cidadeVendedor ?? item.cidade ?? null)
+                setEstadoVendedor(item.estadoVendedor ?? item.estado ?? null)
+              }
+            }
+          } catch (e) {
+            console.debug('Erro ao obter distância do produto', e)
+          }
+        })
+      }
+    } catch (e) {
+      console.debug('Geolocalização indisponível', e)
+    }
+  }, [produto, id])
 
   useEffect(() => {
     const carregarAvaliacoes = async () => {
@@ -557,10 +590,15 @@ export function ProdutoDetalhePage() {
               <h3 className="text-lg font-black text-slate-900">Vendedor</h3>
               <p className="mt-1 font-semibold text-slate-800">{produto.nomeVendedor || 'Vendedor não informado'}</p>
               <div className="mt-1 flex items-center justify-between text-sm text-slate-600">
-                <span>{produto.vendedorCidade || 'Localidade não informada'}</span>
+                <div>
+                  <div>{produto.vendedorCidade || 'Localidade não informada'}{produto.vendedorCidade && estadoVendedor ? `, ${estadoVendedor}` : ''}</div>
+                  {distanciaKm ? <div className="text-xs text-slate-500">📍 {distanciaKm} km de você</div> : null}
+                </div>
                 <span className="font-semibold">{produto.vendedorInstituicao || 'Instituição não informada'}</span>
               </div>
               <div className="mt-3 text-xs text-slate-600">Dados disponibilizados pelo proprietário do anúncio</div>
+              {/* Mapa aproximado da localidade do vendedor. Não revela endereço exato. */}
+              <ProductMap cidade={cidadeVendedor ?? produto.vendedorCidade ?? null} estado={estadoVendedor ?? null} />
             </div>
           </div>
         </div>

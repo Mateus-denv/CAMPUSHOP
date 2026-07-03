@@ -21,6 +21,9 @@ type Produto = {
   categoria?: string
   notaMedia?: number
   totalAvaliacoes?: number
+  distanciaKm?: number
+  cidade?: string
+  estado?: string
 }
 
 export function ProdutosPage() {
@@ -33,6 +36,8 @@ export function ProdutosPage() {
   const [notificacao, setNotificacao] = useState('')
   const [notificacaoErro, setNotificacaoErro] = useState(false)
   const [favoritos, setFavoritos] = useState<number[]>([])
+  const [proximosAtivo, setProximosAtivo] = useState(false)
+  const [raioFiltro, setRaioFiltro] = useState<number>(20)
   const termoBusca = searchParams.get('busca')?.trim().toLowerCase() ?? ''
   const categoriaFiltroIdBruto = searchParams.get('categoriaId')?.trim() ?? ''
   const categoriaFiltroNome = searchParams.get('categoria')?.trim().toLowerCase() ?? ''
@@ -81,6 +86,41 @@ export function ProdutosPage() {
     } catch (err: any) {
       setErro('Erro ao carregar produtos da API')
       console.error('Erro:', err)
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  const carregarProdutosProximos = async (lat: number, lon: number, raio: number) => {
+    try {
+      setCarregando(true)
+      const resp = await produtoAPI.proximos(lat, lon, raio, categoriaFiltroId ?? undefined, termoBusca ?? undefined)
+      const lista = resp.data ?? []
+      const produtosNormalizados: Produto[] = lista.map((produto: any) => ({
+        idProduto: Number(produto.idProduto ?? produto.id),
+        nomeProduto: produto.nomeProduto ?? produto.nome ?? '',
+        descricao: produto.descricao ?? '',
+        preco: Number(produto.preco ?? 0),
+        estoque: Number(produto.estoque ?? 0),
+        status: produto.status,
+        visivelParaComprador: produto.visivelParaComprador,
+        possuiVariantes: Boolean(produto.possuiVariantes),
+        vendedor_id: produto.vendedorId ?? produto.vendedor_id,
+        vendedorNome: produto.nomeVendedor ?? produto.vendedorNome ?? produto.usuario?.nomeCompleto ?? '',
+        categoriaId: Number(produto.categoriaId ?? produto.categoria?.idCategoria ?? produto.categoria?.id ?? 0) || undefined,
+        categoria: produto.categoriaNome ?? produto.categoria?.nome_categoria ?? produto.categoria?.nome ?? '',
+        notaMedia: produto.notaMedia ?? 0,
+        totalAvaliacoes: produto.totalAvaliacoes ?? 0,
+        // campo adicional vindo do endpoint proximos
+        distanciaKm: produto.distanciaKm,
+        cidade: produto.cidadeVendedor,
+        estado: produto.estadoVendedor,
+      }))
+
+      setProdutos(produtosNormalizados)
+    } catch (err) {
+      setErro('Erro ao carregar produtos por proximidade')
+      console.error(err)
     } finally {
       setCarregando(false)
     }
@@ -207,9 +247,40 @@ export function ProdutosPage() {
 
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-4xl font-bold">Produtos</h1>
-          <Link to="/carrinho" className="inline-flex w-fit items-center rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={proximosAtivo} onChange={async (e) => {
+                const ativo = e.target.checked
+                setProximosAtivo(ativo)
+                if (ativo) {
+                  if (!navigator || !navigator.geolocation) {
+                    setErro('Geolocalização não disponível no seu navegador')
+                    return
+                  }
+                  navigator.geolocation.getCurrentPosition(async (pos) => {
+                    await carregarProdutosProximos(pos.coords.latitude, pos.coords.longitude, raioFiltro)
+                  }, (err) => {
+                    console.debug('Erro ao obter localização', err)
+                    setErro('Permissão de geolocalização negada ou erro ao obter localização')
+                  })
+                } else {
+                  carregarProdutos()
+                }
+              }} /> Produtos próximos
+            </label>
+
+            <select value={raioFiltro} onChange={(e) => setRaioFiltro(Number(e.target.value))} className="rounded-lg border p-2 text-sm">
+              <option value={5}>5 km</option>
+              <option value={10}>10 km</option>
+              <option value={20}>20 km</option>
+              <option value={50}>50 km</option>
+              <option value={100}>100 km</option>
+            </select>
+
+            <Link to="/carrinho" className="inline-flex w-fit items-center rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50">
             Ir para carrinho ({itensNoCarrinho})
-          </Link>
+            </Link>
+          </div>
         </div>
 
         {(termoBusca || categoriaSelecionada) && (
@@ -260,6 +331,11 @@ export function ProdutosPage() {
                 </button>
               </div>
               <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
+
+              {/** Exibe distância quando disponível vindo do filtro de proximidade */}
+              { (produto as any).distanciaKm ? (
+                <div className="mb-2 text-sm text-slate-500">📍 {(produto as any).distanciaKm} km</div>
+              ) : null }
 
               <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                 {produto.totalAvaliacoes && produto.totalAvaliacoes > 0 ? (

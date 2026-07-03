@@ -1,23 +1,23 @@
 package service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.campushop.campushop_backend.model.Carrinho;
 import br.com.campushop.campushop_backend.model.Produto;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.repository.CarrinhoRepository;
+import br.com.campushop.campushop_backend.repository.ProdutoRepository;
 import br.com.campushop.campushop_backend.repository.UsuarioRepository;
 import br.com.campushop.campushop_backend.service.CarrinhoService;
 
@@ -29,6 +29,9 @@ public class CarrinhoServiceTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private ProdutoRepository produtoRepository;
 
     @InjectMocks
     private CarrinhoService service;
@@ -80,8 +83,8 @@ public class CarrinhoServiceTest {
         produto.setUsuario(vendedor);
 
         IllegalArgumentException excecao = org.junit.jupiter.api.Assertions.assertThrows(
-            IllegalArgumentException.class,
-            () -> service.adicionarAoCarrinho(10, produto, 1));
+                IllegalArgumentException.class,
+                () -> service.adicionarAoCarrinho(10, produto, 1));
 
         assertEquals("Você não pode comprar este produto porque ele pertence ao seu anúncio", excecao.getMessage());
     }

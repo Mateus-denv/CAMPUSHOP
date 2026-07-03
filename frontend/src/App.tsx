@@ -18,6 +18,7 @@ import { ProdutoDetalhePage } from '@/pages/ProdutoDetalhePage'
 import { TermosPage } from '@/pages/TermosPage'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
+import { usuarioAPI } from '@/lib/api-service'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 const ROTAS_PROTEGIDAS = ['/carrinho', '/pedidos', '/conta', '/conta/editar', '/chat', '/cadastrar-produto']
@@ -84,8 +85,35 @@ function App() {
   }, [setUsuario])
 
   useEffect(() => {
-    if (loading || usuario) {
+    if (loading || !usuario) {
       return
+    }
+
+    // Solicita permissão de geolocalização na primeira vez que o usuário autenticado entra.
+    try {
+      const asked = localStorage.getItem('geo_asked')
+      if (!asked && navigator && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            // Envia localização ao backend autenticado; se falhar, apenas registra e segue.
+            usuarioAPI
+              .atualizarLocalizacao({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+              })
+              .catch(() => {
+                // Não interrompe a aplicação se falhar.
+                console.debug('Não foi possível enviar localização ao backend')
+              })
+          },
+          (err) => {
+            console.debug('Usuário negou ou erro ao obter localização:', err)
+          }
+        )
+        localStorage.setItem('geo_asked', '1')
+      }
+    } catch (e) {
+      console.debug('Geolocalização não disponível', e)
     }
 
     if (ROTAS_PROTEGIDAS.some((rota) => location.pathname === rota || location.pathname.startsWith(`${rota}/`))) {

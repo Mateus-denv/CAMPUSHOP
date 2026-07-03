@@ -1,46 +1,60 @@
 package br.com.campushop.campushop_backend.controller;
 
-import br.com.campushop.campushop_backend.model.Produto; // Importando a classe Produto para usar nos métodos do controller
-import br.com.campushop.campushop_backend.model.ImagemAnexo;
-import br.com.campushop.campushop_backend.model.Usuario; // Importando a classe Usuario
-import br.com.campushop.campushop_backend.service.ProdutoService;
-import br.com.campushop.campushop_backend.service.UsuarioService;
-import br.com.campushop.campushop_backend.service.ImagemService;
-import br.com.campushop.campushop_backend.service.AvaliacaoService;
-import org.springframework.beans.factory.annotation.Autowired; // Importando a anotação @Autowired para injetar o ProdutoRepository
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
+import java.util.HashMap; // Importando a classe Produto para usar nos métodos do controller
+import java.util.List;
+import java.util.Map; // Importando a classe Usuario
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*; // Importando as anotações para criar endpoints REST
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication; // Importando ResponseEntity para retornar respostas HTTP adequadas
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping; // Importando as anotações para criar endpoints REST
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.annotation.Nullable;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import br.com.campushop.campushop_backend.dto.ProdutoProximoResponse;
+import br.com.campushop.campushop_backend.model.ImagemAnexo;
+import br.com.campushop.campushop_backend.model.Produto;
+import br.com.campushop.campushop_backend.model.Usuario;
+import br.com.campushop.campushop_backend.service.AvaliacaoService;
+import br.com.campushop.campushop_backend.service.GeolocalizacaoService;
+import br.com.campushop.campushop_backend.service.ImagemService;
+import br.com.campushop.campushop_backend.service.ProdutoService;
+import br.com.campushop.campushop_backend.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/produtos")
 @CrossOrigin(origins = "*")
 public class ProdutoController {
 
-    @Autowired
-    private ProdutoService produtoService;
+    private final ProdutoService produtoService;
+    private final AvaliacaoService avaliacaoService;
+    private final UsuarioService usuarioService;
+    private final ImagemService imagemService;
+    private final GeolocalizacaoService geolocalizacaoService;
 
-    @Autowired
-    private AvaliacaoService avaliacaoService;
+    public ProdutoController(ProdutoService produtoService, AvaliacaoService avaliacaoService,
+            UsuarioService usuarioService, ImagemService imagemService,
+            GeolocalizacaoService geolocalizacaoService) {
+        this.produtoService = produtoService;
+        this.avaliacaoService = avaliacaoService;
+        this.usuarioService = usuarioService;
+        this.imagemService = imagemService;
+        this.geolocalizacaoService = geolocalizacaoService;
+    }
 
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private ImagemService imagemService;
-
-    // DTO pequeno para devolver exatamente os campos usados pela tela de produtos/carrinho.
+    // DTO pequeno para devolver exatamente os campos usados pela tela de
+    // produtos/carrinho.
     public record VarianteResponse(
             Integer idProduto,
             String nomeProduto,
@@ -88,7 +102,8 @@ public class ProdutoController {
             Long totalAvaliacoes,
             List<VarianteResponse> variantes) {
 
-        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes, Double notaMedia, Long totalAvaliacoes) {
+        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes, Double notaMedia,
+                Long totalAvaliacoes) {
             // Resolve o nome do anunciante direto do usuário associado ao produto.
             Usuario usuario = produto.getUsuario();
             var categoria = produto.getCategoria();
@@ -110,7 +125,9 @@ public class ProdutoController {
                     categoria != null ? categoria.getNome_categoria() : null,
                     notaMedia,
                     totalAvaliacoes,
-                    variantes != null ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList()) : List.of());
+                    variantes != null
+                            ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList())
+                            : List.of());
         }
 
         public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes) {
@@ -122,16 +139,20 @@ public class ProdutoController {
         }
     }
 
-    public record AtualizarStatusProdutoRequest(String status) {}
+    public record AtualizarStatusProdutoRequest(String status) {
+    }
 
-    public record AtualizarVisibilidadeProdutoRequest(Boolean visivelParaComprador) {}
+    public record AtualizarVisibilidadeProdutoRequest(Boolean visivelParaComprador) {
+    }
 
-    public record ImagemResponse(Integer id, String nomeArquivo, String contentType, String url, String dataUpload) {}
+    public record ImagemResponse(Integer id, String nomeArquivo, String contentType, String url, String dataUpload) {
+    }
 
     // 1. Ler todos (Read)
     @GetMapping
     public List<ProdutoResponse> listarTodos() {
-        // Retorna um payload estável para o frontend não depender da serialização da entidade.
+        // Retorna um payload estável para o frontend não depender da serialização da
+        // entidade.
         return produtoService.listarTodos().stream()
                 .map(produto -> toProdutoResponse(produto, List.of()))
                 .collect(Collectors.toList());
@@ -160,12 +181,12 @@ public class ProdutoController {
                     return produtoService.estaDisponivelParaComprador(produto);
                 })
                 // Expõe o mesmo formato da listagem para simplificar o consumo no frontend.
-                    .map(produto -> {
-                        List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
-                                ? produtoService.listarVariantes(produto.getIdProduto())
-                                : List.of();
-                        return ResponseEntity.ok(toProdutoResponse(produto, variantes));
-                    })
+                .map(produto -> {
+                    List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
+                            ? produtoService.listarVariantes(produto.getIdProduto())
+                            : List.of();
+                    return ResponseEntity.ok(toProdutoResponse(produto, variantes));
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -180,7 +201,8 @@ public class ProdutoController {
     public ResponseEntity<?> salvar(@RequestBody Produto produto, Authentication authentication) {
         try {
             // Se não houver autenticação válida, retornar 401 explicitamente.
-            // Isso evita NPEs e fornece feedback claro ao frontend quando o token estiver ausente.
+            // Isso evita NPEs e fornece feedback claro ao frontend quando o token estiver
+            // ausente.
             if (authentication == null || !authentication.isAuthenticated() || authentication.getName() == null) {
                 Map<String, String> erroAuth = new HashMap<>();
                 erroAuth.put("erro", "Usuário não autenticado");
@@ -239,8 +261,8 @@ public class ProdutoController {
     }
 
     // 4. Atualizar produto existente (Update) - NOVO!
-        @PutMapping("/{id}")
-        public ResponseEntity<?> atualizar(@PathVariable Integer id,
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Integer id,
             @RequestBody Produto produtoAtualizado, Authentication authentication) {
         try {
             String requester = authentication != null ? authentication.getName() : null;
@@ -266,18 +288,22 @@ public class ProdutoController {
             Authentication authentication) {
         try {
             if (authentication == null || authentication.getName() == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(java.util.Map.of("message", "Não autenticado"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(java.util.Map.of("message", "Não autenticado"));
             }
 
             Produto produto = produtoService.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            if (produto.getUsuario() == null || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(java.util.Map.of("message", "Você não pode alterar imagens deste produto"));
+            if (produto.getUsuario() == null
+                    || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(java.util.Map.of("message", "Você não pode alterar imagens deste produto"));
             }
 
             List<ImagemAnexo> salvas = imagemService.salvarImagensProduto(produto, imagens);
-            return ResponseEntity.ok(salvas.stream().map(this::toImagemResponse).collect(java.util.stream.Collectors.toList()));
+            return ResponseEntity
+                    .ok(salvas.stream().map(this::toImagemResponse).collect(java.util.stream.Collectors.toList()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
@@ -320,7 +346,8 @@ public class ProdutoController {
             Produto produto = produtoService.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            if (produto.getUsuario() == null || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
+            if (produto.getUsuario() == null
+                    || !authentication.getName().equalsIgnoreCase(produto.getUsuario().getEmail())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -399,9 +426,39 @@ public class ProdutoController {
                 imagem.getDataUpload() != null ? imagem.getDataUpload().toString() : null);
     }
 
+    /**
+     * Retorna produtos próximos à coordenada informada, filtrando por raio,
+     * categoria e nome.
+     * Exemplo: `/api/produtos/proximos?latitude=-12.97&longitude=-38.5&raioKm=10`
+     */
+    @GetMapping("/proximos")
+    public ResponseEntity<?> listarProximos(@RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) Double raioKm,
+            @RequestParam(required = false) Integer categoria,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) Integer produtoId) {
+
+        if (latitude == null || longitude == null || raioKm == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Parâmetros 'latitude', 'longitude' e 'raioKm' são obrigatórios"));
+        }
+
+        try {
+            var todos = produtoService.listarTodos();
+            List<ProdutoProximoResponse> proximos = geolocalizacaoService.buscarProdutosProximos(latitude,
+                    longitude, raioKm, categoria, nome, produtoId);
+            return ResponseEntity.ok(proximos);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao buscar produtos próximos"));
+        }
+    }
+
     private ResponseEntity<byte[]> buildImageResponse(ImagemAnexo imagem) {
+        String contentType = imagem.getContentType() != null ? imagem.getContentType() : "application/octet-stream";
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(imagem.getContentType()))
+                .contentType(MediaType.parseMediaType(contentType))
                 .body(imagem.getDados());
     }
 }

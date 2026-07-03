@@ -277,6 +277,8 @@ export const produtoAPI = {
   },
   excluirImagem: (produtoId: number, imagemId: number) => api.delete(`/api/produtos/${produtoId}/imagens/${imagemId}`),
   deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
+  proximos: (latitude: number, longitude: number, raioKm: number, categoria?: number, nome?: string, produtoId?: number) =>
+    api.get('/api/produtos/proximos', { params: { latitude, longitude, raioKm, categoria, nome, produtoId } }),
 }
 // Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.
 export const usuarioAPI = {
@@ -293,4 +295,6 @@ export const usuarioAPI = {
     return api.post('/api/usuarios/me/foto', formData)
   },
   excluir: (id: number) => api.delete(`/api/usuarios/${id}`), // Centraliza chamada da exclusão de usuário autenticado no backend.
+  atualizarLocalizacao: (payload: { latitude: number; longitude: number; cidade?: string; estado?: string; cep?: string; endereco?: string }) =>
+    api.put('/api/usuarios/localizacao', payload),
 }

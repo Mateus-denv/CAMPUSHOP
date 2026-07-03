@@ -46,11 +46,20 @@ function normalizarProduto(produto: any): ProdutoHome {
     preco: Number(produto.preco ?? produto.precoOriginal ?? 0),
     vendedorNome:
       produto.nomeVendedor ?? produto.vendedorNome ?? produto.usuario?.nomeCompleto ?? produto.usuario?.nomeCliente ?? produto.vendedor ?? 'Vendedor do campus',
-    local: produto.local ?? produto.cidade ?? produto.instituicao ?? '',
+    local: displayLocalComDistancia(produto),
     categoriaId: Number.isFinite(categoriaId) && categoriaId > 0 ? categoriaId : undefined,
     categoria: categoriaNome || 'Sem categoria',
   }
 }
+
+  // Modifica local para incluir a distância quando disponível
+  function displayLocalComDistancia(produto: any) {
+    const base = produto.local ?? produto.cidade ?? produto.instituicao ?? ''
+    if (produto.distanciaKm != null) {
+      return `${base} • ${produto.distanciaKm} km`
+    }
+    return base
+  }
 
 function agruparCategorias(produtos: ProdutoHome[]) {
   const mapa = new Map<string, CategoriaHome>()
@@ -114,9 +123,24 @@ export function HomePage() {
   const [categorias, setCategorias] = useState<CategoriaHome[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
+  const [proximosAtivo, setProximosAtivo] = useState(false)
+  const [raioFiltro, setRaioFiltro] = useState<number>(20)
 
   // termo de busca usado para filtrar destaques
   const termoBusca = busca.trim().toLowerCase()
+
+  async function carregarProdutosProximos(lat: number, lon: number, raio: number) {
+    try {
+      setCarregando(true)
+      const resp = await produtoAPI.proximos(lat, lon, raio)
+      const produtosNormalizados = (resp.data ?? []).map((p: any) => normalizarProduto(p))
+      setProdutos(produtosNormalizados)
+    } catch (e) {
+      console.debug('Erro ao carregar produtos próximos', e)
+    } finally {
+      setCarregando(false)
+    }
+  }
 
   // Carrega dados do backend, mas usa fallback para mocks locais quando necessário.
   useEffect(() => {
@@ -259,12 +283,38 @@ export function HomePage() {
                   className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                 />
               </label>
-              <Link
-                to={busca.trim() ? { pathname: '/produtos', search: `?busca=${encodeURIComponent(busca.trim())}` } : '/produtos'}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-transform hover:scale-[1.01]"
-              >
-                Explorar agora <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={proximosAtivo} onChange={(e) => {
+                    const ativo = e.target.checked
+                    setProximosAtivo(ativo)
+                    if (ativo && navigator && navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition((pos) => {
+                        carregarProdutosProximos(pos.coords.latitude, pos.coords.longitude, raioFiltro)
+                      }, (err) => console.debug('Geo denied', err))
+                    }
+                    if (!ativo) {
+                      // Recarrega a home com dados padrão
+                      window.location.reload()
+                    }
+                  }} /> Produtos próximos
+                </label>
+
+                <select value={raioFiltro} onChange={(e) => setRaioFiltro(Number(e.target.value))} className="rounded-lg border p-2 text-sm">
+                  <option value={5}>5 km</option>
+                  <option value={10}>10 km</option>
+                  <option value={20}>20 km</option>
+                  <option value={50}>50 km</option>
+                  <option value={100}>100 km</option>
+                </select>
+
+                <Link
+                  to={busca.trim() ? { pathname: '/produtos', search: `?busca=${encodeURIComponent(busca.trim())}` } : '/produtos'}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-transform hover:scale-[1.01]"
+                >
+                  Explorar agora <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
 
             <p className="mt-3 text-sm text-blue-50/80">

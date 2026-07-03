@@ -3,6 +3,7 @@ package br.com.campushop.campushop_backend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuario")
@@ -23,6 +24,21 @@ public class Usuario {
 
     @Column(name = "cidade", length = 100)
     private String cidade;
+
+    @Column(name = "estado", length = 100)
+    private String estado;
+
+    @Column(name = "cep", length = 20)
+    private String cep;
+
+    @Column(name = "endereco", length = 255)
+    private String endereco;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     // Forçando o nome exato do diagrama
     @Column(name = "nomeCliente", nullable = false, length = 100)
@@ -54,6 +70,9 @@ public class Usuario {
 
     @Column(name = "data_cadastro", nullable = false)
     private LocalDate dataCadastro;
+
+    @Column(name = "ultima_atualizacao_localizacao")
+    private LocalDateTime ultimaAtualizacaoLocalizacao;
 
     @Column(name = "saldo_vendas", nullable = false, precision = 38, scale = 2)
     private BigDecimal saldoVendas = BigDecimal.ZERO;
@@ -114,6 +133,46 @@ public class Usuario {
 
     public void setCidade(String cidade) {
         this.cidade = cidade;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public String getNomeCliente() {
@@ -188,6 +247,14 @@ public class Usuario {
         this.dataCadastro = dataCadastro;
     }
 
+    public LocalDateTime getUltimaAtualizacaoLocalizacao() {
+        return ultimaAtualizacaoLocalizacao;
+    }
+
+    public void setUltimaAtualizacaoLocalizacao(LocalDateTime ultimaAtualizacaoLocalizacao) {
+        this.ultimaAtualizacaoLocalizacao = ultimaAtualizacaoLocalizacao;
+    }
+
     public BigDecimal getSaldoVendas() {
         return saldoVendas;
     }
@@ -218,9 +285,15 @@ public class Usuario {
                 ", cpfCnpj='" + cpfCnpj + '\'' +
                 ", instituicaoEnsino='" + instituicaoEnsino + '\'' +
                 ", localizacaoGps='" + localizacaoGps + '\'' +
+                ", estado='" + estado + '\'' +
+                ", cep='" + cep + '\'' +
+                ", endereco='" + endereco + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
                 ", ativado=" + ativado +
                 ", dataNascimento=" + dataNascimento +
                 ", dataCadastro=" + dataCadastro +
+                ", ultimaAtualizacaoLocalizacao=" + ultimaAtualizacaoLocalizacao +
                 '}';
     }
 }

@@ -1,10 +1,10 @@
 package br.com.campushop.campushop_backend.service;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,6 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioValidator usuarioValidator;
 
-    @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
             UsuarioValidator usuarioValidator) {
         this.usuarioRepository = usuarioRepository;
@@ -121,20 +120,53 @@ public class UsuarioService {
     }
 
     public void excluirUsuario(Integer id) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+        Integer usuarioId = Objects.requireNonNull(id, "ID do usuário não pode ser nulo");
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(usuarioId);
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
             usuario.setAtivado(false);
             usuarioRepository.save(usuario);
-            logger.info("Usuário desativado com sucesso! ID: {}", id);
+            logger.info("Usuário desativado com sucesso! ID: {}", usuarioId);
         } else {
             throw new RuntimeException("Usuário não encontrado");
         }
     }
 
-    // Busca usuário por ID (usado pelo frontend para exibir dados públicos do vendedor)
+    // Busca usuário por ID (usado pelo frontend para exibir dados públicos do
+    // vendedor)
     public Optional<Usuario> buscarPorId(Integer id) {
-        return usuarioRepository.findById(id);
+        Integer usuarioId = Objects.requireNonNull(id, "ID do usuário não pode ser nulo");
+        return usuarioRepository.findById(usuarioId);
+    }
+
+    /**
+     * Atualiza os campos de localização do usuário identificado pelo email.
+     * Mantém a lógica de domínio no service e salva a última data de atualização.
+     */
+    public Usuario atualizarLocalizacao(String emailAutenticado,
+            Double latitude,
+            Double longitude,
+            String cidade,
+            String estado,
+            String cep,
+            String endereco) {
+
+        Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setLatitude(latitude);
+        usuario.setLongitude(longitude);
+        if (cidade != null)
+            usuario.setCidade(cidade);
+        if (estado != null)
+            usuario.setEstado(estado);
+        if (cep != null)
+            usuario.setCep(cep);
+        if (endereco != null)
+            usuario.setEndereco(endereco);
+        usuario.setUltimaAtualizacaoLocalizacao(java.time.LocalDateTime.now());
+
+        return usuarioRepository.save(usuario);
     }
 
 }

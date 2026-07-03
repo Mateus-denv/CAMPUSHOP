@@ -3,7 +3,6 @@ package br.com.campushop.campushop_backend.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +16,16 @@ import br.com.campushop.campushop_backend.repository.UsuarioRepository;
 @Service
 public class CarrinhoService {
 
-    @Autowired
-    private CarrinhoRepository carrinhoRepository;
+    private final CarrinhoRepository carrinhoRepository;
+    private final UsuarioRepository usuarioRepository; // usado para buscar entidade Usuario por id
+    private final ProdutoRepository produtoRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository; // usado para buscar entidade Usuario por id
-
-    @Autowired
-    private ProdutoRepository produtoRepository;
+    public CarrinhoService(CarrinhoRepository carrinhoRepository, UsuarioRepository usuarioRepository,
+            ProdutoRepository produtoRepository) {
+        this.carrinhoRepository = carrinhoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.produtoRepository = produtoRepository;
+    }
 
     // Listar itens do carrinho por usuário
     public List<Carrinho> listarPorUsuario(Integer usuarioId) {
@@ -49,11 +50,13 @@ public class CarrinhoService {
 
     // Adicionar item ao carrinho
     public Carrinho adicionarAoCarrinho(Integer usuarioId, Produto produto, Integer quantidade) {
-        if (produto != null && produto.getProdutoPai() == null && produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0) {
+        if (produto != null && produto.getProdutoPai() == null
+                && produtoRepository.countByProdutoPai_IdProduto(produto.getIdProduto()) > 0) {
             throw new IllegalArgumentException("Selecione uma variante antes de adicionar este anúncio ao carrinho");
         }
 
-        // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso seria uma compra inválida.
+        // O vendedor não pode adicionar o próprio produto ao carrinho, porque isso
+        // seria uma compra inválida.
         if (produto != null && produto.getUsuario() != null && produto.getUsuario().getId() != null
                 && produto.getUsuario().getId().equals(usuarioId)) {
             throw new IllegalArgumentException("Você não pode comprar este produto porque ele pertence ao seu anúncio");
@@ -136,9 +139,9 @@ public class CarrinhoService {
                 .sum();
     }
 
-    // Valida se há estoque suficiente para o item  
+    // Valida se há estoque suficiente para o item
     public boolean validarEstoque(Produto produto, Integer quantidade) {
         return quantidade != null && quantidade > 0 && produto.getEstoque() >= quantidade;
     }
-    
+
 }
