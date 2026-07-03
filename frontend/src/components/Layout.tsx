@@ -14,7 +14,7 @@ import {
   User,
 } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { PlanBadge } from "./PlanBadge";
 
@@ -89,6 +89,7 @@ export function Layout({ children }: LayoutProps) {
     return partes.slice(0, 2).join(" ");
   };
 
+  const location = useLocation();
   const nomeNavbar = formatNomeNavbar(usuario?.nomeCompleto ?? usuario?.nome);
   const handleLogout = () => {
     setUsuario(null);
@@ -96,6 +97,8 @@ export function Layout({ children }: LayoutProps) {
     // Recarrega a página após logout para limpar estado e componentes
     window.location.href = "/home";
   };
+
+  const exibirBadgePlano = usuario && location.pathname !== "/chat";
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_#dbeafe_0,_#eff6ff_24%,_#f8fafc_58%,_#ffffff_100%)] text-slate-900">
@@ -147,15 +150,17 @@ export function Layout({ children }: LayoutProps) {
                 >
                   <User className="h-4 w-4 text-slate-600" />
                   <span>{nomeNavbar}</span>
-                  <PlanBadge
-                    text={
-                      planoUsuario?.badgeText ||
-                      planoUsuario?.planName ||
-                      "ESSENCIAL"
-                    }
-                    color={planoUsuario?.badgeColor}
-                    icon={planoUsuario?.badgeIcon}
-                  />
+                  {exibirBadgePlano ? (
+                    <PlanBadge
+                      text={
+                        planoUsuario?.badgeText ||
+                        planoUsuario?.planName ||
+                        "ESSENCIAL"
+                      }
+                      color={planoUsuario?.badgeColor}
+                      icon={planoUsuario?.badgeIcon}
+                    />
+                  ) : null}
                 </Link>
                 <button
                   onClick={handleLogout}
