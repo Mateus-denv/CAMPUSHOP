@@ -120,7 +120,7 @@ export function RedefinirSenhaPage() {
               </div>
 
               <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
-                Salvar
+                Redefinir senha
               </Button>
             </form>
 

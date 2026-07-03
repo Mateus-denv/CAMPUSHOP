@@ -338,6 +338,19 @@ export const authAPI = {
   },
   me: () => api.get("/api/auth/me"),
 };
+
+export const passwordResetAPI = {
+  solicitarReset: (email: string) =>
+    api.post('/api/auth/esqueci-senha', {
+      email,
+    }),
+  redefinirSenha: (token: string, novaSenha: string) =>
+    api.post('/api/auth/redefinir-senha', {
+      token,
+      novaSenha,
+    }),
+};
+
 // Centraliza chamadas relacionadas a produtos, como listagem, criação e exclusão.
 export const produtoAPI = {
   listarTodos: () => api.get("/api/produtos"), // Mantém a função de listar produtos para uso geral, como na página inicial.

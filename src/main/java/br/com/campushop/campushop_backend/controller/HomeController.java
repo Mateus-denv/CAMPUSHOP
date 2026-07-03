@@ -82,4 +82,18 @@ public class HomeController {
         return "forward:/index.html";
     }
 
+    @GetMapping("/esqueci-senha")
+    public String esqueciSenha() {
+        // Permite que a SPA renderize a página de recuperação quando o usuário acessa
+        // diretamente esta rota
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/redefinir-senha")
+    public String redefinirSenha() {
+        // Permite que a SPA renderize a página de redefinição de senha quando acessada
+        // por link
+        return "forward:/index.html";
+    }
+
 }

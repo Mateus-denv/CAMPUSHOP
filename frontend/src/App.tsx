@@ -16,6 +16,8 @@ import { PedidosPage } from "@/pages/PedidosPage";
 import { PlanosPage } from "@/pages/PlanosPage";
 import { PrivacidadePage } from "@/pages/PrivacidadePage";
 import { ProdutoDetalhePage } from "@/pages/ProdutoDetalhePage";
+import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage";
+import { RedefinirSenhaPage } from "@/pages/RedefinirSenhaPage";
 import { TermosPage } from "@/pages/TermosPage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
