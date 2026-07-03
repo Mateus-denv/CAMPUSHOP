@@ -55,7 +55,7 @@ public class ChatServiceTest {
         when(pedidoRepository.findDetalhadoById(10)).thenReturn(Optional.of(pedido));
 
         RuntimeException excecao = assertThrows(RuntimeException.class,
-                () -> service.enviarMensagem(10, "comprador@email.com", "Olá", Boolean.TRUE));
+                () -> service.enviarMensagem(10, "comprador@email.com", "Olá", true));
 
         assertTrue(excecao.getMessage().contains("não está disponível"));
     }
