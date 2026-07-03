@@ -16,6 +16,9 @@ type ProdutoHome = {
   local: string
   categoriaId?: number
   categoria: string
+  distanciaKm?: number
+  cidade?: string
+  estado?: string
 }
 
 type CategoriaHome = {
@@ -49,6 +52,9 @@ function normalizarProduto(produto: any): ProdutoHome {
     local: displayLocalComDistancia(produto),
     categoriaId: Number.isFinite(categoriaId) && categoriaId > 0 ? categoriaId : undefined,
     categoria: categoriaNome || 'Sem categoria',
+    distanciaKm: produto.distanciaKm ?? produto.distancia ?? null,
+    cidade: produto.cidadeVendedor ?? produto.cidade ?? produto.usuario?.cidade ?? undefined,
+    estado: produto.estadoVendedor ?? produto.estado ?? undefined,
   }
 }
 
@@ -70,6 +76,12 @@ function normalizarProduto(produto: any): ProdutoHome {
       return base ? `${base} • ${distanceLabel}` : distanceLabel
     }
     return base
+  }
+
+  const buildGoogleMapsUrl = (cidade?: string, estado?: string) => {
+    if (!cidade) return undefined
+    const query = encodeURIComponent([cidade, estado].filter(Boolean).join(', '))
+    return `https://www.google.com/maps/search/?api=1&query=${query}`
   }
 
 function agruparCategorias(produtos: ProdutoHome[]) {
@@ -391,11 +403,23 @@ export function HomePage() {
                           {destaqueAtual.vendedorNome}
                         </p>
                         {destaqueAtual.local ? (
-                          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                            <span>📍</span>
-                            <span>{destaqueAtual.local}</span>
-                          </div>
-                        ) : null}
+                    buildGoogleMapsUrl(destaqueAtual.cidade, destaqueAtual.estado) ? (
+                      <a
+                        href={buildGoogleMapsUrl(destaqueAtual.cidade, destaqueAtual.estado)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                      >
+                        <span>📍</span>
+                        <span>{destaqueAtual.local}</span>
+                      </a>
+                    ) : (
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                        <span>📍</span>
+                        <span>{destaqueAtual.local}</span>
+                      </div>
+                    )
+                  ) : null}
                       </div>
                       <p className="text-2xl font-extrabold text-slate-900">{formatarPreco(destaqueAtual.preco)}</p>
                     </div>

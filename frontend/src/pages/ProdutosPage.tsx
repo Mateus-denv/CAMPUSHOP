@@ -318,17 +318,24 @@ export function ProdutosPage() {
           {produtosFiltrados.map((produto) => (
             <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="relative rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               {/* Distância em badge destacado (melhor contraste e tamanho) */}
-              { (produto as any).distanciaKm ? (
-                <a
-                  href={buildGoogleMapsUrl(produto.cidade, produto.estado) ?? '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={produto.cidade ? 'Abrir local no Google Maps' : 'Distância disponível'}
-                  className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-md text-sm transition hover:bg-slate-50"
-                >
-                  <span className="text-xs">📍</span>
-                  <span className="text-lg font-extrabold text-blue-700">{formatDistanceLabel((produto as any).distanciaKm)}</span>
-                </a>
+              {produto.distanciaKm != null ? (
+                buildGoogleMapsUrl(produto.cidade, produto.estado) ? (
+                  <a
+                    href={buildGoogleMapsUrl(produto.cidade, produto.estado)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Abrir local no Google Maps"
+                    className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-md text-sm transition hover:bg-slate-50"
+                  >
+                    <span className="text-xs">📍</span>
+                    <span className="text-lg font-extrabold text-blue-700">{formatDistanceLabel(produto.distanciaKm)}</span>
+                  </a>
+                ) : (
+                  <div className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-md text-sm text-slate-700">
+                    <span className="text-xs">📍</span>
+                    <span className="text-lg font-extrabold text-blue-700">{formatDistanceLabel(produto.distanciaKm)}</span>
+                  </div>
+                )
               ) : null}
               <MediaImage
                 src={`/api/produtos/${produto.idProduto}/imagens/principal`}

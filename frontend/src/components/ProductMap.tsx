@@ -1,5 +1,3 @@
-import React from 'react'
-
 type Props = {
   cidade?: string | null
   estado?: string | null
@@ -10,14 +8,15 @@ export function ProductMap({ cidade, estado }: Props) {
 
   if (!key || !cidade) return null
 
-  const q = encodeURIComponent([cidade, estado].filter(Boolean).join(', '))
-  const src = `https://www.google.com/maps/embed/v1/place?key=${key}&q=${q}&zoom=12`
-
-  const searchUrl = `https://www.google.com/maps/search/?api=1&query=${q}`
+  // Cria query segura para os parâmetros de cidade/estado.
+  const query = [cidade, estado].filter(Boolean).join(', ')
+  const encodedQuery = encodeURIComponent(query)
+  const src = `https://www.google.com/maps/embed/v1/place?key=${key}&q=${encodedQuery}&zoom=12`
+  const searchUrl = `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`
 
   return (
     <div className="mt-4 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <a href={searchUrl} target="_blank" rel="noreferrer" className="block h-48 w-full overflow-hidden text-transparent">
+      <div className="relative h-48 w-full overflow-hidden bg-slate-100">
         <iframe
           title="Mapa aproximado"
           width="100%"
@@ -26,10 +25,17 @@ export function ProductMap({ cidade, estado }: Props) {
           src={src}
           style={{ border: 0 }}
         />
-      </a>
+        <a
+          href={searchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute inset-0 z-10 bg-transparent"
+          aria-label="Abrir mapa aproximado no Google Maps"
+        />
+      </div>
       <div className="flex flex-col gap-2 px-3 py-2 text-sm text-slate-600">
-        <span>Local aproximado (cidade/região).</span>
-        <a href={searchUrl} target="_blank" rel="noreferrer" className="font-semibold text-blue-700 underline-offset-2 transition hover:text-blue-900 hover:underline">
+        <span>Local aproximado (cidade/região). Endereço exato não é exibido.</span>
+        <a href={searchUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline-offset-2 transition hover:text-blue-900 hover:underline">
           Abrir no Google Maps
         </a>
       </div>

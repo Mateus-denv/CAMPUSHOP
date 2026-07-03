@@ -70,6 +70,8 @@ export function ProdutoDetalhePage() {
     return `https://www.google.com/maps/search/?api=1&query=${query}`
   }
 
+  const mapsUrl = buildGoogleMapsUrl(cidadeVendedor ?? produto?.vendedorCidade, estadoVendedor)
+
   useEffect(() => {
     const carregarProduto = async () => {
       const produtoId = Number(id)
@@ -605,12 +607,23 @@ export function ProdutoDetalhePage() {
                 <div>
                   <div className="flex items-center gap-3">
                     <div>{produto.vendedorCidade || 'Localidade não informada'}{produto.vendedorCidade && estadoVendedor ? `, ${estadoVendedor}` : ''}</div>
-                    {distanciaKm ? (
-                      <div className="inline-flex items-baseline gap-2 rounded-full bg-blue-600 px-3 py-1 text-white shadow-md">
-                        <span className="text-sm">📍</span>
-                        <span className="text-lg font-extrabold">{distanciaKm}</span>
-                        <span className="text-sm">km</span>
-                      </div>
+                    {distanciaKm != null ? (
+                      mapsUrl ? (
+                        <a
+                          href={mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-baseline gap-2 rounded-full bg-blue-600 px-3 py-1 text-white shadow-md transition hover:bg-blue-700"
+                        >
+                          <span className="text-sm">📍</span>
+                          <span className="text-lg font-extrabold">{formatDistanceLabel(distanciaKm)}</span>
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-baseline gap-2 rounded-full bg-slate-100 px-3 py-1 text-slate-900 shadow-sm">
+                          <span className="text-sm">📍</span>
+                          <span className="text-lg font-extrabold">{formatDistanceLabel(distanciaKm)}</span>
+                        </span>
+                      )
                     ) : null}
                   </div>
                 </div>

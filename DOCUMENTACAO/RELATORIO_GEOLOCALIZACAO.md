@@ -319,6 +319,16 @@ ALTER TABLE usuario
 
 ---
 
+## 7. Validação final e status da branch
+
+- O frontend foi compilado com sucesso após as alterações, usando `npm run build` em `frontend/`.
+- Não há erros de TypeScript nos arquivos principais de geolocalização (`HomePage.tsx`, `ProdutosPage.tsx`, `ProdutoDetalhePage.tsx`, `ProductMap.tsx`).
+- As mudanças contemplam distância menor que 1 km como `Perto de você`, badge de distância clicável no mapa e visual consistente nas telas de listagem e detalhe.
+- Branch atual: `feature/geolocalizacao`.
+- O relatório será atualizado e a branch será publicada no repositório remoto.
+
+---
+
 ## 7. APIs criadas
 
 ### PUT /api/usuarios/localizacao
