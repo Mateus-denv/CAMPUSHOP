@@ -13,5 +13,7 @@ public record ContaMetricasResponse(
         BigDecimal gastoCompras,
         BigDecimal ticketMedioVendas,
         BigDecimal ticketMedioCompras,
+        long avaliacoesRecebidas,
+        BigDecimal notaMediaRecebida,
         List<ContaAtividadeResponse> atividadesRecentes) {
 }

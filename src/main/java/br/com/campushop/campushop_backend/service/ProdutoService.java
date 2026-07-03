@@ -1,8 +1,10 @@
 package br.com.campushop.campushop_backend.service;
 
 import br.com.campushop.campushop_backend.model.Categoria;
+import br.com.campushop.campushop_backend.model.PlanType;
 import br.com.campushop.campushop_backend.model.Produto;
 import br.com.campushop.campushop_backend.model.Usuario;
+import br.com.campushop.campushop_backend.exception.PlanLimitExceededException;
 import br.com.campushop.campushop_backend.repository.CategoriaRepository;
 import br.com.campushop.campushop_backend.repository.ProdutoRepository;
 import br.com.campushop.campushop_backend.validation.ProdutoValidator;
@@ -29,18 +31,23 @@ public class ProdutoService {
     private final CategoriaRepository categoriaRepository;
     private final ProdutoValidator produtoValidator;
     private final br.com.campushop.campushop_backend.service.ImagemService imagemService;
+    private final SubscriptionService subscriptionService;
 
     @Autowired
     public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository,
-            ProdutoValidator produtoValidator, br.com.campushop.campushop_backend.service.ImagemService imagemService) {
+            ProdutoValidator produtoValidator, br.com.campushop.campushop_backend.service.ImagemService imagemService,
+            SubscriptionService subscriptionService) {
         this.produtoRepository = produtoRepository;
         this.categoriaRepository = categoriaRepository;
         this.produtoValidator = produtoValidator;
         this.imagemService = imagemService; // injetando serviço de imagens para remoção em lote
+        this.subscriptionService = subscriptionService;
     }
 
     public Produto salvar(Produto produto) {
         logger.info("Tentando salvar produto: {}", produto.getNomeProduto());
+
+        validarLimiteDeAnuncios(produto.getUsuario());
 
         // Produtos novos entram visíveis e ativos por padrão para manter o fluxo atual.
         if (produto.getStatus() == null || produto.getStatus().trim().isEmpty()) {
@@ -85,7 +92,7 @@ public class ProdutoService {
 
     public List<Produto> listarTodos() {
         // A listagem pública mostra só o que está ativo e visível para compradores.
-        return produtoRepository.findAllDisponiveis();
+        return produtoRepository.findAllDisponiveisOrdenadosPorPlano();
     }
 
     public List<Produto> listarPorUsuario(String email) {
@@ -251,6 +258,13 @@ public class ProdutoService {
         return produtoRepository.countByProdutoPai_IdProduto(produtoId) > 0;
     }
 
+    public long contarAnunciosPrincipaisPorEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return 0L;
+        }
+        return produtoRepository.countByUsuario_EmailAndProdutoPaiIsNull(email.trim().toLowerCase());
+    }
+
     private String normalizarStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
             return STATUS_ATIVO;
@@ -348,5 +362,19 @@ public class ProdutoService {
         produtoPai.setEstoque(estoqueTotal);
         produtoPai.setPreco(menorPreco);
         produtoRepository.save(produtoPai);
+    }
+
+    private void validarLimiteDeAnuncios(Usuario usuario) {
+        if (usuario == null || usuario.getEmail() == null) {
+            return;
+        }
+
+        long anunciosAtivos = produtoRepository.countByUsuario_EmailAndProdutoPaiIsNull(usuario.getEmail());
+        PlanType planType = subscriptionService.getCurrentPlan(usuario).getPlan();
+        int limite = PlanPermissions.of(planType).maxListings();
+
+        if (anunciosAtivos >= limite) {
+            throw new PlanLimitExceededException("Você atingiu o limite do seu plano. Faça upgrade para continuar.");
+        }
     }
 }

@@ -247,6 +247,22 @@ public class AvaliacaoService {
         return pedidoRepository.existsPedidoEntreguePorCompradorEmailEProdutoId(usuario.getEmail(), idProduto);
     }
 
+    public Double calcularNotaMediaPorVendedor(Integer vendedorId) {
+        logger.info("Calculando nota média recebida para vendedor {}", vendedorId);
+        if (!usuarioRepository.existsById(vendedorId)) {
+            throw new RuntimeException("Vendedor com ID " + vendedorId + " não encontrado");
+        }
+        return avaliacaoRepository.calcularNotaMediaPorVendedor(vendedorId);
+    }
+
+    public Long contarAvaliacoesPorVendedor(Integer vendedorId) {
+        logger.info("Contando avaliações recebidas para vendedor {}", vendedorId);
+        if (!usuarioRepository.existsById(vendedorId)) {
+            throw new RuntimeException("Vendedor com ID " + vendedorId + " não encontrado");
+        }
+        return avaliacaoRepository.contarAvaliacoesPorVendedor(vendedorId);
+    }
+
     /**
      * Converte uma entidade Avaliacao para AvaliacaoResponse DTO.
      */

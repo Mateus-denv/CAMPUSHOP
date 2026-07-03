@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { chatAPI, type ChatMensagemAPI, type ChatPedidoAPI } from '@/lib/api-service'
+import { PlanBadge } from '@/components/PlanBadge'
+import { chatAPI, subscriptionAPI, type ChatMensagemAPI, type ChatPedidoAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { useEffect, useMemo, useState } from 'react'
 
 export function ChatPage() {
@@ -9,8 +10,18 @@ export function ChatPage() {
   const [texto, setTexto] = useState('')
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
 
   useEffect(() => {
+    const carregarPlano = async () => {
+      try {
+        const response = await subscriptionAPI.current()
+        setAssinatura(response.data ?? null)
+      } catch {
+        setAssinatura(null)
+      }
+    }
+
     const carregarPedidos = async () => {
       setCarregando(true)
       try {
@@ -23,6 +34,7 @@ export function ChatPage() {
       }
     }
 
+    carregarPlano()
     carregarPedidos()
   }, [])
 
@@ -75,6 +87,7 @@ export function ChatPage() {
               <h2 className="text-xl font-black text-slate-900">Conversas</h2>
               <p className="mt-1 text-sm text-slate-500">Cliente x vendedor</p>
             </div>
+            <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
           </div>
 
           {carregando && pedidos.length === 0 ? (
@@ -125,9 +138,12 @@ export function ChatPage() {
                   <h1 className="text-3xl font-black text-slate-900">{pedidoSelecionado.parceiroNome}</h1>
                   <p className="text-sm text-slate-500">{pedidoSelecionado.produtoNome}</p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
-                  {pedidoSelecionado.status}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
+                  <span className="rounded-full bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
+                    {pedidoSelecionado.status}
+                  </span>
+                </div>
               </div>
 
               <div className="flex min-h-[420px] flex-col gap-4 rounded-[2rem] border border-slate-200 bg-slate-50 p-4">

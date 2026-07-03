@@ -1,6 +1,7 @@
 import { MediaImage } from '@/components/MediaImage'
+import { PlanBadge } from '@/components/PlanBadge'
 import { Button, Card, Input } from '@/components/UI'
-import { categoriaAPI, produtoAPI, type ProdutoImagemAPI } from '@/lib/api-service'
+import { categoriaAPI, produtoAPI, subscriptionAPI, type ProdutoImagemAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { buildProductImageUrl, getAllowedImageAccept, getImageGuidance, validateImageFile } from '@/lib/image-utils'
 import { AlertCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
@@ -72,6 +73,7 @@ export function CadastrarProdutoPage() {
     const [categorias, setCategorias] = useState<Categoria[]>([])
     const [erro, setErro] = useState('')
     const [carregando, setCarregando] = useState(false)
+    const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
     const [imagensSelecionadas, setImagensSelecionadas] = useState<File[]>([])
     const [previewImagens, setPreviewImagens] = useState<string[]>([])
     const [imagensExistentes, setImagensExistentes] = useState<ProdutoImagemAPI[]>([])
@@ -94,6 +96,19 @@ export function CadastrarProdutoPage() {
             }
         }
         carregarCategorias()
+    }, [])
+
+    useEffect(() => {
+        const carregarAssinatura = async () => {
+            try {
+                const response = await subscriptionAPI.current()
+                setAssinatura(response.data ?? null)
+            } catch {
+                setAssinatura(null)
+            }
+        }
+
+        carregarAssinatura()
     }, [])
 
     useEffect(() => {
@@ -609,6 +624,18 @@ export function CadastrarProdutoPage() {
                             <div>
                                 <h1 className="text-3xl font-black tracking-tight text-slate-900">{produtoIdEdicao ? 'Editar produto' : 'Cadastrar produto'}</h1>
                                 <p className="mt-2 text-sm text-slate-600">{produtoIdEdicao ? 'Ajuste os dados do produto e salve a atualização.' : 'Preencha os dados do produto e anuncie no CampuShop.'}</p>
+                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                    <PlanBadge
+                                        text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'}
+                                        color={assinatura?.badgeColor}
+                                        icon={assinatura?.badgeIcon}
+                                    />
+                                    <p className="text-sm text-slate-500">
+                                        {assinatura?.remainingListings != null
+                                            ? `${assinatura.remainingListings} anúncio(s) restante(s) no plano atual.`
+                                            : 'Seu limite de anúncios é calculado a partir do plano ativo.'}
+                                    </p>
+                                </div>
                             </div>
                             <Link
                                 to="/conta"
@@ -987,9 +1014,19 @@ export function CadastrarProdutoPage() {
                                 </div>
                             </div>
 
-                            <Button type="submit" loading={carregando} className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20">
+                            <Button
+                                type="submit"
+                                loading={carregando}
+                                className="w-full rounded-2xl py-3.5 text-base shadow-lg shadow-blue-600/20"
+                                disabled={carregando || (!produtoIdEdicao && assinatura?.remainingListings === 0)}
+                            >
                                 {produtoIdEdicao ? 'Salvar alterações' : 'Cadastrar produto'}
                             </Button>
+                            {!produtoIdEdicao && assinatura?.remainingListings === 0 ? (
+                                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                    Limite de anúncios atingido para o plano atual. Faça upgrade para cadastrar mais produtos.
+                                </div>
+                            ) : null}
                         </form>
                     </div>
                 </Card>

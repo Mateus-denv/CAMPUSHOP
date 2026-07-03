@@ -1,11 +1,12 @@
-import { pedidosAPI } from '@/lib/api-service'
+import { pedidosAPI, subscriptionAPI } from '@/lib/api-service'
 import { clearAuth } from '@/lib/auth-listener'
 import { countCartItems } from '@/lib/shop-storage'
 import { useAuthStore } from '@/store'
-import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, User } from 'lucide-react'
+import { Facebook, Instagram, LogOut, Mail, MessageCircle, PhoneCall, ShieldQuestion, ShoppingCart, User } from 'lucide-react'
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Logo } from './Logo'
+import { PlanBadge } from './PlanBadge'
 
 type LayoutProps = {
   children: ReactNode
@@ -14,16 +15,16 @@ type LayoutProps = {
 const navItems = [
   { to: '/home', label: 'Home' },
   { to: '/produtos', label: 'Produtos' },
-  { to: '/carrinho', label: 'Carrinho' },
+  { to: '/planos', label: 'Planos' },
   { to: '/pedidos', label: 'Pedidos' },
   { to: '/chat', label: 'Chat' },
-  { to: '/conta', label: 'Conta' },
 ]
 
 export function Layout({ children }: LayoutProps) {
   const { usuario, setUsuario } = useAuthStore()
   const carrinhoCount = countCartItems()
   const [pedidosPendentes, setPedidosPendentes] = useState(0)
+  const [planoUsuario, setPlanoUsuario] = useState<{ plan?: 'ESSENTIAL' | 'PLUS' | 'PREMIUM'; planName?: string; badgeColor?: string; badgeText?: string; badgeIcon?: string } | null>(null)
 
   useEffect(() => {
     const carregarPendentes = async () => {
@@ -41,6 +42,33 @@ export function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('campushop-orders-changed', carregarPendentes)
   }, [usuario])
 
+  useEffect(() => {
+    const carregarPlano = async () => {
+      if (!usuario) {
+        setPlanoUsuario(null)
+        return
+      }
+
+      try {
+        const response = await subscriptionAPI.current()
+        setPlanoUsuario(response.data ?? null)
+      } catch {
+        setPlanoUsuario({ plan: 'ESSENTIAL', planName: 'Essencial', badgeText: 'ESSENCIAL' })
+      }
+    }
+
+    carregarPlano()
+  }, [usuario])
+
+  const formatNomeNavbar = (nome?: string | null) => {
+    if (!nome) {
+      return 'Usuário'
+    }
+    const partes = nome.trim().split(/\s+/)
+    return partes.slice(0, 2).join(' ')
+  }
+
+  const nomeNavbar = formatNomeNavbar(usuario?.nomeCompleto ?? usuario?.nome)
   const handleLogout = () => {
     setUsuario(null)
     clearAuth()
@@ -51,29 +79,24 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_#dbeafe_0,_#eff6ff_24%,_#f8fafc_58%,_#ffffff_100%)] text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/home" className="flex items-center gap-3 font-black tracking-tight text-slate-900">
             <Logo variant="home" />
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 md:flex">
+          <nav className="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
                   [
-                    'rounded-full px-4 py-2 text-sm font-semibold transition',
+                    'rounded-full px-5 py-3 text-sm font-semibold transition',
                     isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-slate-900',
                   ].join(' ')
                 }
               >
-                <span className="inline-flex items-center gap-2">
-                  {item.label}
-                  {item.to === '/carrinho' && carrinhoCount > 0 ? (
-                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-semibold text-white">{carrinhoCount}</span>
-                  ) : null}
-                </span>
+                {item.label}
               </NavLink>
             ))}
           </nav>
@@ -81,15 +104,25 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-3">
             {usuario ? (
               <>
-                <div className="hidden items-center gap-3 rounded-full bg-slate-100 px-4 py-2 sm:flex">
-                  <User className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-700">{usuario.nome}</span>
-                  {pedidosPendentes > 0 ? (
-                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">
-                      {pedidosPendentes} novos
+                <Link
+                  to="/carrinho"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:bg-slate-50"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {carrinhoCount > 0 ? (
+                    <span className="ml-2 hidden rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-semibold text-white sm:inline-flex">
+                      {carrinhoCount}
                     </span>
                   ) : null}
-                </div>
+                </Link>
+                <Link
+                  to="/conta"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  <User className="h-4 w-4 text-slate-600" />
+                  <span>{nomeNavbar}</span>
+                  <PlanBadge text={planoUsuario?.badgeText || planoUsuario?.planName || 'ESSENCIAL'} color={planoUsuario?.badgeColor} icon={planoUsuario?.badgeIcon} />
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-red-50 hover:border-red-200 hover:text-red-700"

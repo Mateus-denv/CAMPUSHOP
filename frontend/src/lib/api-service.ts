@@ -81,6 +81,37 @@ export type ProdutoAPI = {
   notaMedia?: number
   totalAvaliacoes?: number
   variantes?: ProdutoVarianteAPI[]
+  plan?: 'ESSENTIAL' | 'PLUS' | 'PREMIUM'
+  planName?: string
+  isPremium?: boolean
+  canBoost?: boolean
+  canHighlight?: boolean
+  remainingListings?: number
+  badgeColor?: string
+  badgeText?: string
+  badgeIcon?: string
+  hasMetrics?: boolean
+  hasAdvancedMetrics?: boolean
+  hasFinancialDashboard?: boolean
+  hasAIInsights?: boolean
+}
+
+export type SubscriptionAPI = {
+  id?: number
+  userId?: number
+  plan: 'ESSENTIAL' | 'PLUS' | 'PREMIUM'
+  planName: string
+  startDate?: string | null
+  endDate?: string | null
+  active?: boolean
+  monthlyPrice?: number
+  autoRenew?: boolean
+  badgeColor?: string
+  badgeText?: string
+  badgeIcon?: string
+  canBoost?: boolean
+  canHighlight?: boolean
+  remainingListings?: number
 }
 
 export type CarrinhoBackendItem = {
@@ -206,11 +237,21 @@ export type ContaMetricasAPI = {
   gastoCompras: number
   ticketMedioVendas: number
   ticketMedioCompras: number
+  avaliacoesRecebidas: number
+  notaMediaRecebida: number
   atividadesRecentes: ContaAtividadeAPI[]
 }
 
 export const contaAPI = {
   metricas: () => api.get<ContaMetricasAPI>('/api/conta/metricas'),
+}
+
+export const subscriptionAPI = {
+  current: () => api.get<SubscriptionAPI>('/api/subscription'),
+  upgrade: (plan: SubscriptionAPI['plan']) => api.post<SubscriptionAPI>(`/api/subscription/upgrade?plan=${plan}`),
+  downgrade: () => api.post<SubscriptionAPI>('/api/subscription/downgrade'),
+  cancel: () => api.post<SubscriptionAPI>('/api/subscription/cancel'),
+  renew: () => api.post<SubscriptionAPI>('/api/subscription/renew'),
 }
 
 export const authAPI = {

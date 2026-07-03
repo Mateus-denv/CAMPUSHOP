@@ -39,4 +39,12 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Integer> {
     // Conta quantas avaliações ativas um produto tem — para exibir no card do produto
     @Query("SELECT COUNT(a) FROM Avaliacao a WHERE a.produto.idProduto = :idProduto AND a.status = 'ATIVA'")
     Long contarAvaliacoesAtivas(@Param("idProduto") Integer idProduto);
+
+    // Calcula a nota média de avaliações ativas recebidas pelos produtos de um vendedor
+    @Query("SELECT COALESCE(AVG(a.nota), 0.0) FROM Avaliacao a WHERE a.produto.usuario.id = :vendedorId AND a.status = 'ATIVA'")
+    Double calcularNotaMediaPorVendedor(@Param("vendedorId") Integer vendedorId);
+
+    // Conta quantas avaliações ativas foram recebidas pelos produtos de um vendedor
+    @Query("SELECT COUNT(a) FROM Avaliacao a WHERE a.produto.usuario.id = :vendedorId AND a.status = 'ATIVA'")
+    Long contarAvaliacoesPorVendedor(@Param("vendedorId") Integer vendedorId);
 }

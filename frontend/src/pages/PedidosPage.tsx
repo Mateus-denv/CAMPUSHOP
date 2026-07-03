@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { pedidosAPI, type PedidoAPI } from '@/lib/api-service'
+import { PlanBadge } from '@/components/PlanBadge'
+import { pedidosAPI, subscriptionAPI, type PedidoAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -56,9 +57,19 @@ function montarAvisoPrazo(pedido: PedidoAPI) {
 export function PedidosPage() {
   const [pedidos, setPedidos] = useState<PedidoAPI[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
   const { usuario } = useAuthStore()
 
   useEffect(() => {
+    const carregarPlano = async () => {
+      try {
+        const response = await subscriptionAPI.current()
+        setAssinatura(response.data ?? null)
+      } catch {
+        setAssinatura(null)
+      }
+    }
+
     const carregarPedidos = async () => {
       try {
         setCarregando(true)
@@ -70,6 +81,7 @@ export function PedidosPage() {
       }
     }
 
+    carregarPlano()
     carregarPedidos()
   }, [usuario])
 
@@ -91,6 +103,7 @@ export function PedidosPage() {
             <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Meus pedidos</h1>
             <p className="mt-2 text-sm text-slate-500">Acompanhe o status das suas compras</p>
           </div>
+          <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
           <Link to="/produtos" className="inline-flex w-fit rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             Fazer nova compra
           </Link>
