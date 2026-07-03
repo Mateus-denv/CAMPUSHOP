@@ -58,6 +58,18 @@ export function ProdutoDetalhePage() {
   const [cidadeVendedor, setCidadeVendedor] = useState<string | null>(null)
   const [estadoVendedor, setEstadoVendedor] = useState<string | null>(null)
 
+  const formatDistanceLabel = (distance?: number | null) => {
+    if (distance == null) return ''
+    if (distance < 1) return 'Perto de você'
+    return `${distance} km`
+  }
+
+  const buildGoogleMapsUrl = (cidade?: string | null, estado?: string | null) => {
+    if (!cidade) return undefined
+    const query = encodeURIComponent([cidade, estado].filter(Boolean).join(', '))
+    return `https://www.google.com/maps/search/?api=1&query=${query}`
+  }
+
   useEffect(() => {
     const carregarProduto = async () => {
       const produtoId = Number(id)
@@ -591,8 +603,16 @@ export function ProdutoDetalhePage() {
               <p className="mt-1 font-semibold text-slate-800">{produto.nomeVendedor || 'Vendedor não informado'}</p>
               <div className="mt-1 flex items-center justify-between text-sm text-slate-600">
                 <div>
-                  <div>{produto.vendedorCidade || 'Localidade não informada'}{produto.vendedorCidade && estadoVendedor ? `, ${estadoVendedor}` : ''}</div>
-                  {distanciaKm ? <div className="text-xs text-slate-500">📍 {distanciaKm} km de você</div> : null}
+                  <div className="flex items-center gap-3">
+                    <div>{produto.vendedorCidade || 'Localidade não informada'}{produto.vendedorCidade && estadoVendedor ? `, ${estadoVendedor}` : ''}</div>
+                    {distanciaKm ? (
+                      <div className="inline-flex items-baseline gap-2 rounded-full bg-blue-600 px-3 py-1 text-white shadow-md">
+                        <span className="text-sm">📍</span>
+                        <span className="text-lg font-extrabold">{distanciaKm}</span>
+                        <span className="text-sm">km</span>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <span className="font-semibold">{produto.vendedorInstituicao || 'Instituição não informada'}</span>
               </div>

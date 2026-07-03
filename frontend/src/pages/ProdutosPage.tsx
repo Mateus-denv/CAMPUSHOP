@@ -226,6 +226,18 @@ export function ProdutosPage() {
 
   const categoriaSelecionada = searchParams.get('categoria')?.trim()
 
+  const formatDistanceLabel = (distance?: number) => {
+    if (distance == null) return ''
+    if (distance < 1) return 'Perto de você'
+    return `${distance} km`
+  }
+
+  const buildGoogleMapsUrl = (cidade?: string, estado?: string) => {
+    if (!cidade) return undefined
+    const query = encodeURIComponent([cidade, estado].filter(Boolean).join(', '))
+    return `https://www.google.com/maps/search/?api=1&query=${query}`
+  }
+
   if (carregando) {
     return (
       <Layout>
@@ -304,7 +316,20 @@ export function ProdutosPage() {
         {/* Ajuste: mostrar 2 produtos por linha em telas maiores */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {produtosFiltrados.map((produto) => (
-            <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            <Link key={produto.idProduto} to={`/produto/${produto.idProduto}`} className="relative rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              {/* Distância em badge destacado (melhor contraste e tamanho) */}
+              { (produto as any).distanciaKm ? (
+                <a
+                  href={buildGoogleMapsUrl(produto.cidade, produto.estado) ?? '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={produto.cidade ? 'Abrir local no Google Maps' : 'Distância disponível'}
+                  className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 shadow-md text-sm transition hover:bg-slate-50"
+                >
+                  <span className="text-xs">📍</span>
+                  <span className="text-lg font-extrabold text-blue-700">{formatDistanceLabel((produto as any).distanciaKm)}</span>
+                </a>
+              ) : null}
               <MediaImage
                 src={`/api/produtos/${produto.idProduto}/imagens/principal`}
                 alt={produto.nomeProduto}
@@ -332,10 +357,7 @@ export function ProdutosPage() {
               </div>
               <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
 
-              {/** Exibe distância quando disponível vindo do filtro de proximidade */}
-              { (produto as any).distanciaKm ? (
-                <div className="mb-2 text-sm text-slate-500">📍 {(produto as any).distanciaKm} km</div>
-              ) : null }
+              {/** Exibe distância (removido texto pequeno duplicado - badge já mostra a distância) */}
 
               <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                 {produto.totalAvaliacoes && produto.totalAvaliacoes > 0 ? (

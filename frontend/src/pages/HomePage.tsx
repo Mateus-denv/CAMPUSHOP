@@ -53,10 +53,21 @@ function normalizarProduto(produto: any): ProdutoHome {
 }
 
   // Modifica local para incluir a distância quando disponível
+  function formatDistanceLabel(distance?: number | null) {
+    if (distance == null) {
+      return ''
+    }
+    if (distance < 1) {
+      return 'Perto de você'
+    }
+    return `${distance} km`
+  }
+
   function displayLocalComDistancia(produto: any) {
     const base = produto.local ?? produto.cidade ?? produto.instituicao ?? ''
     if (produto.distanciaKm != null) {
-      return `${base} • ${produto.distanciaKm} km`
+      const distanceLabel = formatDistanceLabel(produto.distanciaKm)
+      return base ? `${base} • ${distanceLabel}` : distanceLabel
     }
     return base
   }
@@ -376,7 +387,15 @@ export function HomePage() {
                     <div className="mt-4 flex items-start justify-between gap-4">
                       <div>
                         <p className="text-lg font-bold text-slate-900">{destaqueAtual.nomeProduto}</p>
-                        <p className="text-sm text-slate-500">{destaqueAtual.vendedorNome}{destaqueAtual.local ? ` • ${destaqueAtual.local}` : ''}</p>
+                        <p className="text-sm text-slate-500">
+                          {destaqueAtual.vendedorNome}
+                        </p>
+                        {destaqueAtual.local ? (
+                          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                            <span>📍</span>
+                            <span>{destaqueAtual.local}</span>
+                          </div>
+                        ) : null}
                       </div>
                       <p className="text-2xl font-extrabold text-slate-900">{formatarPreco(destaqueAtual.preco)}</p>
                     </div>
