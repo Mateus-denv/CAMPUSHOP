@@ -44,7 +44,7 @@ public class ChatController {
                                             @RequestBody @Valid ChatMensagemRequest request,
                                             Authentication authentication) {
         try {
-            ChatMensagemResponse mensagem = chatService.enviarMensagem(pedidoId, authentication.getName(), request.texto());
+            ChatMensagemResponse mensagem = chatService.enviarMensagem(pedidoId, authentication.getName(), request.texto(), request.aceitouAviso());
             return ResponseEntity.status(HttpStatus.CREATED).body(mensagem);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));

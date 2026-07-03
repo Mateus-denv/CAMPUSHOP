@@ -1,7 +1,20 @@
 import { Layout } from '@/components/Layout'
-import { PlanBadge } from '@/components/PlanBadge'
 import { chatAPI, subscriptionAPI, type ChatMensagemAPI, type ChatPedidoAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { useEffect, useMemo, useState } from 'react'
+
+function mensagemBloqueio(status?: string) {
+  const statusNormalizado = (status ?? '').toLowerCase()
+
+  if (statusNormalizado === 'rejeitado' || statusNormalizado === 'invalido') {
+    return 'O chat não está disponível porque o pedido foi rejeitado ou invalidado.'
+  }
+
+  if (statusNormalizado === 'entregue') {
+    return 'O chat foi encerrado após a entrega do produto.'
+  }
+
+  return 'O chat só é liberado após a aprovação do pedido.'
+}
 
 export function ChatPage() {
   const [pedidos, setPedidos] = useState<ChatPedidoAPI[]>([])
@@ -11,6 +24,8 @@ export function ChatPage() {
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
   const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
+  const [bloqueioChat, setBloqueioChat] = useState('')
+  const [aceitouAviso, setAceitouAviso] = useState(false)
 
   useEffect(() => {
     const carregarPlano = async () => {
@@ -46,6 +61,8 @@ export function ChatPage() {
 
     const carregarMensagens = async () => {
       setCarregando(true)
+      setBloqueioChat(mensagemBloqueio(pedidoSelecionado.status))
+      setAceitouAviso(false)
       try {
         const response = await chatAPI.listarMensagens(pedidoSelecionado.pedidoId)
         setMensagens(response.data)
@@ -69,12 +86,26 @@ export function ChatPage() {
       return
     }
 
+    if (pedidoSelecionado.status !== 'aceito') {
+      setBloqueioChat(mensagemBloqueio(pedidoSelecionado.status));
+      return
+    }
+
+    if (!aceitouAviso) {
+      setBloqueioChat('Você precisa confirmar o aviso de segurança antes de enviar mensagens.')
+      return
+    }
+
     try {
-      const response = await chatAPI.enviarMensagem(pedidoSelecionado.pedidoId, texto.trim())
+      const response = await chatAPI.enviarMensagem(pedidoSelecionado.pedidoId, texto.trim(), aceitouAviso)
       setMensagens((current) => [...current, response.data])
       setTexto('')
+      setErro('')
+      setBloqueioChat('')
     } catch (err) {
-      setErro('Não foi possível enviar a mensagem. Tente novamente.')
+      const mensagemErro = err instanceof Error ? err.message : 'Não foi possível enviar a mensagem. Tente novamente.';
+      setErro(mensagemErro)
+      setBloqueioChat(mensagemErro)
     }
   }
 
@@ -82,12 +113,11 @@ export function ChatPage() {
     <Layout>
       <section className="grid min-h-[calc(100vh-6rem)] gap-6 lg:grid-cols-[320px_1fr]">
         <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
               <h2 className="text-xl font-black text-slate-900">Conversas</h2>
               <p className="mt-1 text-sm text-slate-500">Cliente x vendedor</p>
             </div>
-            <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
           </div>
 
           {carregando && pedidos.length === 0 ? (
@@ -100,7 +130,12 @@ export function ChatPage() {
                 <button
                   type="button"
                   key={pedido.pedidoId}
-                  onClick={() => setPedidoSelecionado(pedido)}
+                  onClick={() => {
+                    setPedidoSelecionado(pedido)
+                    setErro('')
+                    setBloqueioChat('')
+                    setAceitouAviso(false)
+                  }}
                   className={`w-full rounded-3xl border px-4 py-4 text-left transition ${
                     pedidoSelecionado?.pedidoId === pedido.pedidoId
                       ? 'border-blue-600 bg-blue-50'
@@ -114,7 +149,15 @@ export function ChatPage() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">{pedido.produtoNome}</p>
-                  <p className="mt-3 text-xs text-slate-400">{pedido.souVendedor ? 'Você é vendedor' : 'Você é comprador'}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                    {pedido.ultimaMensagemTexto || 'Nenhuma mensagem ainda.'}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-400">{pedido.souVendedor ? 'Você é vendedor' : 'Você é comprador'}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      {pedido.ultimaMensagemData ? new Date(pedido.ultimaMensagemData).toLocaleString('pt-BR') : 'Sem mensagens'}
+                    </p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -139,7 +182,6 @@ export function ChatPage() {
                   <p className="text-sm text-slate-500">{pedidoSelecionado.produtoNome}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
                   <span className="rounded-full bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
                     {pedidoSelecionado.status}
                   </span>
@@ -147,6 +189,11 @@ export function ChatPage() {
               </div>
 
               <div className="flex min-h-[420px] flex-col gap-4 rounded-[2rem] border border-slate-200 bg-slate-50 p-4">
+                {bloqueioChat && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    {bloqueioChat}
+                  </div>
+                )}
                 {carregando && mensagens.length === 0 ? (
                   <p className="text-sm text-slate-500">Carregando mensagens...</p>
                 ) : mensagens.length === 0 ? (
@@ -171,14 +218,15 @@ export function ChatPage() {
                   value={texto}
                   onChange={(event) => setTexto(event.target.value)}
                   rows={3}
-                  placeholder="Digite sua mensagem..."
+                  placeholder={pedidoSelecionado.status === 'aceito' ? 'Digite sua mensagem...' : 'O chat ficará disponível após a aprovação do pedido.'}
                   className="min-h-[110px] w-full rounded-[1.5rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  disabled={pedidoSelecionado.status !== 'aceito'}
                 />
                 <button
                   type="button"
                   onClick={enviarMensagem}
                   className="inline-flex h-14 items-center justify-center rounded-[1.5rem] bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={!texto.trim()}
+                  disabled={!texto.trim() || pedidoSelecionado.status !== 'aceito'}
                 >
                   Enviar
                 </button>

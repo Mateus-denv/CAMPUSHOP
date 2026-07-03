@@ -175,6 +175,29 @@ export type AvaliacaoPermissaoAPI = {
   motivo?: string
 }
 
+export type ChatPedidoAPI = {
+  pedidoId: number
+  status: string
+  parceiroId?: number | null
+  parceiroNome: string
+  parceiroPerfil?: string
+  produtoNome: string
+  souVendedor?: boolean
+  criadoEm?: string | null
+  ultimaMensagemTexto?: string | null
+  ultimaMensagemData?: string | null
+}
+
+export type ChatMensagemAPI = {
+  id: number
+  pedidoId?: number | null
+  usuarioId?: number | null
+  usuarioNome?: string | null
+  usuarioPerfil?: string | null
+  texto: string
+  criadoEm?: string | null
+}
+
 export const categoriaAPI = {
   listar: () => api.get('/api/categorias'),
 }
@@ -323,9 +346,10 @@ export const produtoAPI = {
 export const chatAPI = {
   listarPedidos: () => api.get<ChatPedidoAPI[]>('/api/chat/pedidos'),
   listarMensagens: (pedidoId: number) => api.get<ChatMensagemAPI[]>(`/api/chat/pedidos/${pedidoId}/mensagens`),
-  enviarMensagem: (pedidoId: number, texto: string) =>
+  enviarMensagem: (pedidoId: number, texto: string, aceitouAviso: boolean) =>
     api.post<ChatMensagemAPI>(`/api/chat/pedidos/${pedidoId}/mensagens`, {
       texto,
+      aceitouAviso,
     }),
 }
 

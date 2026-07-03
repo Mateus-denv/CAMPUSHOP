@@ -116,6 +116,7 @@ function App() {
       <Route path="/planos" element={<PlanosPage />} />
       <Route path="/ajuda" element={<AjudaPage />} />
       <Route path="/manual-usuario" element={<ManualUsuarioPage />} />
+      <Route path="/manual-usuario.html" element={<ManualUsuarioPage />} />
       <Route path="/privacidade" element={<PrivacidadePage />} />
       <Route path="/termos" element={<TermosPage />} />
       <Route path="/anunciar" element={<AnunciarPage />} />

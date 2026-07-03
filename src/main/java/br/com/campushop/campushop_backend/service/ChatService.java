@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Locale.ROOT;
+
 @Service
 public class ChatService {
 
@@ -56,8 +58,10 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatMensagemResponse enviarMensagem(Integer pedidoId, String emailUsuario, String texto) {
+    public ChatMensagemResponse enviarMensagem(Integer pedidoId, String emailUsuario, String texto, Boolean aceitouAviso) {
         Pedido pedido = verificarPedidoDoUsuario(pedidoId, emailUsuario);
+        validarChatDisponivel(pedido, aceitouAviso);
+
         Usuario usuarioRemetente = usuarioService.buscarPorEmail(emailUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -85,12 +89,36 @@ public class ChatService {
         return pedido;
     }
 
+    private void validarChatDisponivel(Pedido pedido, Boolean aceitouAviso) {
+        String status = pedido.getStatusPedido();
+        if (status == null) {
+            return;
+        }
+
+        String statusNormalizado = status.trim().toLowerCase(ROOT);
+        if ("rejeitado".equals(statusNormalizado) || "invalido".equals(statusNormalizado) || "entregue".equals(statusNormalizado)) {
+            throw new RuntimeException("O chat para este pedido não está disponível porque o pedido foi rejeitado, invalidado ou já foi entregue.");
+        }
+
+        if (!"aceito".equals(statusNormalizado)) {
+            throw new RuntimeException("O chat para este pedido ainda não foi liberado. Aguarde a aprovação do vendedor.");
+        }
+
+        if (aceitouAviso == null || !aceitouAviso) {
+            throw new RuntimeException("É necessário confirmar que seguirá as orientações de segurança clicando em OK no aviso antes de enviar mensagens.");
+        }
+    }
+
     private ChatPedidoResponse toChatPedidoResponse(Pedido pedido, Usuario usuarioLogado, boolean souVendedor) {
         Usuario parceiro = souVendedor ? pedido.getUsuario() : pedido.getVendedor();
         String produtoNome = pedido.getItens().stream()
                 .findFirst()
                 .map(item -> item.getProduto() != null ? item.getProduto().getNomeProduto() : null)
                 .orElse("Pedido sem produto");
+
+        List<ChatMensagem> mensagensPedido = chatMensagemRepository
+                .findByPedido_IdPedidoOrderByCriadoEmAsc(pedido.getIdPedido());
+        ChatMensagem ultimaMensagem = mensagensPedido.isEmpty() ? null : mensagensPedido.get(mensagensPedido.size() - 1);
 
         return new ChatPedidoResponse(
                 pedido.getIdPedido(),
@@ -100,7 +128,9 @@ public class ChatService {
                 parceiro != null ? parceiro.getTipoConta() : "",
                 produtoNome,
                 souVendedor,
-                pedido.getDataPedido() != null ? pedido.getDataPedido().toString() : null);
+                pedido.getDataPedido() != null ? pedido.getDataPedido().toString() : null,
+                ultimaMensagem != null ? ultimaMensagem.getTexto() : null,
+                ultimaMensagem != null && ultimaMensagem.getCriadoEm() != null ? ultimaMensagem.getCriadoEm().toString() : null);
     }
 
     private ChatMensagemResponse toChatMensagemResponse(ChatMensagem mensagem) {

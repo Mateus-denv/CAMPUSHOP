@@ -8,5 +8,7 @@ public record ChatPedidoResponse(
         String parceiroPerfil,
         String produtoNome,
         Boolean souVendedor,
-        String criadoEm) {
+        String criadoEm,
+        String ultimaMensagemTexto,
+        String ultimaMensagemData) {
 }

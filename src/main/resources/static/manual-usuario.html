@@ -1,96 +1,1456 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manual do Usuário — CampuShop</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
-          colors: {
-            flame: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' }
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual do Usuário — CampuShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+                    colors: {
+                        flame: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' }
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  <style>
-    * { scroll-behavior: smooth; box-sizing: border-box; }
-    body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .sidebar-link { transition: all 0.2s ease; border-radius: 12px; }
-    .sidebar-link:hover { background: #fff7ed; color: #ea580c; }
-    .sidebar-link.active-link { background: linear-gradient(135deg, #ea580c, #2563eb); color: #ffffff; }
-    .sidebar-link.active-link:hover { background: linear-gradient(135deg, #c2410c, #1d4ed8); }
-    .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-    .collapsible-content.open { max-height: 3000px; }
-    .collapsible-arrow { transition: transform 0.3s ease; }
-    .collapsible-arrow.rotated { transform: rotate(180deg); }
-    .step-number { width: 30px; height: 30px; min-width: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #ea580c, #2563eb); font-size: 13px; color: white; }
-  </style>
+    </script>
+    <style>
+        * { scroll-behavior: smooth; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+        .sidebar-link:hover {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+        .sidebar-link.active-link {
+            background: linear-gradient(135deg, #ea580c, #2563eb);
+            color: #ffffff;
+        }
+        .sidebar-link.active-link:hover {
+            background: linear-gradient(135deg, #c2410c, #1d4ed8);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .collapsible-content.open { max-height: 3000px; }
+        .collapsible-arrow { transition: transform 0.3s ease; }
+        .collapsible-arrow.rotated { transform: rotate(180deg); }
+
+        .step-number {
+            width: 30px; height: 30px; min-width: 30px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ea580c, #2563eb);
+            font-size: 13px; font-weight: 600; color: #FFFFFF;
+        }
+
+        .gif-placeholder {
+            background: linear-gradient(135deg, #fff7ed, #eff6ff, #ffffff);
+            border: 2px dashed #fed7aa;
+            border-radius: 1.25rem;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 8px; color: #93c5fd; min-height: 260px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .gif-placeholder:hover {
+            border-color: #fb923c;
+            background: linear-gradient(135deg, #ffedd5, #dbeafe, #ffffff);
+        }
+        .gif-placeholder img {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 1rem;
+        }
+
+        .flow-connector {
+            width: 2px; height: 20px;
+            background: linear-gradient(to bottom, #ea580c, #93c5fd);
+            margin: 0 auto;
+        }
+
+        .flow-connector-v {
+            width: 2px; height: 24px;
+            background: linear-gradient(to bottom, #ea580c, #93c5fd);
+            margin-left: 15px;
+        }
+
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #ffffff; border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            color: #1e293b; padding: 12px 20px; border-radius: 12px;
+            font-size: 14px; font-weight: 500; z-index: 10000;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.4s ease; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #ea580c, #2563eb);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 40%, #3b82f6 55%, #c2410c 80%, #ea580c 100%);
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar-panel {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .sidebar-panel.open { transform: translateX(0); }
+        }
+
+        @media print {
+            .sidebar-panel, .mobile-btn, .back-to-top, .toast, #mobile-overlay { display: none !important; }
+            main { margin-left: 0 !important; }
+            .reveal { opacity: 1 !important; transform: none !important; }
+        }
+
+        .info-card-orange { background: #fff7ed; border: 1px solid #fed7aa; }
+        .info-card-orange p { color: #9a3412; }
+        .info-card-orange .iconify { color: #ea580c; }
+
+        .info-card-blue { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .info-card-blue p { color: #1e40af; }
+        .info-card-blue .iconify { color: #2563eb; }
+
+        .info-card-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .info-card-green p { color: #166534; }
+        .info-card-green .iconify { color: #16a34a; }
+
+        .info-card-red { background: #fef2f2; border: 1px solid #fecaca; }
+        .info-card-red p { color: #991b1b; }
+        .info-card-red .iconify { color: #dc2626; }
+
+        .info-card-yellow { background: #fefce8; border: 1px solid #fde68a; }
+        .info-card-yellow p { color: #854d0e; }
+        .info-card-yellow .iconify { color: #ca8a04; }
+
+        .feature-card { transition: all 0.3s ease; }
+        .feature-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(37, 99, 235, 0.15); }
+
+        .detail-item { transition: all 0.2s ease; }
+        .detail-item:hover { background: #eff6ff; border-color: #bfdbfe; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 14px; border-radius: 9999px;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.025em;
+        }
+
+        .notif-badge {
+            min-width: 20px; height: 20px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #ea580c, #2563eb);
+            color: #fff; font-size: 11px; font-weight: 700;
+            padding: 0 6px;
+        }
+
+        .flow-branch-right {
+            position: relative;
+        }
+        .flow-branch-right::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 50%;
+            width: 2px;
+            background: linear-gradient(to bottom, #ea580c, #94a3b8);
+        }
+        .flow-branch-right::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            width: 2px;
+            height: 50%;
+            background: #94a3b8;
+        }
+    </style>
 </head>
+<body class="bg-white text-zinc-900 antialiased">
 
-<body class="bg-slate-50 text-slate-900">
-  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <div class="rounded-[2rem] bg-white p-8 shadow-sm sm:p-10">
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p class="text-sm uppercase tracking-[0.24em] text-slate-400">Manual do Usuário</p>
-          <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Como usar o CampusShop</h1>
-          <p class="mt-4 max-w-3xl text-base leading-8 text-slate-600">Tudo o que você precisa para comprar, vender e se comunicar no marketplace da comunidade acadêmica.</p>
+<!-- Toast -->
+<div id="toast" class="toast">
+    <span class="iconify inline-block mr-1.5 align-[-2px] text-emerald-600" data-icon="lucide:check-circle" data-width="16"></span>
+    <span id="toast-msg">Feito!</span>
+</div>
+
+<!-- Mobile overlay -->
+<div id="mobile-overlay" class="fixed inset-0 bg-black/40 z-30 hidden" onclick="toggleSidebar()"></div>
+
+<!-- Mobile button -->
+<button class="mobile-btn fixed top-4 left-4 z-50 lg:hidden bg-white border border-slate-200 p-2.5 rounded-xl shadow-sm" onclick="toggleSidebar()">
+    <span class="iconify text-blue-800" data-icon="lucide:menu" data-width="20"></span>
+</button>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar-panel fixed top-0 left-0 h-full w-72 z-40 bg-white border-r border-slate-200 overflow-y-auto hidden lg:block">
+    <div class="p-6">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #ea580c, #2563eb);">
+                <span class="iconify text-white" data-icon="lucide:shopping-bag" data-width="20"></span>
+            </div>
+            <div>
+                <span class="font-bold gradient-text">CampuShop</span>
+                <span class="block text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Manual do Usuário</span>
+            </div>
         </div>
-      </div>
+
+        <!-- Search -->
+        <div class="relative mb-6">
+            <span class="iconify absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="lucide:search" data-width="15"></span>
+            <input id="sidebar-search" type="text" placeholder="Buscar no manual..."
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                oninput="filterSidebar(this.value)">
+        </div>
+
+        <!-- Nav -->
+        <nav id="sidebar-nav" class="space-y-1 text-sm">
+            <div class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-2 px-3">Primeiros Passos</div>
+            <a href="#cadastro-login" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="cadastro-login">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:user-plus" data-width="15"></span>Cadastro e Login
+            </a>
+            <a href="#gerenciar-conta" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="gerenciar-conta">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:user" data-width="15"></span>Gerenciar Conta
+            </a>
+
+            <div class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-2 mt-5 px-3">Usando a Plataforma</div>
+            <a href="#cadastrar-produto" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="cadastrar-produto">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:tag" data-width="15"></span>Cadastrar Produto
+            </a>
+            <a href="#editar-produto" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="editar-produto">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:package-edit" data-width="15"></span>Editar Produto
+            </a>
+            <a href="#desativar-produto" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="desativar-produto">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:eye-off" data-width="15"></span>Desativar ou Ocultar
+            </a>
+            <a href="#carrinho" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="carrinho">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:shopping-cart" data-width="15"></span>Comprar
+            </a>
+            <a href="#pedidos" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="pedidos">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:package" data-width="15"></span>Acompanhar Pedidos
+            </a>
+            <a href="#chat" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="chat">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:message-circle" data-width="15"></span>Conversar por Chat
+            </a>
+
+            <div class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-2 mt-5 px-3">Mais Informações</div>
+            <a href="#dicas" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="dicas">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:lightbulb" data-width="15"></span>Dicas Importantes
+            </a>
+            <a href="#nota-tecnica" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="nota-tecnica">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:code-2" data-width="15"></span>Nota Técnica
+            </a>
+            <a href="#resumo" class="sidebar-link block px-3 py-2.5 text-slate-600" data-section="resumo">
+                <span class="iconify inline-block mr-2 align-[-2px]" data-icon="lucide:sparkles" data-width="15"></span>Resumo
+            </a>
+        </nav>
     </div>
-  </div>
-  <div class="relative lg:pl-[18rem]">
-    <aside class="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-slate-200 bg-white p-6 lg:static lg:block">
-      <div class="mb-8 flex items-center gap-3">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-blue-600 text-white shadow-sm">📘</div>
-        <div>
-          <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Manual do Usuário</p>
-          <p class="font-semibold text-slate-900">CampusShop</p>
-        </div>
-      </div>
-      <nav class="space-y-1 text-sm">
-        <a href="#bem-vindo" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Bem-vindo</a>
-        <a href="#como-funciona" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Como Funciona</a>
-        <a href="#criar-conta" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Criar sua Conta</a>
-        <a href="#fazer-login" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Entrar</a>
-        <a href="#explorar" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Explorar</a>
-      </nav>
-    </aside>
-    <main class="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
-      <section id="bem-vindo" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Bem-vindo ao CampusShop</h2>
-        <p class="mt-4 text-slate-600">O CampusShop é o marketplace da comunidade acadêmica. Aqui você pode comprar materiais, vender seus produtos, trocar mensagens com outros estudantes e acompanhar seus pedidos.</p>
-      </section>
-      <section id="como-funciona" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Como Funciona</h2>
-        <p class="mt-4 text-slate-600">Usar o CampusShop é simples: crie sua conta, explore produtos, veja detalhes, compre ou anuncie pelo marketplace.</p>
-      </section>
-      <section id="criar-conta" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Criar sua Conta</h2>
-        <p class="mt-4 text-slate-600">Para participar do CampusShop, use a página de cadastro e informe seus dados acadêmicos.</p>
-      </section>
-      <section id="fazer-login" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Entrar na Conta</h2>
-        <p class="mt-4 text-slate-600">Se já tiver conta, acesse o login e entre com email e senha para usar o marketplace.</p>
-      </section>
-      <section id="explorar" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Explorar Produtos</h2>
-        <p class="mt-4 text-slate-600">Navegue por categorias, produtos em destaque e encontre o que você precisa no marketplace.</p>
-      </section>
-    </main>
-  </div>
-</body>
+</aside>
 
+<!-- Main content -->
+<main class="lg:ml-72 min-h-screen">
+
+    <!-- Hero -->
+    <section class="hero-gradient relative overflow-hidden">
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse at 70% 40%, rgba(234,88,12,0.2) 0%, transparent 60%);"></div>
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.3) 0%, transparent 50%);"></div>
+        <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 pt-24 pb-20 md:pt-32 md:pb-28 text-center">
+            <div class="reveal inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-white/90 text-sm mb-6">
+                <span class="iconify" data-icon="lucide:book-open" data-width="14"></span>
+                Manual do Usuário — Versão 2.0
+            </div>
+            <h1 class="reveal delay-100 text-4xl md:text-6xl font-bold tracking-tight text-white leading-[1.1] mb-6">
+                Como usar o<br>CampuShop
+            </h1>
+            <p class="reveal delay-200 text-lg md:text-xl text-white/70 font-light leading-relaxed max-w-2xl mx-auto mb-10">
+                Guia completo com pré-condições, fluxos detalhados, segurança e rotas atualizadas para comprar, vender e se comunicar na plataforma.
+            </p>
+            <div class="reveal delay-300 flex flex-wrap justify-center gap-3">
+                <a href="#cadastro-login" class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-blue-900 text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                    <span class="iconify" data-icon="lucide:rocket" data-width="16"></span>
+                    Começar Agora
+                </a>
+                <a href="#pedidos" class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all duration-300">
+                    <span class="iconify" data-icon="lucide:package" data-width="16"></span>
+                    Ver Fluxo de Pedidos
+                </a>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 50C120 30 240 10 360 20C480 30 600 70 720 70C840 70 960 30 1080 20C1200 10 1320 30 1440 50V80H0V50Z" fill="#ffffff"/>
+            </svg>
+        </div>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 pb-28 space-y-10">
+
+        <!-- ==================== 1. CADASTRO E LOGIN ==================== -->
+        <section id="cadastro-login" class="reveal pt-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-flame-50 border border-flame-200">
+                        <span class="iconify text-flame-600" data-icon="lucide:user-plus" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Cadastro e Login</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Primeiros Passos</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">
+                    Permitir que novos usuários criem contas na plataforma e que usuários existentes acessem o sistema de forma segura.
+                </p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Possuir um endereço de e-mail válido e ativo.<br>2. Ter acesso à internet e a um navegador atualizado.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Acesse a página inicial do CampuShop.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Entrar"</code> ou <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Criar conta"</code>.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Preencha os campos obrigatórios (Nome, E-mail, R.A./Matrícula, Senha).</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Cadastrar"</code> ou <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Entrar"</code>.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> O usuário será autenticado no sistema e redirecionado para a página "Minha Conta" ou página inicial.</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> "E-mail já cadastrado". <strong>Solução:</strong> Faça login ou recupere sua senha.</p>
+                    </div>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> "R.A. inválido". <strong>Solução:</strong> Verifique se o número de matrícula está correto e ativo na instituição.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-flame-500" data-icon="lucide:lightbulb" data-width="15"></span>
+                        Observações importantes
+                    </p>
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:asterisk" data-width="16"></span>
+                        <p class="text-sm"><strong>Campos obrigatórios:</strong> Marcados com asterisco (*).</p>
+                    </div>
+                    <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:at-sign" data-width="16"></span>
+                        <p class="text-sm"><strong>Formato do e-mail:</strong> Deve seguir o padrão <code class="px-1.5 py-0.5 bg-blue-100 rounded text-xs font-mono">usuario@email.com</code>.</p>
+                    </div>
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:lock" data-width="16"></span>
+                        <p class="text-sm"><strong>Requisitos de senha:</strong> Mínimo de 8 caracteres, exigindo ao menos 1 letra maiúscula, 1 número e 1 caractere especial (ex: <code class="px-1.5 py-0.5 bg-orange-100 rounded text-xs font-mono">Campus@2024</code>).</p>
+                    </div>
+                    <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:key-round" data-width="16"></span>
+                        <p class="text-sm"><strong>Recuperação de senha:</strong> Na tela de login, clique em "Esqueci minha senha", insira o e-mail cadastrado e siga as instruções enviadas.</p>
+                    </div>
+                </div>
+
+                <div class="gif-placeholder" id="gif-cadastro-login">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Cadastro e login em ação</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/cadastro-login.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-cadastro-login', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. GERENCIAR CONTA ==================== -->
+        <section id="gerenciar-conta" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-blue-50 border border-blue-200">
+                        <span class="iconify text-blue-600" data-icon="lucide:user" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Gerenciar Conta</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Primeiros Passos</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">Permitir que o usuário visualize e atualize seus dados pessoais e de contato.</p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Possuir cadastro ativo.<br>2. Estar autenticado no sistema.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique no seu nome de usuário no canto superior direito (ex: "Felipe Amorim Santos").</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Selecione a opção <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Minha Conta"</code>.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Na seção de informações, clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Editar conta"</code>.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Atualize os dados desejados e clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Salvar alterações"</code>.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> Os dados do perfil são atualizados e exibidos na tela de resumo da conta.</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Falha ao salvar alterações. <strong>Solução:</strong> Verifique se deixou algum campo obrigatório em branco.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-yellow flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:shield-check" data-width="16"></span>
+                    <p class="text-sm"><strong>Segurança de Identificadores (ID):</strong> O sistema utiliza o seu R.A./Matrícula como identificador interno. A manipulação de IDs na URL do navegador não concederá acesso a contas de terceiros, pois o sistema valida a sessão atual do usuário logada.</p>
+                </div>
+
+                <div class="gif-placeholder" id="gif-gerenciar-conta">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Editando dados da conta</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/conta.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-gerenciar-conta', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. CADASTRAR PRODUTO ==================== -->
+        <section id="cadastrar-produto" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-flame-50 border border-flame-200">
+                        <span class="iconify text-flame-600" data-icon="lucide:tag" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Cadastrar Produto</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">Permitir que vendedores publiquem novos itens para venda na plataforma.</p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Possuir cadastro ativo.<br>2. Estar logado no sistema.<br>3. Ter permissão de vendedor ativa na conta.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Acesse a opção de cadastro de produtos (rota <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">/cadastrar-produto</code>).</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Imagens:</strong> Selecione as imagens do produto respeitando os formatos aceitos.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Informações Básicas:</strong> Preencha "Nome do produto" e "Descrição do produto".</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Tipo do anúncio:</strong> Selecione "Produto".</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">5</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Estoque e Preço:</strong> Informe a "Quantidade de estoque" e o "Preço" (ex: 49.90).</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">6</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Categoria:</strong> Selecione a categoria correspondente.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">7</div>
+                        <div class="text-slate-600 text-sm mt-0.5">
+                            <p class="mb-1.5"><strong>Dimensões e Opções:</strong></p>
+                            <ul class="space-y-1 ml-3">
+                                <li class="flex items-start gap-1.5"><span class="text-slate-400 mt-1">•</span><span>Marque "Precisa informar dimensões?" se necessário e preencha o peso (ex: 0.5).</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-slate-400 mt-1">•</span><span>Caso o produto tenha diferentes modelos (ex: tamanhos P, M, G), marque <em>"Este anúncio tem variações"</em>.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">8</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Cadastrar produto"</code>.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> Uma mensagem de sucesso é exibida e o produto é salvo como rascunho ou ativo na lista de "Meus produtos".</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Categoria não selecionada. <strong>Solução:</strong> O campo "Categoria" é obrigatório. Escolha uma opção na lista suspensa.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-flame-500" data-icon="lucide:lightbulb" data-width="15"></span>
+                        Observações importantes
+                    </p>
+                    <div class="info-card-yellow flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:shield-check" data-width="16"></span>
+                        <p class="text-sm"><strong>Segurança de ID:</strong> Ao acessar a edição de um produto via URL (ex: <code class="px-1.5 py-0.5 bg-yellow-100 rounded text-xs font-mono">?produtold=35</code>), o sistema valida se o ID pertence ao vendedor logado. Tentativas de acessar IDs de terceiros resultarão em bloqueio.</p>
+                    </div>
+                    <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:info" data-width="16"></span>
+                        <p class="text-sm"><strong>Termologia:</strong> O termo "Variações" substitui a nomenclatura anterior para facilitar o entendimento do usuário final.</p>
+                    </div>
+                </div>
+
+                <div class="gif-placeholder" id="gif-cadastrar-produto">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Cadastrando um produto</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/cadastrar.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-cadastrar-produto', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. EDITAR PRODUTO ==================== -->
+        <section id="editar-produto" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-blue-50 border border-blue-200">
+                        <span class="iconify text-blue-600" data-icon="lucide:package-edit" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Editar Produto</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">Atualizar informações, imagens, estoque e opções de um produto já cadastrado.</p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Estar logado no sistema.<br>2. Ter cadastrado pelo menos um produto.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Vá para "Meus produtos" e clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Editar produto"</code>.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Imagens:</strong> Em "Imagens já salvas", clique em "Excluir" para remover fotos antigas ou adicione novas em "Selecionar imagens".</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Detalhes:</strong> Atualize Nome, Descrição, Preço ou Estoque.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5"><strong>Variações (Opções do produto):</strong> Se o produto tiver opções marcadas, edite o nome (ex: Camisa Clássica 99), as opções disponíveis (ex: M, P, G, GG) e o estoque específico de cada uma.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">5</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Salvar alterações"</code>.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> Alterações salvas e refletidas imediatamente no anúncio público.</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Estoque de uma variação definido como zero, mas produto ativo. <strong>Solução:</strong> Atualize o estoque ou desative a opção específica.</p>
+                    </div>
+                </div>
+
+                <div class="gif-placeholder" id="gif-editar-produto">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Editando um produto</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/editar.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-editar-produto', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. DESATIVAR OU OCULTAR ==================== -->
+        <section id="desativar-produto" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-flame-50 border border-flame-200">
+                        <span class="iconify text-flame-600" data-icon="lucide:eye-off" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Desativar ou Ocultar Produtos</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">Gerenciar a visibilidade dos anúncios sem precisar excluí-los permanentemente.</p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Estar logado.<br>2. Possuir produtos cadastrados.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Acesse "Meus produtos".</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Localize o produto desejado.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <div class="text-slate-600 text-sm mt-0.5">
+                            <p class="mb-2">Escolha uma das ações:</p>
+                            <div class="space-y-2 ml-1">
+                                <div class="feature-card flex gap-3 items-start p-4 rounded-2xl border border-red-200" style="background: linear-gradient(135deg, #fef2f2, #ffffff);">
+                                    <span class="iconify text-red-500 flex-shrink-0 mt-0.5" data-icon="lucide:power" data-width="18"></span>
+                                    <div>
+                                        <p class="font-semibold text-blue-900 text-sm">Ativar/Desativar produto</p>
+                                        <p class="text-slate-500 text-xs mt-0.5">Altera o status entre "Ativo" e "Inativo". Produtos inativos não aparecem na busca.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-card flex gap-3 items-start p-4 rounded-2xl border border-slate-200" style="background: linear-gradient(135deg, #f8fafc, #ffffff);">
+                                    <span class="iconify text-slate-500 flex-shrink-0 mt-0.5" data-icon="lucide:eye-off" data-width="18"></span>
+                                    <div>
+                                        <p class="font-semibold text-blue-900 text-sm">Ocultar dos compradores</p>
+                                        <p class="text-slate-500 text-xs mt-0.5">Esconde o produto temporariamente das listagens, mesmo que esteja ativo estruturalmente.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique no botão da ação escolhida.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> A tela exibirá uma mensagem verde (ex: "Produto desativado com sucesso.") e o status na lista mudará para "Inativo".</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. COMPRAR ==================== -->
+        <section id="carrinho" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-blue-50 border border-blue-200">
+                        <span class="iconify text-blue-600" data-icon="lucide:shopping-cart" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Comprar</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">Permitir que compradores selecionem produtos e concluam a compra.</p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Estar logado.<br>2. Adicionar pelo menos um item ao carrinho.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique no ícone do carrinho no menu superior.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Em "Meu carrinho", revise os itens. Ajuste a quantidade ou clique em remover se necessário.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <div class="text-slate-600 text-sm mt-0.5">
+                            <p>Verifique o "Resumo do pedido" (Subtotal, Frete e Total).</p>
+                            <div class="info-card-orange flex gap-3 items-start p-3 rounded-xl mt-2">
+                                <span class="iconify mt-0.5" data-icon="lucide:info" data-width="14"></span>
+                                <p class="text-xs"><strong>Nota:</strong> O frete pode aparecer como "A negociar" dependendo do vendedor.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Clique em <code class="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-blue-900">"Confirmar pedido"</code>.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> O pedido é criado com status "Aguardando aprovação" e o usuário é redirecionado para a tela de acompanhamento de pedidos.</p>
+                </div>
+
+                <div class="gif-placeholder" id="gif-carrinho">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Processo de compra</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/carrinho.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-carrinho', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 7. ACOMPANHAR PEDIDOS (FLUXO CORRIGIDO) ==================== -->
+        <section id="pedidos" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-flame-50 border border-flame-200">
+                        <span class="iconify text-flame-600" data-icon="lucide:package" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Acompanhar Pedidos</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">
+                    Permitir que compradores e vendedores acompanhem o status e o fluxo completo de processamento dos pedidos. O fluxo envolve solicitação, aprovação/rejeição pelo vendedor, liberação de chat e entrega do código de acesso.
+                </p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-8">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Possuir conta cadastrada.<br>2. Estar autenticado no sistema.<br>3. Ter realizado ou recebido pelo menos um pedido.</p>
+                    </div>
+                </div>
+
+                <!-- VISÃO DO COMPRADOR -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="iconify text-blue-600" data-icon="lucide:eye" data-width="16"></span>
+                        <h3 class="text-base font-bold text-blue-900">Visão do Comprador — "Meus Pedidos"</h3>
+                    </div>
+
+                    <div class="space-y-4 mb-4">
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                            <p class="text-slate-600 text-sm mt-0.5">Acesse "Meus pedidos" no menu superior.</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                            <p class="text-slate-600 text-sm mt-0.5">Clique no pedido que deseja acompanhar.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl mb-4">
+                        <span class="iconify mt-0.5" data-icon="lucide:info" data-width="16"></span>
+                        <p class="text-sm">Após confirmar a compra, o pedido é criado com o status <strong>"Aguardando aprovação"</strong>. O código de acesso exibe: <em>"Aguardando aprovação do vendedor"</em>. O comprador deve aguardar até que o vendedor aceite ou rejeite a solicitação.</p>
+                    </div>
+
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:message-circle-off" data-width="16"></span>
+                        <p class="text-sm"><strong>Chat bloqueado:</strong> Enquanto o pedido estiver "Aguardando aprovação", o chat com o vendedor <strong>não é liberado</strong> para o comprador.</p>
+                    </div>
+                </div>
+
+                <!-- VISÃO DO VENDEDOR -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="iconify text-flame-600" data-icon="lucide:bell" data-width="16"></span>
+                        <h3 class="text-base font-bold text-blue-900">Visão do Vendedor — "Pedidos Recebidos"</h3>
+                    </div>
+
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl mb-4">
+                        <span class="iconify mt-0.5" data-icon="lucide:bell-ring" data-width="16"></span>
+                        <div class="text-sm">
+                            <p class="mb-1"><strong>Notificação com badge:</strong> Quando um novo pedido é recebido, o menu "Pedidos recebidos" exibe um badge numérico indicando a quantidade de pedidos pendentes.</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-slate-600">Exemplo:</span>
+                                <span class="notif-badge">1</span>
+                                <span class="text-slate-400 text-xs">ou</span>
+                                <span class="notif-badge">2</span>
+                                <span class="text-slate-400 text-xs">dependendo da quantidade</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 mb-4">
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                            <p class="text-slate-600 text-sm mt-0.5">Clique em "Pedidos recebidos" no menu lateral da conta.</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                            <p class="text-slate-600 text-sm mt-0.5">O pedido aparece com status <strong>"EM ANÁLISE"</strong> e todas as etapas como "Aguardando".</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                            <p class="text-slate-600 text-sm mt-0.5">O vendedor visualiza os dados do comprador, produto e valor total.</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">4</div>
+                            <div class="text-slate-600 text-sm mt-0.5">
+                                <p class="mb-2">O vendedor tem três ações disponíveis:</p>
+                                <div class="space-y-2 ml-1">
+                                    <div class="feature-card flex gap-3 items-center p-4 rounded-2xl border border-green-200" style="background: linear-gradient(135deg, #f0fdf4, #ffffff);">
+                                        <span class="iconify text-green-600 flex-shrink-0" data-icon="lucide:check-circle" data-width="18"></span>
+                                        <div>
+                                            <p class="font-semibold text-blue-900 text-sm">Aceitar pedido</p>
+                                            <p class="text-slate-500 text-xs mt-0.5">Aprova a compra, libera o chat e gera o código de acesso.</p>
+                                        </div>
+                                    </div>
+                                    <div class="feature-card flex gap-3 items-center p-4 rounded-2xl border border-red-200" style="background: linear-gradient(135deg, #fef2f2, #ffffff);">
+                                        <span class="iconify text-red-500 flex-shrink-0" data-icon="lucide:x-circle" data-width="18"></span>
+                                        <div>
+                                            <p class="font-semibold text-blue-900 text-sm">Rejeitar pedido</p>
+                                            <p class="text-slate-500 text-xs mt-0.5">Cancela a solicitação. O comprador é notificado.</p>
+                                        </div>
+                                    </div>
+                                    <div class="feature-card flex gap-3 items-center p-4 rounded-2xl border border-slate-200" style="background: linear-gradient(135deg, #f8fafc, #ffffff);">
+                                        <span class="iconify text-slate-400 flex-shrink-0" data-icon="lucide:message-circle" data-width="18"></span>
+                                        <div>
+                                            <p class="font-semibold text-slate-400 text-sm">Abrir chat</p>
+                                            <p class="text-slate-400 text-xs mt-0.5">Disponível apenas após aceitar o pedido.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FLUXO DE STATUS -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="iconify text-blue-600" data-icon="lucide:git-branch" data-width="16"></span>
+                        <h3 class="text-base font-bold text-blue-900">Fluxo Completo de Status</h3>
+                    </div>
+
+                    <!-- ETAPA 1: Solicitação -->
+                    <div class="flex gap-4 items-start">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #fff7ed, #fef3c7); border: 1px solid #fde68a;">
+                                <span class="iconify text-amber-600" data-icon="lucide:send" data-width="16"></span>
+                            </div>
+                            <div class="flow-connector-v"></div>
+                        </div>
+                        <div class="pb-5 flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="status-badge bg-amber-100 text-amber-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Solicitação do Pedido
+                                </span>
+                            </div>
+                            <div class="grid gap-2 md:grid-cols-2 mb-2">
+                                <div class="detail-item flex gap-3 items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="iconify text-blue-600" data-icon="lucide:user" data-width="16"></span>
+                                    <p class="text-slate-700 text-xs"><strong>Comprador:</strong> Vê "Aguardando aprovação"</p>
+                                </div>
+                                <div class="detail-item flex gap-3 items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="iconify text-flame-600" data-icon="lucide:bell" data-width="16"></span>
+                                    <p class="text-slate-700 text-xs"><strong>Vendedor:</strong> Recebe notificação com badge</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500">Código de acesso: "Aguardando aprovação do vendedor". Chat bloqueado para o comprador.</p>
+                        </div>
+                    </div>
+
+                    <!-- ETAPA 2: Decisão do Vendedor (BIFURCAÇÃO) -->
+                    <div class="flex gap-4 items-start">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe;">
+                                <span class="iconify text-blue-600" data-icon="lucide:git-branch" data-width="16"></span>
+                            </div>
+                            <div class="flow-connector-v"></div>
+                        </div>
+                        <div class="pb-5 flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="status-badge bg-blue-100 text-blue-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                    Decisão do Vendedor
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">O vendedor analisa o pedido e escolhe entre "Aceitar pedido" ou "Rejeitar pedido".</p>
+
+                            <!-- DOIS CAMINHOS -->
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <!-- CAMINHO A: REJEITADO -->
+                                <div class="rounded-2xl border border-red-200 overflow-hidden" style="background: linear-gradient(135deg, #fef2f2, #ffffff);">
+                                    <div class="px-4 py-2.5 border-b border-red-100 bg-red-50">
+                                        <p class="text-xs font-bold text-red-700 flex items-center gap-1.5">
+                                            <span class="iconify" data-icon="lucide:x-circle" data-width="13"></span>
+                                            Caminho A — Rejeitado
+                                        </p>
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-red-500" data-icon="lucide:x" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Status muda para <strong class="text-red-700">"REJEITADO"</strong></p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-red-500" data-icon="lucide:x" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Todas as etapas ficam como "Aguardando confirmação"</p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-red-500" data-icon="lucide:x" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Chat <strong>não é liberado</strong></p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-red-500" data-icon="lucide:x" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Nenhum código é gerado</p>
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-red-100">
+                                            <span class="status-badge bg-red-100 text-red-800 text-[10px]">
+                                                <span class="w-1 h-1 rounded-full bg-red-400"></span>
+                                                FIM — Pedido cancelado
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CAMINHO B: ACEITO -->
+                                <div class="rounded-2xl border border-green-200 overflow-hidden" style="background: linear-gradient(135deg, #f0fdf4, #ffffff);">
+                                    <div class="px-4 py-2.5 border-b border-green-100 bg-green-50">
+                                        <p class="text-xs font-bold text-green-700 flex items-center gap-1.5">
+                                            <span class="iconify" data-icon="lucide:check-circle" data-width="13"></span>
+                                            Caminho B — Aceito
+                                        </p>
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-green-600" data-icon="lucide:check" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Status muda para <strong class="text-green-700">"ACEITO"</strong></p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-green-600" data-icon="lucide:check" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600"><strong>Chat é liberado</strong> para ambas as partes</p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-green-600" data-icon="lucide:check" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Um <strong>código de acesso é criado</strong> automaticamente</p>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span class="iconify text-green-600" data-icon="lucide:check" data-width="10"></span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Vendedor entrega o código ao comprador (presencialmente ou via chat)</p>
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-green-100">
+                                            <span class="status-badge bg-green-100 text-green-800 text-[10px]">
+                                                <span class="w-1 h-1 rounded-full bg-green-500"></span>
+                                                FIM — Código entregue
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ETAPA 3: Pós-aceitação (visão do vendedor) -->
+                    <div class="flex gap-4 items-start">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0;">
+                                <span class="iconify text-green-600" data-icon="lucide:handshake" data-width="16"></span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="status-badge bg-green-100 text-green-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Pós-Aceitação (Vendedor)
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2">Após aceitar, os botões do vendedor são atualizados:</p>
+                            <div class="grid gap-2 md:grid-cols-2">
+                                <div class="detail-item flex gap-3 items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="iconify text-green-600" data-icon="lucide:package-check" data-width="16"></span>
+                                    <p class="text-slate-700 text-xs"><strong>"Entregar produto"</strong> — Para confirmar a entrega do código</p>
+                                </div>
+                                <div class="detail-item flex gap-3 items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="iconify text-blue-600" data-icon="lucide:message-circle" data-width="16"></span>
+                                    <p class="text-slate-700 text-xs"><strong>"Abrir chat"</strong> — Agora liberado para negociação</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POSSÍVEIS ERROS -->
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Pedido rejeitado pelo vendedor. <strong>Solução:</strong> O status "REJEITADO" será exibido. O comprador pode realizar uma nova compra ou entrar em contato pelo suporte.</p>
+                    </div>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Chat indisponível. <strong>Solução:</strong> O chat só é liberado após o vendedor aceitar o pedido. Verifique o status do pedido em "Meus pedidos".</p>
+                    </div>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Vendedor não responde (pedido parado em "Aguardando aprovação"). <strong>Solução:</strong> Entre em contato com o suporte através do rodapé do site.</p>
+                    </div>
+                </div>
+
+                <div class="gif-placeholder" id="gif-pedidos">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Fluxo de acompanhamento de pedidos</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/pedidos.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-pedidos', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 8. CHAT ==================== -->
+        <section id="chat" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-blue-50 border border-blue-200">
+                        <span class="iconify text-blue-600" data-icon="lucide:message-circle" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Conversar por Chat</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Usando a Plataforma</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6">
+                    Facilitar a comunicação direta entre compradores e vendedores, ou entre usuários e suporte.
+                </p>
+
+                <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:clipboard-check" data-width="16"></span>
+                    <div>
+                        <p class="text-sm font-semibold mb-1">Pré-condições</p>
+                        <p class="text-sm">1. Estar autenticado no sistema.<br>2. <strong>O pedido deve estar com status "ACEITO"</strong> para que o chat seja liberado entre comprador e vendedor.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">1</div>
+                        <p class="text-slate-600 text-sm mt-0.5">No menu superior ou na página do pedido, clique em "Abrir chat".</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">2</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Selecione o contato do vendedor ou comprador.</p>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="step-number text-xs" style="width:28px;height:28px;min-width:28px;font-size:12px;">3</div>
+                        <p class="text-slate-600 text-sm mt-0.5">Digite a mensagem e envie.</p>
+                    </div>
+                </div>
+
+                <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl mb-6">
+                    <span class="iconify mt-0.5" data-icon="lucide:check-circle" data-width="16"></span>
+                    <p class="text-sm"><strong>Resultado esperado:</strong> A conversa é aberta e as mensagens são trocadas em tempo real ou de forma assíncrona.</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-red-500" data-icon="lucide:alert-triangle" data-width="15"></span>
+                        Possíveis erros e soluções
+                    </p>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Tela exibindo "Chat em desenvolvimento". <strong>Solução:</strong> A funcionalidade ainda está em fase de implementação pelo time do CampuShop. Utilize os canais de contato alternativos disponíveis no rodapé da página.</p>
+                    </div>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:x-circle" data-width="16"></span>
+                        <p class="text-sm"><strong>Erro:</strong> Chat não aparece ou está desabilitado. <strong>Solução:</strong> Verifique se o pedido já foi aceito pelo vendedor. O chat só é liberado após a aprovação.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <span class="iconify text-flame-500" data-icon="lucide:lightbulb" data-width="15"></span>
+                        Observações importantes
+                    </p>
+                    <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:scale" data-width="16"></span>
+                        <p class="text-sm">Esta rota não afeta os fluxos de pedido diretamente, mas serve como <strong>evidência em casos de disputa</strong>. As conversas podem ser usadas para validação de acordos entre comprador e vendedor.</p>
+                    </div>
+                </div>
+
+                <div class="gif-placeholder" id="gif-chat">
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Usando o chat</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/chat.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('gif-chat', this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== DICAS ==================== -->
+        <section id="dicas" class="reveal">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center bg-flame-50 border border-flame-200">
+                        <span class="iconify text-flame-600" data-icon="lucide:lightbulb" data-width="22"></span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight gradient-text">Dicas Importantes</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Mais Informações</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:shield" data-width="18"></span>
+                        <p class="text-sm">Algumas áreas do site só aparecem quando você está logado. Se tentar acessar e for redirecionado para o login, é só entrar e tentar de novo.</p>
+                    </div>
+                    <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:smartphone" data-width="18"></span>
+                        <p class="text-sm">O CampuShop funciona bem tanto no computador quanto no celular. No mobile, o menu de navegação vira uma barra horizontal para facilitar o uso.</p>
+                    </div>
+                    <div class="info-card-green flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:shopping-bag" data-width="18"></span>
+                        <p class="text-sm">O carrinho mostra a quantidade de itens direto no menu, para você nunca esquecer o que já adicionou.</p>
+                    </div>
+                    <div class="info-card-yellow flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:bell-ring" data-width="18"></span>
+                        <p class="text-sm">Fique atento ao badge de notificações em "Pedidos recebidos". Ele indica quantos pedidos estão aguardando sua análise como vendedor.</p>
+                    </div>
+                    <div class="info-card-blue flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:message-circle" data-width="18"></span>
+                        <p class="text-sm">O chat só é liberado após o vendedor aceitar o pedido. Antes disso, o botão "Abrir chat" aparece desabilitado.</p>
+                    </div>
+                    <div class="info-card-orange flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:key-round" data-width="18"></span>
+                        <p class="text-sm">Após a aceitação do pedido, um código de acesso é gerado. O vendedor deve entregá-lo ao comprador para finalizar a transação.</p>
+                    </div>
+                    <div class="info-card-red flex gap-3 items-start p-4 rounded-2xl">
+                        <span class="iconify mt-0.5" data-icon="lucide:log-out" data-width="18"></span>
+                        <p class="text-sm">Se acessar de um computador compartilhado, lembre-se de sair da conta quando terminar.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== NOTA TÉCNICA ==================== -->
+        <section id="nota-tecnica" class="reveal">
+            <div class="rounded-3xl p-8 relative overflow-hidden" style="background: #0f172a;">
+                <div class="absolute inset-0" style="background: radial-gradient(ellipse at 70% 30%, rgba(234,88,12,0.15) 0%, transparent 60%);"></div>
+                <div class="absolute inset-0" style="background: radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.2) 0%, transparent 50%);"></div>
+                <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="iconify text-slate-500" data-icon="lucide:code-2" data-width="24"></span>
+                        <h2 class="text-2xl font-bold tracking-tight text-white">Nota Técnica para Desenvolvedores/Revisores</h2>
+                    </div>
+                    <div class="space-y-4 text-slate-400 text-sm leading-relaxed">
+                        <div class="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                            <span class="iconify text-flame-500 mt-0.5 flex-shrink-0" data-icon="lucide:route" data-width="16"></span>
+                            <p>As rotas enviadas nas imagens (Cadastro, Edição, Carrinho, Chat, Minha Conta, Pedidos recebidos) foram integradas ao manual.</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                            <span class="iconify text-blue-400 mt-0.5 flex-shrink-0" data-icon="lucide:type" data-width="16"></span>
+                            <p>O termo "Variante" foi substituído por "Variações" ou "Opções do produto".</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                            <span class="iconify text-green-400 mt-0.5 flex-shrink-0" data-icon="lucide:shield-check" data-width="16"></span>
+                            <p>Os cuidados com a exposição de IDs via URL (ex: <code class="px-1.5 py-0.5 bg-white/10 rounded text-xs font-mono text-slate-300">?produtold=35</code>) foram documentados como recurso de segurança interno, garantindo o controle de acesso baseado na sessão do usuário logado.</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                            <span class="iconify text-amber-400 mt-0.5 flex-shrink-0" data-icon="lucide:git-branch" data-width="16"></span>
+                            <p>O fluxo de pedidos foi atualizado para o modelo de aprovação manual pelo vendedor: Solicitação → Aprovação/Rejeição → Liberação de chat e código de acesso. O badge de notificação em "Pedidos recebidos" indica pedidos pendentes de análise.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== RESUMO ==================== -->
+        <section id="resumo" class="reveal">
+            <div class="rounded-3xl p-8 relative overflow-hidden hero-gradient">
+                <div class="absolute inset-0" style="background: radial-gradient(ellipse at 70% 30%, rgba(234,88,12,0.25) 0%, transparent 60%);"></div>
+                <div class="absolute inset-0" style="background: radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.4) 0%, transparent 50%);"></div>
+                <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="iconify text-white/90" data-icon="lucide:sparkles" data-width="24"></span>
+                        <h2 class="text-2xl font-bold tracking-tight text-white">Resumo</h2>
+                    </div>
+                    <p class="text-white/80 leading-relaxed text-base">
+                        O CampuShop é o marketplace da sua comunidade acadêmica. Nele você pode <strong class="text-white">criar sua conta, gerenciar seus dados, cadastrar e editar produtos, desativar anúncios, comprar pelo carrinho, acompanhar pedidos com fluxo de aprovação pelo vendedor, receber notificações de novos pedidos e se comunicar por chat após aprovação</strong>. Tudo com segurança de sessão e proteção contra acesso indevido via URL.
+                    </p>
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:user-plus" data-width="12"></span>Cadastro
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:tag" data-width="12"></span>Vender
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:shopping-cart" data-width="12"></span>Comprar
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:package" data-width="12"></span>Aprovar/Rejeitar
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:key-round" data-width="12"></span>Código de Acesso
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:message-circle" data-width="12"></span>Chat
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs font-medium">
+                            <span class="iconify" data-icon="lucide:shield-check" data-width="12"></span>Segurança
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Back to top -->
+    <button id="back-to-top" onclick="window.scrollTo({top:0})" class="back-to-top fixed bottom-6 right-6 w-11 h-11 rounded-xl bg-white border border-slate-200 shadow-md flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:shadow-lg z-50">
+        <span class="iconify text-blue-600" data-icon="lucide:arrow-up" data-width="16"></span>
+    </button>
+
+</main>
+
+<script>
+    // Scroll Reveal
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // Active sidebar link
+    const sections = document.querySelectorAll('section[id]');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    function updateActiveLink() {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 200;
+            if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+        });
+        sidebarLinks.forEach(link => {
+            link.classList.remove('active-link');
+            if (link.getAttribute('data-section') === current) link.classList.add('active-link');
+        });
+    }
+    window.addEventListener('scroll', updateActiveLink);
+    updateActiveLink();
+
+    // Sidebar search
+    function filterSidebar(query) {
+        const links = document.querySelectorAll('#sidebar-nav a');
+        const headings = document.querySelectorAll('#sidebar-nav > div');
+        const q = query.toLowerCase().trim();
+        links.forEach(link => {
+            link.style.display = (!q || link.textContent.toLowerCase().includes(q)) ? '' : 'none';
+        });
+        headings.forEach(heading => {
+            let next = heading.nextElementSibling;
+            let hasVisible = false;
+            while (next && next.tagName !== 'DIV') {
+                if (next.style.display !== 'none') hasVisible = true;
+                next = next.nextElementSibling;
+            }
+            heading.style.display = hasVisible ? '' : 'none';
+        });
+    }
+
+    // Mobile sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.remove('hidden');
+        }
+    }
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('mobile-overlay').classList.add('hidden');
+            }
+        });
+    });
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) document.getElementById('sidebar').classList.remove('open');
+    });
+
+    // Back to top
+    const backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 600) {
+            backToTop.style.opacity = '1';
+            backToTop.style.pointerEvents = 'auto';
+        } else {
+            backToTop.style.opacity = '0';
+            backToTop.style.pointerEvents = 'none';
+        }
+    });
+
+    // GIF placeholder
+    function setGif(containerId, url) {
+        const container = document.getElementById(containerId);
+        if (!url.trim()) return;
+        const img = new Image();
+        img.onload = function() {
+            container.innerHTML = '';
+            img.style.width = '100%';
+            img.style.borderRadius = '1rem';
+            container.appendChild(img);
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<span class="iconify" data-icon="lucide:x" data-width="14"></span>';
+            removeBtn.className = 'absolute top-3 right-3 w-7 h-7 rounded-lg bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition';
+            removeBtn.onclick = function(e) {
+                e.stopPropagation();
+                container.innerHTML = `
+                    <span class="iconify" data-icon="lucide:film" data-width="32"></span>
+                    <span class="text-sm font-medium text-blue-400">Vídeo de demonstração</span>
+                    <span class="text-xs text-slate-400">Cole a URL do GIF abaixo</span>
+                    <input type="text" placeholder="https://exemplo.com/demo.gif"
+                        class="mt-1 w-72 text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-center text-slate-500 focus:outline-none focus:border-blue-400"
+                        oninput="setGif('${containerId}', this.value)">
+                `;
+            };
+            container.style.position = 'relative';
+            container.appendChild(removeBtn);
+        };
+        img.onerror = function() {
+            showToast('Não foi possível carregar a imagem. Verifique a URL.');
+        };
+        img.src = url;
+    }
+
+    // Toast
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+</script>
+
+</body>
 </html>
