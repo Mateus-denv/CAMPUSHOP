@@ -19,6 +19,8 @@ type Produto = {
   vendedorNome?: string
   categoriaId?: number
   categoria?: string
+  notaMedia?: number
+  totalAvaliacoes?: number
 }
 
 export function ProdutosPage() {
@@ -72,6 +74,8 @@ export function ProdutosPage() {
           produto.categoria?.nome_categoria ??
           produto.categoria?.nome ??
           (typeof produto.categoria === 'string' ? produto.categoria : ''),
+        notaMedia: produto.notaMedia ?? 0,
+        totalAvaliacoes: produto.totalAvaliacoes ?? 0,
       }))
       setProdutos(produtosNormalizados)
     } catch (err: any) {
@@ -256,6 +260,20 @@ export function ProdutosPage() {
                 </button>
               </div>
               <p className="text-slate-600 text-sm mb-4">{produto.descricao}</p>
+
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                {produto.totalAvaliacoes && produto.totalAvaliacoes > 0 ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                      <span>⭐</span>
+                      <span>{produto.notaMedia?.toFixed(1).replace('.', ',')}</span>
+                    </span>
+                    <span>({produto.totalAvaliacoes} avaliações)</span>
+                  </>
+                ) : (
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-500">Sem avaliações</span>
+                )}
+              </div>
 
               <div className="flex justify-between items-center mb-4">
                 <span className="text-2xl font-bold text-blue-700">
