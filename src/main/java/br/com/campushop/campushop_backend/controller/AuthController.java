@@ -2,15 +2,20 @@ package br.com.campushop.campushop_backend.controller;
 
 import br.com.campushop.campushop_backend.dto.AuthResponse;
 import br.com.campushop.campushop_backend.dto.LoginRequest;
+import br.com.campushop.campushop_backend.dto.PasswordResetRequest;
+import br.com.campushop.campushop_backend.dto.RedefinirSenhaRequest;
 import br.com.campushop.campushop_backend.dto.RegisterRequest;
 import br.com.campushop.campushop_backend.model.Usuario;
 import br.com.campushop.campushop_backend.security.JwtTokenProvider;
 import br.com.campushop.campushop_backend.service.CustomUserDetailsService;
+import br.com.campushop.campushop_backend.service.EmailService;
+import br.com.campushop.campushop_backend.service.PasswordResetService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +36,19 @@ public class AuthController {
     private final UsuarioService usuarioService;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
 
     public AuthController(UsuarioService usuarioService,
             CustomUserDetailsService customUserDetailsService,
-            JwtTokenProvider jwtTokenProvider) {
+            JwtTokenProvider jwtTokenProvider,
+            PasswordResetService passwordResetService,
+            EmailService emailService) {
         this.usuarioService = usuarioService;
         this.customUserDetailsService = customUserDetailsService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordResetService = passwordResetService;
+        this.emailService = emailService;
     }
 
     @PostMapping("/register")
@@ -116,6 +127,59 @@ public class AuthController {
         String token = jwtTokenProvider.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponse(token, toUserMap(usuario)));
+    }
+
+    @PostMapping("/esqueci-senha")
+    public ResponseEntity<?> esqueciSenha(@RequestBody PasswordResetRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email é obrigatório"));
+        }
+
+        logger.info("Chamada recebida em /api/auth/esqueci-senha para {}", request.getEmail());
+        try {
+            passwordResetService.solicitarRedefinicao(request.getEmail());
+            return ResponseEntity
+                    .ok(Map.of("message",
+                            "Se existir uma conta com esse e-mail, enviaremos um link para redefinição."));
+        } catch (MailException e) {
+            logger.error("Falha SMTP ao solicitar redefinição para {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao enviar e-mail de redefinição", "error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erro interno no endpoint /api/auth/esqueci-senha para {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro interno ao processar solicitação", "error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/teste-email")
+    public ResponseEntity<?> testeEmail() {
+        logger.info("GET /api/auth/teste-email acionado");
+        try {
+            emailService.enviarEmailRedefinicaoSenha("meuemail@gmail.com", "TOKEN123");
+            return ResponseEntity.ok(Map.of("message", "Email de teste enviado"));
+        } catch (Exception e) {
+            logger.error("Erro completo ao enviar email de teste", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Falha ao enviar email de teste", "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<?> redefinirSenha(@RequestBody RedefinirSenhaRequest request) {
+        if (request == null || request.getToken() == null || request.getToken().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Token é obrigatório"));
+        }
+        if (request.getNovaSenha() == null || request.getNovaSenha().length() < 8) {
+            return ResponseEntity.badRequest().body(Map.of("message", "A senha deve ter no mínimo 8 caracteres"));
+        }
+
+        try {
+            passwordResetService.redefinirSenha(request.getToken(), request.getNovaSenha());
+            return ResponseEntity.ok(Map.of("message", "Senha redefinida com sucesso"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping("/me")

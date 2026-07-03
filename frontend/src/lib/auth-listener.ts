@@ -5,7 +5,9 @@ const listeners = new Set<AuthListener>()
 
 export function addAuthListener(listener: AuthListener) {
   listeners.add(listener)
-  return () => listeners.delete(listener)
+  return () => {
+    listeners.delete(listener)
+  }
 }
 
 export function notifyAuthChange() {
