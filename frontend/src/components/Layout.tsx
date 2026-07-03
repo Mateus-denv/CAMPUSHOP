@@ -44,8 +44,8 @@ export function Layout({ children }: LayoutProps) {
   const handleLogout = () => {
     setUsuario(null)
     clearAuth()
-    // Redireciona para a home padrão ao sair, evitando retornos incorretos para páginas de produto
-    navigate('/home', { replace: true })
+    // Recarrega a página após logout para limpar estado e componentes
+    window.location.href = '/home'
   }
 
   return (
@@ -142,10 +142,10 @@ export function Layout({ children }: LayoutProps) {
 
       <footer className="border-t border-slate-200/80 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="max-w-sm">
-              <div className="flex items-start gap-4">
-                <Logo variant="completa" className="h-8 w-auto sm:h-10" />
+              <div className="flex items-center gap-4">
+                <Logo variant="completa" className="h-7 w-auto sm:h-9" />
                 <div>
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-400">CampuShop</p>
                   <p className="text-sm text-slate-500">Marketplace estudantil para compra, venda e troca no campus.</p>
@@ -212,6 +212,7 @@ export function Layout({ children }: LayoutProps) {
               <a href="/privacidade" className="transition hover:text-slate-600">Privacidade</a>
               <a href="/termos" className="transition hover:text-slate-600">Termos</a>
               <a href="/anunciar" className="transition hover:text-slate-600">Anunciar</a>
+              <a href="/manual-usuario.html" className="transition hover:text-slate-600">Manual do Usuário</a>
             </div>
           </div>
         </div>

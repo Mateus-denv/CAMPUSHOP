@@ -2,279 +2,95 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual do Usuário — CampuShop</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
-                    colors: {
-                        flame: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' }
-                    }
-                }
-            }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual do Usuário — CampuShop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+          colors: {
+            flame: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' }
+          }
         }
-    </script>
-    <style>
-        * {
-            scroll-behavior: smooth;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .delay-100 {
-            transition-delay: 100ms;
-        }
-
-        .delay-200 {
-            transition-delay: 200ms;
-        }
-
-        .delay-300 {
-            transition-delay: 300ms;
-        }
-
-        .sidebar-link {
-            transition: all 0.2s ease;
-            border-radius: 12px;
-        }
-
-        .sidebar-link:hover {
-            background: #fff7ed;
-            color: #ea580c;
-        }
-
-        .sidebar-link.active-link {
-            background: linear-gradient(135deg, #ea580c, #2563eb);
-            color: #ffffff;
-        }
-
-        .sidebar-link.active-link:hover {
-            background: linear-gradient(135deg, #c2410c, #1d4ed8);
-        }
-
-        .collapsible-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .collapsible-content.open {
-            max-height: 3000px;
-        }
-
-        .collapsible-arrow {
-            transition: transform 0.3s ease;
-        }
-
-        .collapsible-arrow.rotated {
-            transform: rotate(180deg);
-        }
-
-        .step-number {
-            width: 30px;
-            height: 30px;
-            min-width: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ea580c, #2563eb);
-            font-size: 13px;
-            font-weight: 600;
-            color: #FFFFFF;
-        }
-
-        .gif-placeholder {
-            background: linear-gradient(135deg, #fff7ed, #eff6ff, #ffffff);
-            border: 2px dashed #fed7aa;
-            border-radius: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: #93c5fd;
-            min-height: 260px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .gif-placeholder:hover {
-            border-color: #fb923c;
-            background: linear-gradient(135deg, #ffedd5, #dbeafe, #ffffff);
-        }
-
-        .gif-placeholder img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 1rem;
-        }
-
-        .flow-connector {
-            width: 2px;
-            height: 20px;
-            background: linear-gradient(to bottom, #ea580c, #93c5fd);
-            margin: 0 auto;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            color: #1e293b;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 10000;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s ease;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #ea580c, #2563eb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 40%, #3b82f6 55%, #c2410c 80%, #ea580c 100%);
-        }
-
-        @media (max-width: 1023px) {
-            .sidebar-panel {
-                transform: translateX(-100%);
-                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            }
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    * { scroll-behavior: smooth; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .sidebar-link { transition: all 0.2s ease; border-radius: 12px; }
+    .sidebar-link:hover { background: #fff7ed; color: #ea580c; }
+    .sidebar-link.active-link { background: linear-gradient(135deg, #ea580c, #2563eb); color: #ffffff; }
+    .sidebar-link.active-link:hover { background: linear-gradient(135deg, #c2410c, #1d4ed8); }
+    .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .collapsible-content.open { max-height: 3000px; }
+    .collapsible-arrow { transition: transform 0.3s ease; }
+    .collapsible-arrow.rotated { transform: rotate(180deg); }
+    .step-number { width: 30px; height: 30px; min-width: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #ea580c, #2563eb); font-size: 13px; color: white; }
+  </style>
 </head>
 
 <body class="bg-slate-50 text-slate-900">
-    <div class="min-h-screen">
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <header
-                class="mb-10 flex flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Manual do Usuário</p>
-                    <h1 class="mt-3 text-4xl font-bold text-slate-900">Guia completo para usar o CampuShop</h1>
-                    <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">Veja passo a passo como criar conta,
-                        navegar por produtos, publicar anúncios e falar com compradores.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span
-                        class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-3xl text-orange-700">📘</span>
-                </div>
-            </header>
-            <main class="space-y-8">
-                <section class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-                    <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
-                        <aside class="space-y-6">
-                            <div class="rounded-3xl bg-slate-50 p-5 shadow-sm">
-                                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Sumário</p>
-                                <ul class="mt-4 space-y-3 text-sm text-slate-600">
-                                    <li>Como criar conta</li>
-                                    <li>Navegar por categorias</li>
-                                    <li>Publicar anúncio</li>
-                                    <li>Acompanhar pedidos</li>
-                                </ul>
-                            </div>
-                            <div class="rounded-3xl bg-slate-50 p-5 shadow-sm">
-                                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Busca</p>
-                                <input id="sidebar-search" type="text" placeholder="Buscar no manual..."
-                                    class="mt-3 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700 outline-none transition focus:border-orange-400" />
-                            </div>
-                        </aside>
-                        <article class="space-y-6">
-                            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                                <h2 class="text-2xl font-semibold text-slate-900">Resumo rápido</h2>
-                                <p class="mt-3 text-sm leading-7 text-slate-600">O CampuShop conecta compradores e
-                                    vendedores em um marketplace local para campus universitário. Use este manual para
-                                    acessar os principais fluxos do sistema.</p>
-                            </div>
-                            <div class="grid gap-5 sm:grid-cols-2">
-                                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                                    <p class="text-sm font-semibold text-slate-500">Passo 1</p>
-                                    <p class="mt-3 text-base leading-7 text-slate-700">Crie sua conta, complete seu
-                                        perfil e confirme seu e-mail para começar.</p>
-                                </div>
-                                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                                    <p class="text-sm font-semibold text-slate-500">Passo 2</p>
-                                    <p class="mt-3 text-base leading-7 text-slate-700">Navegue por categorias ou use a
-                                        busca para encontrar o produto certo em minutos.</p>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                </section>
-                <section class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-                    <h2 class="text-xl font-semibold text-slate-900">Detalhes do conteúdo</h2>
-                    <ol class="mt-5 space-y-4 text-sm leading-7 text-slate-600">
-                        <li class="rounded-3xl border border-slate-200 bg-slate-50 p-5">Como fazer login e navegar pela
-                            região.</li>
-                        <li class="rounded-3xl border border-slate-200 bg-slate-50 p-5">Como anunciar com fotos, preço e
-                            descrição.</li>
-                        <li class="rounded-3xl border border-slate-200 bg-slate-50 p-5">Como enviar mensagens e
-                            acompanhar pedidos.</li>
-                        <li class="rounded-3xl border border-slate-200 bg-slate-50 p-5">FAQs e dicas rápidas para vender
-                            melhor.</li>
-                    </ol>
-                </section>
-            </main>
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="rounded-[2rem] bg-white p-8 shadow-sm sm:p-10">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p class="text-sm uppercase tracking-[0.24em] text-slate-400">Manual do Usuário</p>
+          <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Como usar o CampusShop</h1>
+          <p class="mt-4 max-w-3xl text-base leading-8 text-slate-600">Tudo o que você precisa para comprar, vender e se comunicar no marketplace da comunidade acadêmica.</p>
         </div>
+      </div>
     </div>
+  </div>
+  <div class="relative lg:pl-[18rem]">
+    <aside class="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-slate-200 bg-white p-6 lg:static lg:block">
+      <div class="mb-8 flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-blue-600 text-white shadow-sm">📘</div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Manual do Usuário</p>
+          <p class="font-semibold text-slate-900">CampusShop</p>
+        </div>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <a href="#bem-vindo" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Bem-vindo</a>
+        <a href="#como-funciona" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Como Funciona</a>
+        <a href="#criar-conta" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Criar sua Conta</a>
+        <a href="#fazer-login" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Entrar</a>
+        <a href="#explorar" class="sidebar-link block px-3 py-2 text-slate-600 hover:bg-orange-50 hover:text-orange-700">Explorar</a>
+      </nav>
+    </aside>
+    <main class="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+      <section id="bem-vindo" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Bem-vindo ao CampusShop</h2>
+        <p class="mt-4 text-slate-600">O CampusShop é o marketplace da comunidade acadêmica. Aqui você pode comprar materiais, vender seus produtos, trocar mensagens com outros estudantes e acompanhar seus pedidos.</p>
+      </section>
+      <section id="como-funciona" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Como Funciona</h2>
+        <p class="mt-4 text-slate-600">Usar o CampusShop é simples: crie sua conta, explore produtos, veja detalhes, compre ou anuncie pelo marketplace.</p>
+      </section>
+      <section id="criar-conta" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Criar sua Conta</h2>
+        <p class="mt-4 text-slate-600">Para participar do CampusShop, use a página de cadastro e informe seus dados acadêmicos.</p>
+      </section>
+      <section id="fazer-login" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Entrar na Conta</h2>
+        <p class="mt-4 text-slate-600">Se já tiver conta, acesse o login e entre com email e senha para usar o marketplace.</p>
+      </section>
+      <section id="explorar" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900">Explorar Produtos</h2>
+        <p class="mt-4 text-slate-600">Navegue por categorias, produtos em destaque e encontre o que você precisa no marketplace.</p>
+      </section>
+    </main>
+  </div>
 </body>
 
 </html>

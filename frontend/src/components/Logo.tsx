@@ -6,7 +6,7 @@ const logoEscrita = new URL('./LogoEscrita.svg', import.meta.url).href
 
 type LogoProps = {
   className?: string
-  variant?: 'home' | 'completa' | 'responsive' | 'simbolo-escrita' | 'simbolo' // Defina qual versão exibir
+  variant?: 'home' | 'completa' | 'responsive' | 'simbolo-escrita' | 'simbolo' | 'auth' // Defina qual versão exibir
 }
 
 export function Logo({ className = '', variant = 'home' }: LogoProps) {
@@ -67,6 +67,24 @@ export function Logo({ className = '', variant = 'home' }: LogoProps) {
           src={logoEscrita}
           alt="CampuShop Escrita"
           className={`h-12 w-auto sm:h-16 sm:w-auto ${className}`}
+        />
+      </div>
+    )
+  }
+
+  if (variant === 'auth') {
+    // Logo para páginas de autenticação - símbolo + escrita com tamanho maior
+    return (
+      <div className="flex items-center gap-4 sm:gap-5">
+        <img
+          src={logoSimbolo}
+          alt="CampuShop Símbolo"
+          className={`h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 ${className}`}
+        />
+        <img
+          src={logoEscrita}
+          alt="CampuShop Escrita"
+          className={`h-16 w-auto sm:h-24 lg:h-28 w-auto ${className}`}
         />
       </div>
     )

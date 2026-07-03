@@ -279,6 +279,15 @@ export const produtoAPI = {
   deletar: (id: number) => api.delete(`/api/produtos/${id}`), // Centraliza chamada da exclusão de produto no backend.
 }
 // Centraliza chamadas relacionadas ao usuário autenticado, como atualização de perfil e exclusão de conta.
+export const chatAPI = {
+  listarPedidos: () => api.get<ChatPedidoAPI[]>('/api/chat/pedidos'),
+  listarMensagens: (pedidoId: number) => api.get<ChatMensagemAPI[]>(`/api/chat/pedidos/${pedidoId}/mensagens`),
+  enviarMensagem: (pedidoId: number, texto: string) =>
+    api.post<ChatMensagemAPI>(`/api/chat/pedidos/${pedidoId}/mensagens`, {
+      texto,
+    }),
+}
+
 export const usuarioAPI = {
   atualizarPerfil: (nomeCompleto: string, email: string) =>
     // Centraliza chamada da edição de perfil autenticado no backend.
