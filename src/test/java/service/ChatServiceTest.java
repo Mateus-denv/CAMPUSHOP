@@ -1,15 +1,14 @@
 package service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.campushop.campushop_backend.model.Pedido;
@@ -56,7 +55,7 @@ public class ChatServiceTest {
         when(pedidoRepository.findDetalhadoById(10)).thenReturn(Optional.of(pedido));
 
         RuntimeException excecao = assertThrows(RuntimeException.class,
-                () -> service.enviarMensagem(10, "comprador@email.com", "Olá"));
+                () -> service.enviarMensagem(10, "comprador@email.com", "Olá", Boolean.TRUE));
 
         assertTrue(excecao.getMessage().contains("não está disponível"));
     }

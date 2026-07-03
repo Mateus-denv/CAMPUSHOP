@@ -16,6 +16,8 @@ import { PedidosPage } from "@/pages/PedidosPage";
 import { PlanosPage } from "@/pages/PlanosPage";
 import { PrivacidadePage } from "@/pages/PrivacidadePage";
 import { ProdutoDetalhePage } from "@/pages/ProdutoDetalhePage";
+import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage";
+import { RedefinirSenhaPage } from "@/pages/RedefinirSenhaPage";
 import { TermosPage } from "@/pages/TermosPage";
 import { useAuthStore } from "@/store";
 import { useEffect, useState } from "react";
@@ -88,8 +90,10 @@ function App() {
       }
     });
 
-    return () => unsubscribe();
-  }, [setUsuario]);
+    return () => {
+      unsubscribe()
+    }
+  }, [setUsuario])
 
   useEffect(() => {
     if (loading || usuario) {
@@ -139,39 +143,16 @@ function App() {
       <Route path="/termos" element={<TermosPage />} />
       <Route path="/anunciar" element={<AnunciarPage />} />
 
-      <Route
-        path="/login"
-        element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />}
-      />
-      <Route
-        path="/cadastro"
-        element={
-          usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />
-        }
-      />
+      <Route path="/login" element={usuario ? <Navigate to="/produtos" replace /> : <LoginPage />} />
+      <Route path="/cadastro" element={usuario ? <Navigate to="/produtos" replace /> : <CadastroPage />} />
+      <Route path="/esqueci-senha" element={usuario ? <Navigate to="/produtos" replace /> : <EsqueciSenhaPage />} />
+      <Route path="/redefinir-senha" element={usuario ? <Navigate to="/produtos" replace /> : <RedefinirSenhaPage />} />
 
-      <Route
-        path="/carrinho"
-        element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/pedidos"
-        element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/conta"
-        element={usuario ? <ContaPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/conta/editar"
-        element={
-          usuario ? <EditarContaPage /> : <Navigate to="/login" replace />
-        }
-      />
-      <Route
-        path="/chat"
-        element={usuario ? <ChatPage /> : <Navigate to="/login" replace />}
-      />
+      <Route path="/carrinho" element={usuario ? <CarrinhoPage /> : <Navigate to="/login" replace />} />
+      <Route path="/pedidos" element={usuario ? <PedidosPage /> : <Navigate to="/login" replace />} />
+      <Route path="/conta" element={usuario ? <ContaPage /> : <Navigate to="/login" replace />} />
+      <Route path="/conta/editar" element={usuario ? <EditarContaPage /> : <Navigate to="/login" replace />} />
+      <Route path="/chat" element={usuario ? <ChatPage /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
