@@ -1,3 +1,4 @@
+import { Logo } from '@/components/Logo'
 import { Button, Card } from '@/components/UI'
 import { authAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
@@ -49,10 +50,11 @@ export function LoginPage() {
       <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:grid-cols-2">
         <div className="hidden flex-col justify-between bg-gradient-to-br from-blue-700 via-indigo-700 to-orange-500 p-10 text-white sm:flex">
           <div>
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-              <Store className="h-7 w-7" />
+            {/* Logo principal no painel esquerdo com fundo branco */}
+            <div className="mb-8 mx-auto flex justify-center bg-white rounded-3xl p-6">
+              <Logo variant="home" />
             </div>
-            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Entre no CampuShop e encontre tudo em um só lugar</h1>
+            <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Entre e encontre tudo em um só lugar</h1>
             <p className="mt-4 max-w-md text-sm text-blue-50/90">
               Login rápido para comprar, vender, conversar e acompanhar seus pedidos sem sair da plataforma.
             </p>
@@ -73,10 +75,10 @@ export function LoginPage() {
         <Card className="border-0 shadow-none rounded-none bg-white">
           <div className="p-8 sm:p-10">
             <div className="sm:hidden mb-8 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
-                <span className="text-3xl font-bold">📦</span>
+              {/* Logo para mobile */}
+              <div className="mb-4 flex justify-center">
+                <Logo variant="simbolo-escrita" />
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">CampuShop</h1>
               <p className="mt-2 text-slate-600">Bem-vindo de volta!</p>
             </div>
 

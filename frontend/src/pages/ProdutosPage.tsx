@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
+import { PlanBadge } from '@/components/PlanBadge'
 import { carrinhoAPI, produtoAPI, type ProdutoAPI } from '@/lib/api-service'
 import { countCartItems, isFavorite, saveCart, toggleFavorite } from '@/lib/shop-storage'
 import { Heart } from 'lucide-react'
@@ -21,6 +22,10 @@ type Produto = {
   categoria?: string
   notaMedia?: number
   totalAvaliacoes?: number
+  planName?: string
+  badgeColor?: string
+  badgeText?: string
+  badgeIcon?: string
 }
 
 export function ProdutosPage() {
@@ -76,6 +81,10 @@ export function ProdutosPage() {
           (typeof produto.categoria === 'string' ? produto.categoria : ''),
         notaMedia: produto.notaMedia ?? 0,
         totalAvaliacoes: produto.totalAvaliacoes ?? 0,
+        planName: produto.planName,
+        badgeColor: produto.badgeColor,
+        badgeText: produto.badgeText,
+        badgeIcon: produto.badgeIcon,
       }))
       setProdutos(produtosNormalizados)
     } catch (err: any) {
@@ -242,7 +251,10 @@ export function ProdutosPage() {
                 imageClassName="h-48 w-full rounded-[1.25rem]"
               />
               <div className="mb-2 flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-slate-900">{produto.nomeProduto || 'Produto sem nome'}</h3>
+                  <PlanBadge text={produto.badgeText || produto.planName || 'ESSENCIAL'} color={produto.badgeColor} icon={produto.badgeIcon} />
+                </div>
                 <button
                   type="button"
                   onClick={(e) => {

@@ -1,8 +1,9 @@
 import { ImageCropModal } from '@/components/ImageCropModal'
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
+import { PlanBadge } from '@/components/PlanBadge'
 import { Button, Card, Input } from '@/components/UI'
-import { usuarioAPI } from '@/lib/api-service'
+import { subscriptionAPI, usuarioAPI, type SubscriptionAPI } from '@/lib/api-service'
 import { buildUserPhotoUrl, getAllowedImageAccept, getImageGuidance, validateImageBasics } from '@/lib/image-utils'
 import { useAuthStore } from '@/store'
 import { AlertCircle, Camera, Save } from 'lucide-react'
@@ -19,11 +20,22 @@ export function EditarContaPage() {
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [assinatura, setAssinatura] = useState<SubscriptionAPI | null>(null)
 
   useEffect(() => {
+    const carregarPlano = async () => {
+      try {
+        const response = await subscriptionAPI.current()
+        setAssinatura(response.data ?? null)
+      } catch {
+        setAssinatura(null)
+      }
+    }
+
     setNomeCompleto(usuario?.nomeCompleto || usuario?.nome || '')
     setEmail(usuario?.email || '')
     setFotoVersao((atual) => atual + 1)
+    carregarPlano()
   }, [usuario])
 
   useEffect(() => {
@@ -149,6 +161,9 @@ export function EditarContaPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Conta</p>
                 <h1 className="text-3xl font-black tracking-tight text-slate-900">Editar conta</h1>
                 <p className="mt-1 text-sm text-slate-500">Atualize dados pessoais e foto de perfil em uma página dedicada.</p>
+                <div className="mt-3">
+                  <PlanBadge text={assinatura?.badgeText || assinatura?.planName || 'ESSENCIAL'} color={assinatura?.badgeColor} icon={assinatura?.badgeIcon} />
+                </div>
               </div>
             </div>
 

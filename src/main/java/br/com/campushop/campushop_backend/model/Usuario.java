@@ -3,6 +3,7 @@ package br.com.campushop.campushop_backend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import br.com.campushop.campushop_backend.model.PlanType;
 
 @Entity
 @Table(name = "usuario")
@@ -57,6 +58,9 @@ public class Usuario {
 
     @Column(name = "saldo_vendas", nullable = false, precision = 38, scale = 2)
     private BigDecimal saldoVendas = BigDecimal.ZERO;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Subscription subscription;
 
     // Constructors
     public Usuario() {
@@ -202,6 +206,26 @@ public class Usuario {
 
     public void setDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
+    }
+
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(Subscription subscription) {
+        this.subscription = subscription;
+    }
+
+    public boolean isPremium() {
+        return subscription != null && Boolean.TRUE.equals(subscription.getActive()) && subscription.getPlan() == PlanType.PREMIUM;
+    }
+
+    public boolean isPlus() {
+        return subscription != null && Boolean.TRUE.equals(subscription.getActive()) && subscription.getPlan() == PlanType.PLUS;
+    }
+
+    public boolean isEssential() {
+        return subscription == null || !Boolean.TRUE.equals(subscription.getActive()) || subscription.getPlan() == PlanType.ESSENTIAL;
     }
 
     @Override

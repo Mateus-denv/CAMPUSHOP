@@ -1,5 +1,6 @@
 import { Layout } from '@/components/Layout'
 import { MediaImage } from '@/components/MediaImage'
+import { PlanBadge } from '@/components/PlanBadge'
 import { categoriaAPI, produtoAPI } from '@/lib/api-service'
 import { buildProductImageUrl } from '@/lib/image-utils'
 import { categories, products } from '@/lib/mock-data'
@@ -16,6 +17,10 @@ type ProdutoHome = {
   local: string
   categoriaId?: number
   categoria: string
+  planName?: string
+  badgeColor?: string
+  badgeText?: string
+  badgeIcon?: string
 }
 
 type CategoriaHome = {
@@ -49,6 +54,10 @@ function normalizarProduto(produto: any): ProdutoHome {
     local: produto.local ?? produto.cidade ?? produto.instituicao ?? '',
     categoriaId: Number.isFinite(categoriaId) && categoriaId > 0 ? categoriaId : undefined,
     categoria: categoriaNome || 'Sem categoria',
+    planName: produto.planName,
+    badgeColor: produto.badgeColor,
+    badgeText: produto.badgeText,
+    badgeIcon: produto.badgeIcon,
   }
 }
 
@@ -327,6 +336,9 @@ export function HomePage() {
                       <div>
                         <p className="text-lg font-bold text-slate-900">{destaqueAtual.nomeProduto}</p>
                         <p className="text-sm text-slate-500">{destaqueAtual.vendedorNome}{destaqueAtual.local ? ` • ${destaqueAtual.local}` : ''}</p>
+                        <div className="mt-2">
+                          <PlanBadge text={destaqueAtual.badgeText || destaqueAtual.planName || 'ESSENCIAL'} color={destaqueAtual.badgeColor} icon={destaqueAtual.badgeIcon} />
+                        </div>
                       </div>
                       <p className="text-2xl font-extrabold text-slate-900">{formatarPreco(destaqueAtual.preco)}</p>
                     </div>

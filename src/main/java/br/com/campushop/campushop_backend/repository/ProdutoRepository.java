@@ -15,9 +15,14 @@ public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
     @Query("SELECT p FROM Produto p LEFT JOIN FETCH p.usuario WHERE p.produtoPai IS NULL AND COALESCE(UPPER(p.status), 'ATIVO') <> 'INATIVO' AND COALESCE(p.visivelParaComprador, true) = true")
     List<Produto> findAllDisponiveis();
 
+    @Query("SELECT DISTINCT p FROM Produto p LEFT JOIN FETCH p.usuario u LEFT JOIN FETCH u.subscription s WHERE p.produtoPai IS NULL AND COALESCE(UPPER(p.status), 'ATIVO') <> 'INATIVO' AND COALESCE(p.visivelParaComprador, true) = true ORDER BY CASE WHEN s.plan = br.com.campushop.campushop_backend.model.PlanType.PREMIUM THEN 1 WHEN s.plan = br.com.campushop.campushop_backend.model.PlanType.PLUS THEN 2 ELSE 3 END, p.idProduto DESC")
+    List<Produto> findAllDisponiveisOrdenadosPorPlano();
+
     // Faz o mesmo carregamento no filtro por usuário logado para manter o payload consistente.
     @Query("SELECT p FROM Produto p LEFT JOIN FETCH p.usuario WHERE p.produtoPai IS NULL AND p.usuario.email = :email")
     List<Produto> findByUsuarioEmail(@Param("email") String email);
+
+    long countByUsuario_EmailAndProdutoPaiIsNull(String email);
 
     // Garante o nome do anunciante também no detalhe sem perder acesso aos produtos do dono.
     @Query("SELECT p FROM Produto p LEFT JOIN FETCH p.usuario LEFT JOIN FETCH p.produtoPai WHERE p.idProduto = :id")

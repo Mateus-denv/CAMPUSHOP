@@ -2,11 +2,13 @@ package br.com.campushop.campushop_backend.controller;
 
 import br.com.campushop.campushop_backend.model.Produto; // Importando a classe Produto para usar nos métodos do controller
 import br.com.campushop.campushop_backend.model.ImagemAnexo;
+import br.com.campushop.campushop_backend.model.PlanType;
 import br.com.campushop.campushop_backend.model.Usuario; // Importando a classe Usuario
 import br.com.campushop.campushop_backend.service.ProdutoService;
 import br.com.campushop.campushop_backend.service.UsuarioService;
 import br.com.campushop.campushop_backend.service.ImagemService;
 import br.com.campushop.campushop_backend.service.AvaliacaoService;
+import br.com.campushop.campushop_backend.service.PlanPermissions;
 import org.springframework.beans.factory.annotation.Autowired; // Importando a anotação @Autowired para injetar o ProdutoRepository
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity; // Importando ResponseEntity para retornar respostas HTTP adequadas
@@ -86,12 +88,32 @@ public class ProdutoController {
             String categoriaNome,
             Double notaMedia,
             Long totalAvaliacoes,
-            List<VarianteResponse> variantes) {
+            List<VarianteResponse> variantes,
+            PlanType plan,
+            String planName,
+            Boolean isPremium,
+            Boolean canBoost,
+            Boolean canHighlight,
+            Integer remainingListings,
+            String badgeColor,
+            String badgeText,
+            String badgeIcon,
+            Boolean hasMetrics,
+            Boolean hasAdvancedMetrics,
+            Boolean hasFinancialDashboard,
+            Boolean hasAIInsights) {
 
-        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes, Double notaMedia, Long totalAvaliacoes) {
+        public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes, Double notaMedia, Long totalAvaliacoes, Integer remainingListings) {
             // Resolve o nome do anunciante direto do usuário associado ao produto.
             Usuario usuario = produto.getUsuario();
             var categoria = produto.getCategoria();
+            PlanType plan = PlanType.ESSENTIAL;
+            PlanPermissions permissions = PlanPermissions.of(plan);
+            if (usuario != null && usuario.getSubscription() != null && Boolean.TRUE.equals(usuario.getSubscription().getActive())
+                    && usuario.getSubscription().getPlan() != null) {
+                plan = usuario.getSubscription().getPlan();
+                permissions = PlanPermissions.of(plan);
+            }
             return new ProdutoResponse(
                     produto.getIdProduto(),
                     produto.getNomeProduto(),
@@ -110,11 +132,24 @@ public class ProdutoController {
                     categoria != null ? categoria.getNome_categoria() : null,
                     notaMedia,
                     totalAvaliacoes,
-                    variantes != null ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList()) : List.of());
+                    variantes != null ? variantes.stream().map(VarianteResponse::fromEntity).collect(Collectors.toList()) : List.of(),
+                    plan,
+                    plan.getDisplayName(),
+                    plan == PlanType.PREMIUM,
+                    permissions.canBoostListing(),
+                    permissions.canHighlightListing(),
+                    remainingListings,
+                    permissions.getBadgeColor(),
+                    permissions.getBadgeText(),
+                    permissions.getBadgeIcon(),
+                    permissions.canViewBasicMetrics(),
+                    permissions.canViewAdvancedMetrics(),
+                    permissions.canViewFinancialDashboard(),
+                    permissions.canViewAIInsights());
         }
 
         public static ProdutoResponse fromEntity(Produto produto, List<Produto> variantes) {
-            return fromEntity(produto, variantes, 0.0, 0L);
+            return fromEntity(produto, variantes, 0.0, 0L, null);
         }
 
         public static ProdutoResponse fromEntity(Produto produto) {
@@ -172,7 +207,14 @@ public class ProdutoController {
     private ProdutoResponse toProdutoResponse(Produto produto, List<Produto> variantes) {
         double notaMedia = avaliacaoService.calcularNotaMediaProduto(produto.getIdProduto());
         long totalAvaliacoes = avaliacaoService.contarAvaliacoesAtivas(produto.getIdProduto());
-        return ProdutoResponse.fromEntity(produto, variantes, notaMedia, totalAvaliacoes);
+        Integer remainingListings = null;
+        if (produto.getUsuario() != null && produto.getUsuario().getSubscription() != null) {
+            PlanPermissions permissions = PlanPermissions.of(produto.getUsuario().getSubscription().getPlan());
+            long anunciosAtivos = produtoService.contarAnunciosPrincipaisPorEmail(produto.getUsuario().getEmail());
+            int limite = permissions.maxListings();
+            remainingListings = limite == Integer.MAX_VALUE ? -1 : (int) Math.max(0, limite - anunciosAtivos);
+        }
+        return ProdutoResponse.fromEntity(produto, variantes, notaMedia, totalAvaliacoes, remainingListings);
     }
 
     // 3. Criar novo produto (Create)
@@ -226,7 +268,11 @@ public class ProdutoController {
             List<Produto> variantes = Boolean.TRUE.equals(produtoSalvo.getPossuiVariantes())
                     ? produtoService.listarVariantes(produtoSalvo.getIdProduto())
                     : List.of();
-            return ResponseEntity.status(HttpStatus.CREATED).body(ProdutoResponse.fromEntity(produtoSalvo, variantes));
+                return ResponseEntity.status(HttpStatus.CREATED).body(ProdutoResponse.fromEntity(produtoSalvo, variantes, 0.0, 0L,
+                    produtoSalvo.getUsuario() != null && produtoSalvo.getUsuario().getSubscription() != null
+                        ? (int) Math.max(0, PlanPermissions.of(produtoSalvo.getUsuario().getSubscription().getPlan()).maxListings()
+                            - produtoService.contarAnunciosPrincipaisPorEmail(produtoSalvo.getUsuario().getEmail()))
+                        : null));
         } catch (RuntimeException e) {
             Map<String, String> erro = new HashMap<>();
             erro.put("erro", e.getMessage());
@@ -248,7 +294,11 @@ public class ProdutoController {
             List<Produto> variantes = Boolean.TRUE.equals(produto.getPossuiVariantes())
                     ? produtoService.listarVariantes(produto.getIdProduto())
                     : List.of();
-            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes));
+                return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, variantes, 0.0, 0L,
+                    produto.getUsuario() != null && produto.getUsuario().getSubscription() != null
+                        ? (int) Math.max(0, PlanPermissions.of(produto.getUsuario().getSubscription().getPlan()).maxListings()
+                            - produtoService.contarAnunciosPrincipaisPorEmail(produto.getUsuario().getEmail()))
+                        : null));
         } catch (RuntimeException e) {
             Map<String, String> erro = new HashMap<>();
             erro.put("message", e.getMessage());
@@ -336,7 +386,11 @@ public class ProdutoController {
             @RequestBody AtualizarStatusProdutoRequest request) {
         try {
             Produto produto = produtoService.atualizarStatus(id, request.status());
-            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of()));
+                return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of(), 0.0, 0L,
+                    produto.getUsuario() != null && produto.getUsuario().getSubscription() != null
+                        ? (int) Math.max(0, PlanPermissions.of(produto.getUsuario().getSubscription().getPlan()).maxListings()
+                            - produtoService.contarAnunciosPrincipaisPorEmail(produto.getUsuario().getEmail()))
+                        : null));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -347,7 +401,11 @@ public class ProdutoController {
             @RequestBody AtualizarVisibilidadeProdutoRequest request) {
         try {
             Produto produto = produtoService.atualizarVisibilidade(id, request.visivelParaComprador());
-            return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of()));
+                return ResponseEntity.ok(ProdutoResponse.fromEntity(produto, List.of(), 0.0, 0L,
+                    produto.getUsuario() != null && produto.getUsuario().getSubscription() != null
+                        ? (int) Math.max(0, PlanPermissions.of(produto.getUsuario().getSubscription().getPlan()).maxListings()
+                            - produtoService.contarAnunciosPrincipaisPorEmail(produto.getUsuario().getEmail()))
+                        : null));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }

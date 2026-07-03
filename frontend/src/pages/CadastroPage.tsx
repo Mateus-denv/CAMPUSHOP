@@ -1,7 +1,8 @@
+import { Logo } from '@/components/Logo'
 import { Button, Card } from '@/components/UI'
 import { authAPI } from '@/lib/api-service'
 import { useAuthStore } from '@/store'
-import { AlertCircle, CheckCircle2, ShieldCheck, UserPlus } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -137,8 +138,9 @@ export function CadastroPage() {
       <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur lg:grid-cols-2">
         <div className="hidden flex-col justify-between bg-gradient-to-br from-indigo-700 via-blue-700 to-orange-500 p-10 text-white lg:flex">
           <div>
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-              <UserPlus className="h-7 w-7" />
+            {/* Logo principal no painel esquerdo com fundo branco */}
+            <div className="mb-8 bg-white rounded-3xl p-6 inline-flex">
+              <Logo variant="home" />
             </div>
             <h1 className="mt-8 text-4xl font-black leading-tight tracking-tight">Crie sua conta e negocie com segurança</h1>
             <p className="mt-4 max-w-md text-sm text-blue-50/90">
@@ -160,6 +162,12 @@ export function CadastroPage() {
 
         <Card className="border-0 shadow-none rounded-none bg-white">
           <div className="p-8 sm:p-10">
+            <div className="lg:hidden mb-6 text-center">
+              {/* Logo para mobile no cadastro */}
+              <div className="mb-4 flex justify-center">
+                <Logo variant="simbolo-escrita" />
+              </div>
+            </div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Criar conta</h1>
             <p className="text-sm text-slate-600 mb-6">Preencha os dados para entrar no CampuShop</p>
 
